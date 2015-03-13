@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flowgraph"
+	"github.com/vectaport/flowgraph"
 	"fmt"
 	"math"
 	"time"
@@ -26,9 +26,9 @@ func promote_test(a, b, x flowgraph.Conn) {
 }
 func main() {
 
-	a := flowgraph.MakeConn()
-	b := flowgraph.MakeConn()
-	x := flowgraph.MakeConn()
+	a := flowgraph.MakeConn(false,true,nil)
+	b := flowgraph.MakeConn(false,true,nil)
+	x := flowgraph.MakeConn(false,true,nil)
 
 	go promote_test(a, b, x)
 

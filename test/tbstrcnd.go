@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flowgraph"
+	"github.com/vectaport/flowgraph"
 	"fmt"
 	"reflect"
 	"time"
