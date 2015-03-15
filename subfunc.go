@@ -28,7 +28,7 @@ func subfunc(a, b Datum) Datum {
 	}
 }
 
-func SubFunc(a, b, x Edge) {
+func SubNode(a, b, x Edge) {
 
 	nodeid := MakeNode()
 

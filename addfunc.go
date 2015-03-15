@@ -28,7 +28,7 @@ func addfunc(a, b Datum) Datum {
 	}
 }
 
-func AddFunc(a, b, x Edge) {
+func AddNode(a, b, x Edge) {
 
 	nodeid := MakeNode()
 

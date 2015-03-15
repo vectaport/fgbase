@@ -26,7 +26,7 @@ func zerotest(a Datum) bool {
 	}
 }
 
-func StrCndFunc(a, x, y Edge) {
+func StrCndNode(a, x, y Edge) {
 
 	nodeid := MakeNode()
 

@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func ArbitFunc(a, b, x Edge) {
+func ArbitNode(a, b, x Edge) {
 
 	nodeid := MakeNode()
 
