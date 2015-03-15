@@ -28,7 +28,7 @@ func zerotest(a Datum) bool {
 
 func StrCndNode(a, x, y Edge) {
 
-	nodeid := MakeNode()
+	node := MakeNode()
 
 	var _a Datum = a.Init_val
 	_a_rdy := a.Data_init
@@ -36,10 +36,10 @@ func StrCndNode(a, x, y Edge) {
 	_y_rdy := y.Ack_init
 
 	for {
-		fmt.Printf("	strcnd(%d):  _a_rdy %v  _x_rdy,_y_rdy %v,%v\n", nodeid, _a_rdy, _x_rdy, _y_rdy);
+		fmt.Printf("	strcnd(%d):  _a_rdy %v  _x_rdy,_y_rdy %v,%v\n", node.Id, _a_rdy, _x_rdy, _y_rdy);
 
 		if _a_rdy && _x_rdy && _y_rdy {
-			fmt.Printf("	strcnd(%d):  writing x.Data or y.Data and a.Ack\n", nodeid)
+			fmt.Printf("	strcnd(%d):  writing x.Data or y.Data and a.Ack\n", node.Id)
 			_a_rdy = false
 			if (zerotest(_a)) {
 				x.Data <- _a
@@ -49,20 +49,20 @@ func StrCndNode(a, x, y Edge) {
 				_y_rdy = false
 			}
 			a.Ack <- true
-			fmt.Printf("	strcnd(%d):  done writing x.Data or y.Data and a.Ack\n", nodeid)
+			fmt.Printf("	strcnd(%d):  done writing x.Data or y.Data and a.Ack\n", node.Id)
 		}
 
-		fmt.Printf("	strcnd(%d):  select", nodeid)
+		fmt.Printf("	strcnd(%d):  select", node.Id)
 		select {
 		case _a = <-a.Data:
 			{
-				fmt.Printf("	strcnd(%d):  a read %v --  %v\n", nodeid, reflect.TypeOf(_a), _a)
+				fmt.Printf("	strcnd(%d):  a read %v --  %v\n", node.Id, reflect.TypeOf(_a), _a)
 				_a_rdy = true
 			}
 		case _x_rdy = <-x.Ack:
-			fmt.Printf("	strcnd(%d):  x.Ack read\n", nodeid)
+			fmt.Printf("	strcnd(%d):  x.Ack read\n", node.Id)
 		case _y_rdy = <-y.Ack:
-			fmt.Printf("	strcnd(%d):  y.Ack read\n", nodeid)
+			fmt.Printf("	strcnd(%d):  y.Ack read\n", node.Id)
 		}
 
 	}

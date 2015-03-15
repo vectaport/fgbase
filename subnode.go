@@ -30,7 +30,7 @@ func subfunc(a, b Datum) Datum {
 
 func SubNode(a, b, x Edge) {
 
-	nodeid := MakeNode()
+	node := MakeNode()
 
 	var _a Datum = a.Init_val
 	var _b Datum = b.Init_val
@@ -39,40 +39,40 @@ func SubNode(a, b, x Edge) {
 	_x_rdy := x.Ack_init
 
 	for {
-		fmt.Printf("	sub(%d):  _a_rdy,_b_rdy %v,%v  _x_rdy %v\n", nodeid, _a_rdy, _b_rdy, _x_rdy);
+		fmt.Printf("	sub(%d):  _a_rdy,_b_rdy %v,%v  _x_rdy %v\n", node.Id, _a_rdy, _b_rdy, _x_rdy);
 
 		if _a_rdy && _b_rdy && _x_rdy {
-			fmt.Printf("	sub(%d):  writing x and a_req and b_req\n", nodeid)
+			fmt.Printf("	sub(%d):  writing x and a_req and b_req\n", node.Id)
 			_a_rdy = false
 			_b_rdy = false
 			_x_rdy = false
 
 			if(reflect.TypeOf(_a)!=reflect.TypeOf(_b)) {
 				_,nm,ln,_ := runtime.Caller(0)
-				x.Data <-  errors.New(fmt.Sprintf("%s:%d (nodeid %d)  type mismatch (%v,%v)", nm, ln, nodeid, reflect.TypeOf(_a), reflect.TypeOf(_b)))
+				x.Data <-  errors.New(fmt.Sprintf("%s:%d (node.Id %d)  type mismatch (%v,%v)", nm, ln, node.Id, reflect.TypeOf(_a), reflect.TypeOf(_b)))
 			} else {
 				x.Data <- subfunc(_a, _b)
 			}
 
 			a.Ack <- true
 			b.Ack <- true
-			fmt.Printf("	sub(%d):  done writing x.Data and a.Ack and b.Ack\n", nodeid)
+			fmt.Printf("	sub(%d):  done writing x.Data and a.Ack and b.Ack\n", node.Id)
 		}
 
-		fmt.Printf("	sub(%d):  select", nodeid)
+		fmt.Printf("	sub(%d):  select", node.Id)
 		select {
 		case _a = <-a.Data:
 			{
-				fmt.Printf("	sub(%d):  a.Data read %v --  %v\n", nodeid, reflect.TypeOf(_a), _a)
+				fmt.Printf("	sub(%d):  a.Data read %v --  %v\n", node.Id, reflect.TypeOf(_a), _a)
 				_a_rdy = true
 			}
 		case _b = <-b.Data:
 			{
-				fmt.Printf("	sub(%d):  b.Data read %v --  %v\n", nodeid, reflect.TypeOf(_b), _b)
+				fmt.Printf("	sub(%d):  b.Data read %v --  %v\n", node.Id, reflect.TypeOf(_b), _b)
 				_b_rdy = true
 			}
 		case _x_rdy = <-x.Ack:
-			fmt.Printf("	sub(%d):  x.Ack read\n", nodeid)
+			fmt.Printf("	sub(%d):  x.Ack read\n", node.Id)
 		}
 
 	}
