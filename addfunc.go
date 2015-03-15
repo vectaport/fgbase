@@ -28,9 +28,9 @@ func addfunc(a, b Datum) Datum {
 	}
 }
 
-func AddFunc(a, b, x Conn) {
+func AddFunc(a, b, x Edge) {
 
-	pipeid := MakePipe()
+	nodeid := MakeNode()
 
 	var _a Datum = a.Init_val
 	var _b Datum = b.Init_val
@@ -39,40 +39,40 @@ func AddFunc(a, b, x Conn) {
 	_x_rdy := x.Ack_init
 
 	for {
-		fmt.Printf("	add(%d):  _a_rdy,_b_rdy %v,%v  _x_rdy %v\n", pipeid, _a_rdy, _b_rdy, _x_rdy);
+		fmt.Printf("	add(%d):  _a_rdy,_b_rdy %v,%v  _x_rdy %v\n", nodeid, _a_rdy, _b_rdy, _x_rdy);
 
 		if _a_rdy && _b_rdy && _x_rdy {
-			fmt.Println("	add(%d):  writing x and a_req and b_req", pipeid)
+			fmt.Printf("	add(%d):  writing x.Data and a.Ack and b.Ack\n", nodeid)
 			_a_rdy = false
 			_b_rdy = false
 			_x_rdy = false
 
 			if(reflect.TypeOf(_a)!=reflect.TypeOf(_b)) {
 				_,nm,ln,_ := runtime.Caller(0)
-				x.Data <-  errors.New(fmt.Sprintf("%s:%d (pipeid %d)  type mismatch (%v,%v)", nm, ln, pipeid, reflect.TypeOf(_a), reflect.TypeOf(_b)))
+				x.Data <-  errors.New(fmt.Sprintf("%s:%d (nodeid %d)  type mismatch (%v,%v)", nm, ln, nodeid, reflect.TypeOf(_a), reflect.TypeOf(_b)))
 			} else {
 				x.Data <- addfunc(_a, _b)
 			}
 
 			a.Ack <- true
 			b.Ack <- true
-			fmt.Println("	add(%d):  done writing x and a_req and b_req", pipeid)
+			fmt.Printf("	add(%d):  done writing x.Data and a.Ack and b.Ack\n", nodeid)
 		}
 
-		fmt.Println("	add(%d):  select")
+		fmt.Printf("	add(%d):  select", nodeid)
 		select {
 		case _a = <-a.Data:
 			{
-				fmt.Printf("	add(%d):  a read %v --  %v\n", pipeid, reflect.TypeOf(_a), _a)
+				fmt.Printf("	add(%d):  a.Data read %v --  %v\n", nodeid, reflect.TypeOf(_a), _a)
 				_a_rdy = true
 			}
 		case _b = <-b.Data:
 			{
-				fmt.Printf("	add(%d):  b read %v --  %v\n", pipeid, reflect.TypeOf(_b), _b)
+				fmt.Printf("	add(%d):  b.Data read %v --  %v\n", nodeid, reflect.TypeOf(_b), _b)
 				_b_rdy = true
 			}
 		case _x_rdy = <-x.Ack:
-			fmt.Println("	add(%d):  x_req read", pipeid)
+			fmt.Printf("	add(%d):  x.Ack read\n", nodeid)
 		}
 
 	}

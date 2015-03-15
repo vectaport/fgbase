@@ -3,34 +3,32 @@ package flowgraph
 import (
 )
 
-var PipeId int = 0
+var NodeId int = 0
 
 type Datum interface{}
-type Dataconn chan Datum
-type Ackconn chan bool
 
-type Conn struct {
-	Data Dataconn
+type Edge struct {
+	Data chan Datum
 	Data_init bool
 	Init_val Datum
-	Ack Ackconn
+	Ack chan bool
 	Ack_init bool
 }
-// type Pipe ???
+// type Node ???
 
-func MakeConn(data_init, ack_init bool, init_val Datum) Conn {
-	var c Conn
-	c.Data = make(Dataconn)
+func MakeEdge(data_init, ack_init bool, init_val Datum) Edge {
+	var c Edge
+	c.Data = make(chan Datum)
 	c.Data_init = data_init
 	c.Init_val = init_val
-	c.Ack = make(Ackconn)
+	c.Ack = make(chan bool)
 	c.Ack_init = ack_init
 	return c
 }
 
-func MakePipe() int {
-	PipeId = PipeId + 1
-	return PipeId-1
+func MakeNode() int {
+	NodeId = NodeId + 1
+	return NodeId-1
 }
 
 func Sink(a Datum) () {
