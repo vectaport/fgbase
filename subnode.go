@@ -39,10 +39,10 @@ func SubNode(a, b, x Edge) {
 	_x_rdy := x.Ack_init
 
 	for {
-		fmt.Printf("	sub(%d):  _a_rdy,_b_rdy %v,%v  _x_rdy %v\n", node.Id, _a_rdy, _b_rdy, _x_rdy);
+		node.Printf("_a_rdy,_b_rdy %v,%v  _x_rdy %v\n", _a_rdy, _b_rdy, _x_rdy);
 
 		if _a_rdy && _b_rdy && _x_rdy {
-			fmt.Printf("	sub(%d):  writing x.Data and a.Ack and b.Ack\n", node.Id)
+			node.Printf("writing x.Data and a.Ack and b.Ack\n")
 			_a_rdy = false
 			_b_rdy = false
 			_x_rdy = false
@@ -56,23 +56,23 @@ func SubNode(a, b, x Edge) {
 
 			a.Ack <- true
 			b.Ack <- true
-			fmt.Printf("	sub(%d):  done writing x.Data and a.Ack and b.Ack\n", node.Id)
+			node.Printf("done writing x.Data and a.Ack and b.Ack\n")
 		}
 
-		fmt.Printf("	sub(%d):  select", node.Id)
+		node.Printf("select\n")
 		select {
 		case _a = <-a.Data:
 			{
-				fmt.Printf("	sub(%d):  a.Data read %v --  %v\n", node.Id, reflect.TypeOf(_a), _a)
+				node.Printf("a.Data read %v --  %v\n", reflect.TypeOf(_a), _a)
 				_a_rdy = true
 			}
 		case _b = <-b.Data:
 			{
-				fmt.Printf("	sub(%d):  b.Data read %v --  %v\n", node.Id, reflect.TypeOf(_b), _b)
+				node.Printf("b.Data read %v --  %v\n", reflect.TypeOf(_b), _b)
 				_b_rdy = true
 			}
 		case _x_rdy = <-x.Ack:
-			fmt.Printf("	sub(%d):  x.Ack read\n", node.Id)
+			node.Printf("x.Ack read\n")
 		}
 
 	}

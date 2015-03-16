@@ -1,6 +1,7 @@
 package flowgraph
 
 import (
+	"fmt"
 )
 
 var NodeId int = 0
@@ -39,4 +40,12 @@ func MakeNode(nm string) Node {
 }
 
 func Sink(a Datum) () {
+}
+
+func (n Node) Printf(format string, v ...interface{}) {
+	var newv [] interface{}
+	newv = append(newv, n.Name)
+	newv = append(newv, n.Id)
+	newv = append(newv, v...)
+	fmt.Printf("%s(%d):  "+format, newv...)
 }

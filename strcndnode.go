@@ -1,7 +1,6 @@
 package flowgraph
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -36,10 +35,10 @@ func StrCndNode(a, x, y Edge) {
 	_y_rdy := y.Ack_init
 
 	for {
-		fmt.Printf("	strcnd(%d):  _a_rdy %v  _x_rdy,_y_rdy %v,%v\n", node.Id, _a_rdy, _x_rdy, _y_rdy);
+		node.Printf("_a_rdy %v  _x_rdy,_y_rdy %v,%v\n", _a_rdy, _x_rdy, _y_rdy);
 
 		if _a_rdy && _x_rdy && _y_rdy {
-			fmt.Printf("	strcnd(%d):  writing x.Data or y.Data and a.Ack\n", node.Id)
+			node.Printf("writing x.Data or y.Data and a.Ack\n")
 			_a_rdy = false
 			if (zerotest(_a)) {
 				x.Data <- _a
@@ -49,20 +48,20 @@ func StrCndNode(a, x, y Edge) {
 				_y_rdy = false
 			}
 			a.Ack <- true
-			fmt.Printf("	strcnd(%d):  done writing x.Data or y.Data and a.Ack\n", node.Id)
+			node.Printf("done writing x.Data or y.Data and a.Ack\n")
 		}
 
-		fmt.Printf("	strcnd(%d):  select", node.Id)
+		node.Printf("select\n")
 		select {
 		case _a = <-a.Data:
 			{
-				fmt.Printf("	strcnd(%d):  a read %v --  %v\n", node.Id, reflect.TypeOf(_a), _a)
+				node.Printf("a read %v --  %v\n", reflect.TypeOf(_a), _a)
 				_a_rdy = true
 			}
 		case _x_rdy = <-x.Ack:
-			fmt.Printf("	strcnd(%d):  x.Ack read\n", node.Id)
+			node.Printf("x.Ack read\n")
 		case _y_rdy = <-y.Ack:
-			fmt.Printf("	strcnd(%d):  y.Ack read\n", node.Id)
+			node.Printf("y.Ack read\n")
 		}
 
 	}
