@@ -30,7 +30,7 @@ func subfunc(a, b Datum) Datum {
 
 func SubNode(a, b, x Edge) {
 
-	node := MakeNode()
+	node := MakeNode("sub")
 
 	var _a Datum = a.Init_val
 	var _b Datum = b.Init_val
@@ -42,7 +42,7 @@ func SubNode(a, b, x Edge) {
 		fmt.Printf("	sub(%d):  _a_rdy,_b_rdy %v,%v  _x_rdy %v\n", node.Id, _a_rdy, _b_rdy, _x_rdy);
 
 		if _a_rdy && _b_rdy && _x_rdy {
-			fmt.Printf("	sub(%d):  writing x and a_req and b_req\n", node.Id)
+			fmt.Printf("	sub(%d):  writing x.Data and a.Ack and b.Ack\n", node.Id)
 			_a_rdy = false
 			_b_rdy = false
 			_x_rdy = false

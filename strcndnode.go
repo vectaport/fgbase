@@ -28,7 +28,7 @@ func zerotest(a Datum) bool {
 
 func StrCndNode(a, x, y Edge) {
 
-	node := MakeNode()
+	node := MakeNode("strcnd")
 
 	var _a Datum = a.Init_val
 	_a_rdy := a.Data_init

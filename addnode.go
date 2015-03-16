@@ -30,7 +30,7 @@ func addfunc(a, b Datum) Datum {
 
 func AddNode(a, b, x Edge) {
 
-	node := MakeNode()
+	node := MakeNode("add")
 
 	var _a Datum = a.Init_val
 	var _b Datum = b.Init_val

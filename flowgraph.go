@@ -17,6 +17,7 @@ type Edge struct {
 
 type Node struct {
 	Id int
+	Name string
 }
 
 func MakeEdge(data_init, ack_init bool, init_val Datum) Edge {
@@ -29,10 +30,11 @@ func MakeEdge(data_init, ack_init bool, init_val Datum) Edge {
 	return e
 }
 
-func MakeNode() Node {
+func MakeNode(nm string) Node {
 	var n Node
         n.Id = NodeId
 	NodeId = NodeId + 1
+	n.Name = nm
 	return n
 }
 

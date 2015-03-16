@@ -7,7 +7,7 @@ import (
 
 func ArbitNode(a, b, x Edge) {
 
-	node := MakeNode()
+	node := MakeNode("arbit")
 
 	var _a Datum = a.Init_val
 	var _b Datum = a.Init_val
