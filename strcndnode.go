@@ -38,6 +38,7 @@ func StrCndNode(a, x, y Edge) {
 		node.Printf("_a_rdy %v  _x_rdy,_y_rdy %v,%v\n", _a_rdy, _x_rdy, _y_rdy);
 
 		if _a_rdy && _x_rdy && _y_rdy {
+			node.ExecCnt()
 			node.Printf("writing x.Data or y.Data and a.Ack\n")
 			_a_rdy = false
 			if (zerotest(_a)) {

@@ -20,6 +20,7 @@ func ArbitNode(a, b, x Edge) {
 		node.Printf("_a_rdy,_b_rdy %v,%v  _x_rdy %v\n", _a_rdy, _b_rdy, _x_rdy);
 
 		if (_a_rdy || _b_rdy) && _x_rdy {
+			node.ExecCnt()
 			node.Printf("writing x.Data  and either a.Ack or b.Ack\n")
 			if(_a_rdy && !_b_rdy || _a_rdy && !_a_last) {
 				_a_rdy = false

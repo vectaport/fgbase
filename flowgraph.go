@@ -1,10 +1,12 @@
 package flowgraph
 
 import (
+	"sync/atomic"
 	"fmt"
 )
 
-var NodeId int = 0
+var node_id int64 = 0
+var global_cnt int64 = 0
 
 type Datum interface{}
 
@@ -17,8 +19,9 @@ type Edge struct {
 }
 
 type Node struct {
-	Id int
+	Id int64
 	Name string
+	Cnt int64
 }
 
 func MakeEdge(data_init, ack_init bool, init_val Datum) Edge {
@@ -33,9 +36,10 @@ func MakeEdge(data_init, ack_init bool, init_val Datum) Edge {
 
 func MakeNode(nm string) Node {
 	var n Node
-        n.Id = NodeId
-	NodeId = NodeId + 1
+	i := atomic.AddInt64(&node_id, 1)
+	n.Id = i-1
 	n.Name = nm
+	n.Cnt = -1
 	return n
 }
 
@@ -46,6 +50,17 @@ func (n Node) Printf(format string, v ...interface{}) {
 	var newv [] interface{}
 	newv = append(newv, n.Name)
 	newv = append(newv, n.Id)
+	if (n.Cnt>=0) {
+		newv = append(newv, n.Cnt)
+	} else {
+		newv = append(newv, "*")
+	}
+
 	newv = append(newv, v...)
-	fmt.Printf("%s(%d):  "+format, newv...)
+	fmt.Printf("%s(%d:%v):  "+format, newv...)
+}
+
+func (n *Node) ExecCnt() {
+	c := atomic.AddInt64(&global_cnt, 1)
+	n.Cnt = c-1
 }

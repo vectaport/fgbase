@@ -42,6 +42,7 @@ func SubNode(a, b, x Edge) {
 		node.Printf("_a_rdy,_b_rdy %v,%v  _x_rdy %v\n", _a_rdy, _b_rdy, _x_rdy);
 
 		if _a_rdy && _b_rdy && _x_rdy {
+			node.ExecCnt()
 			node.Printf("writing x.Data and a.Ack and b.Ack\n")
 			_a_rdy = false
 			_b_rdy = false
