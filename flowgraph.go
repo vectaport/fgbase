@@ -47,6 +47,9 @@ func Sink(a Datum) () {
 }
 
 func (n Node) Printf(format string, v ...interface{}) {
+	if (format=="select\n") {
+		return
+	}
 	var newv [] interface{}
 	newv = append(newv, n.Name)
 	newv = append(newv, n.Id)
