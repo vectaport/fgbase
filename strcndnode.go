@@ -27,41 +27,44 @@ func zerotest(a Datum) bool {
 
 func StrCndNode(a, x, y Edge) {
 
-	node := MakeNode("strcnd")
-
-	var _a Datum = a.Init_val
-	_a_rdy := a.Data_init
-	_x_rdy := x.Ack_init
-	_y_rdy := y.Ack_init
+	node := MakeNode2("strcnd", []*Edge{&a}, []*Edge{&x, &y})
 
 	for {
-		node.Printf("_a_rdy %v  _x_rdy,_y_rdy %v,%v\n", _a_rdy, _x_rdy, _y_rdy);
+		node.Printf("a.Rdy %v  x.Rdy,y.Rdy %v,%v\n", a.Rdy, x.Rdy, y.Rdy);
 
-		if _a_rdy && _x_rdy && _y_rdy {
-			node.ExecCnt()
+		if node.Rdy() {
 			node.Printf("writing x.Data or y.Data and a.Ack\n")
-			_a_rdy = false
-			if (zerotest(_a)) {
-				x.Data <- _a
-				_x_rdy = false
+			x.Val = nil
+			y.Val = nil
+			if (zerotest(a.Val)) {
+				node.Printf("x write\n")
+				x.Val = a.Val
+				node.PrintVals()
+				x.Data <- x.Val
+				x.Rdy = false
+				
 			} else {
-				y.Data <- _a
-				_y_rdy = false
+				node.Printf("y write\n")
+				y.Val = a.Val
+				node.PrintVals()
+				y.Data <- y.Val
+				y.Rdy = false
 			}
+			a.Rdy = false
 			a.Ack <- true
 			node.Printf("done writing x.Data or y.Data and a.Ack\n")
 		}
 
 		node.Printf("select\n")
 		select {
-		case _a = <-a.Data:
+		case a.Val = <-a.Data:
 			{
-				node.Printf("a read %v --  %v\n", reflect.TypeOf(_a), _a)
-				_a_rdy = true
+				node.Printf("a read %v --  %v\n", reflect.TypeOf(a.Val), a.Val)
+				a.Rdy = true
 			}
-		case _x_rdy = <-x.Ack:
+		case x.Rdy = <-x.Ack:
 			node.Printf("x.Ack read\n")
-		case _y_rdy = <-y.Ack:
+		case y.Rdy = <-y.Ack:
 			node.Printf("y.Ack read\n")
 		}
 

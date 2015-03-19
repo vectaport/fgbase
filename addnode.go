@@ -30,49 +30,43 @@ func addfunc(a, b Datum) Datum {
 
 func AddNode(a, b, x Edge) {
 
-	node := MakeNode("add")
-
-	var _a Datum = a.Init_val
-	var _b Datum = b.Init_val
-	_a_rdy := a.Data_init
-	_b_rdy := b.Data_init
-	_x_rdy := x.Ack_init
+	node := MakeNode2("add", []*Edge{&a, &b}, []*Edge{&x})
 
 	for {
-		node.Printf("_a_rdy,_b_rdy %v,%v  _x_rdy %v\n", _a_rdy, _b_rdy, _x_rdy);
-
-		if _a_rdy && _b_rdy && _x_rdy {
-			node.ExecCnt()
+		if node.Rdy() {
 			node.Printf("writing x.Data and a.Ack and b.Ack\n")
-			_a_rdy = false
-			_b_rdy = false
-			_x_rdy = false
 
-			if(reflect.TypeOf(_a)!=reflect.TypeOf(_b)) {
+			if(reflect.TypeOf(a.Val)!=reflect.TypeOf(b.Val)) {
 				_,nm,ln,_ := runtime.Caller(0)
-				x.Data <-  errors.New(fmt.Sprintf("%s:%d (node.Id %d)  type mismatch (%v,%v)", nm, ln, node.Id, reflect.TypeOf(_a), reflect.TypeOf(_b)))
+				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  type mismatch (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a.Val), reflect.TypeOf(b.Val)))
 			} else {
-				x.Data <- addfunc(_a, _b)
+				x.Val = addfunc(a.Val, b.Val)
 			}
+			node.PrintVals()
 
+			x.Data <- x.Val
 			a.Ack <- true
 			b.Ack <- true
 			node.Printf("done writing x.Data and a.Ack and b.Ack\n")
+
+			a.Rdy = false
+			b.Rdy = false
+			x.Rdy = false
 		}
 
 		node.Printf("select\n")
 		select {
-		case _a = <-a.Data:
+		case a.Val = <-a.Data:
 			{
-				node.Printf("a.Data read %v --  %v\n", reflect.TypeOf(_a), _a)
-				_a_rdy = true
+				node.Printf("a.Data read %v --  %v\n", reflect.TypeOf(a.Val), a.Val)
+				a.Rdy = true
 			}
-		case _b = <-b.Data:
+		case b.Val = <-b.Data:
 			{
-				node.Printf("b.Data read %v --  %v\n", reflect.TypeOf(_b), _b)
-				_b_rdy = true
+				node.Printf("b.Data read %v --  %v\n", reflect.TypeOf(b.Val), b.Val)
+				b.Rdy = true
 			}
-		case _x_rdy = <-x.Ack:
+		case x.Rdy = <-x.Ack:
 			node.Printf("x.Ack read\n")
 		}
 
