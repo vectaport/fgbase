@@ -4,3 +4,7 @@
 *.save~
 
 flowgraph.go.save
+
+*.go#
+
+.#arbitnode.go

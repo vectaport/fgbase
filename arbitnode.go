@@ -4,9 +4,13 @@ import (
 	"reflect"
 )
 
+func either (n *Node) bool {
+	return (n.Srcs[0].Rdy || n.Srcs[1].Rdy) && n.Dsts[0].Rdy
+}
+
 func ArbitNode(a, b, x Edge) {
 
-	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, nil)
+	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, either)
 
 	a_last := false
 

@@ -157,11 +157,15 @@ func (n *Node) ExecCnt() {
 
 func (n *Node) Rdy() bool {
 	n.PrintStatus(false)
-	for i := range n.Srcs {
-		if !n.Srcs[i].Rdy { return false }
-	}
-	for i := range n.Dsts {
-		if !n.Dsts[i].Rdy { return false }
+	if (n.RdyFunc == nil) {
+		for i := range n.Srcs {
+			if !n.Srcs[i].Rdy { return false }
+		}
+		for i := range n.Dsts {
+			if !n.Dsts[i].Rdy { return false }
+		}
+	} else {
+		if !n.RdyFunc(n) { return false }
 	}
 	n.ExecCnt();
 	return true
