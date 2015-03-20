@@ -14,6 +14,8 @@ var Indent bool = false
 
 type Datum interface{}
 
+type rdy_func func(*Node) bool
+
 type Edge struct {
 
 	// values shared by upstream and downstream Node
@@ -37,6 +39,7 @@ type Node struct {
 	Cnt int64
 	Srcs []*Edge
 	Dsts []*Edge
+	RdyFunc rdy_func
 }
 
 func MakeEdge(name string, data_init, ack_init bool, init_val Datum) Edge {
@@ -58,7 +61,7 @@ func (e *Edge) InitDst(n *Node) {
 	e.Rdy = e.Ack_init
 }
 
-func MakeNode(nm string, srcs, dsts []*Edge) Node {
+func MakeNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1
@@ -73,6 +76,7 @@ func MakeNode(nm string, srcs, dsts []*Edge) Node {
 	for i := range n.Dsts {
 		n.Dsts[i].InitDst(&n)
 	}
+	n.RdyFunc = ready
 	return n
 }
 
