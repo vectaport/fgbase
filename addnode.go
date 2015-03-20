@@ -30,7 +30,7 @@ func addfunc(a, b Datum) Datum {
 
 func AddNode(a, b, x Edge) {
 
-	node := MakeNode2("add", []*Edge{&a, &b}, []*Edge{&x})
+	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x})
 
 	for {
 		if node.Rdy() {

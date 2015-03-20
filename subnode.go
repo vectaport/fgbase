@@ -30,7 +30,7 @@ func subfunc(a, b Datum) Datum {
 
 func SubNode(a, b, x Edge) {
 
-	node := MakeNode2("sub", []*Edge{&a, &b}, []*Edge{&x})
+	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x})
 
 	for {
 		node.Printf("a.Rdy,b.Rdy %v,%v  x.Rdy %v\n", a.Rdy, b.Rdy, x.Rdy);

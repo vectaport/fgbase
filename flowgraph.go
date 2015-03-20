@@ -63,17 +63,12 @@ func (e *Edge) InitDst(n *Node) {
 	e.Rdy = e.Ack_init
 }
 
-func MakeNode(nm string) Node {
+func MakeNode(nm string, srcs, dsts []*Edge) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1
 	n.Name = nm
 	n.Cnt = -1
-	return n
-}
-
-func MakeNode2(nm string, srcs, dsts []*Edge) Node {
-	n := MakeNode(nm)
 	n.Srcs = srcs
 	n.Dsts = dsts
 	for i := range n.Srcs {

@@ -6,7 +6,7 @@ import (
 
 func ArbitNode(a, b, x Edge) {
 
-	node := MakeNode2("arbit", []*Edge{&a, &b}, []*Edge{&x})
+	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x})
 
 	a_last := false
 

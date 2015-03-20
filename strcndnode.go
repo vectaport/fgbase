@@ -27,7 +27,7 @@ func zerotest(a Datum) bool {
 
 func StrCndNode(a, x, y Edge) {
 
-	node := MakeNode2("strcnd", []*Edge{&a}, []*Edge{&x, &y})
+	node := MakeNode("strcnd", []*Edge{&a}, []*Edge{&x, &y})
 
 	for {
 		node.Printf("a.Rdy %v  x.Rdy,y.Rdy %v,%v\n", a.Rdy, x.Rdy, y.Rdy);
