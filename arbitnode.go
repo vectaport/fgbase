@@ -4,21 +4,20 @@ import (
 	"reflect"
 )
 
-func either (n *Node) bool {
+func arbit_rdy (n *Node) bool {
 	return (n.Srcs[0].Rdy || n.Srcs[1].Rdy) && n.Dsts[0].Rdy
 }
 
 func ArbitNode(a, b, x Edge) {
 
-	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, either)
+	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy)
 
 	a_last := false
 
 	for {
 		node.Printf("a.Rdy,b.Rdy %v,%v  x.Rdy %v\n", a.Rdy, b.Rdy, x.Rdy);
 
-		if (a.Rdy || b.Rdy) && x.Rdy {
-			node.ExecCnt()
+		if node.Rdy() {
 			node.Printf("writing x.Data  and either a.Ack or b.Ack\n")
 			if(a.Rdy && !b.Rdy || a.Rdy && !a_last) {
 				a_last = true
