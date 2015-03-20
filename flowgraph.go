@@ -39,18 +39,13 @@ type Node struct {
 	Dsts []*Edge
 }
 
-func MakeEdge(data_init, ack_init bool, init_val Datum) Edge {
+func MakeEdge(name string, data_init, ack_init bool, init_val Datum) Edge {
 	var e Edge
 	e.Data = make(chan Datum)
 	e.Data_init = data_init
 	e.Init_val = init_val
 	e.Ack = make(chan bool)
 	e.Ack_init = ack_init
-	return e
-}
-
-func MakeEdge2(name string, data_init, ack_init bool, init_val Datum) Edge {
-	e := MakeEdge(data_init, ack_init, init_val)
 	e.Name = name
 	return e
 }
