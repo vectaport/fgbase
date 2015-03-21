@@ -8,7 +8,7 @@ Flowgraphs are a distinct model of concurrent programming that augment channels 
 
 How to use goroutines, channels, and select to implement the flowgraph model is not completely obvious, and this framework is an attempt to illustrate the necessary approach.  
 
-#### flowgraph.Edge augments a channel between goroutines ####
+#### flowgraph.Edge augments a channel ####
 
 
 #### flowgraph.Node augments a goroutine ####
