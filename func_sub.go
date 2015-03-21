@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-func subfunc(a, b Datum) Datum {
+func func_sub(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)-b.(int8) }
@@ -28,7 +28,7 @@ func subfunc(a, b Datum) Datum {
 	}
 }
 
-func SubNode(a, b, x Edge) {
+func FuncSub(a, b, x Edge) {
 
 	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil)
 
@@ -42,7 +42,7 @@ func SubNode(a, b, x Edge) {
 				_,nm,ln,_ := runtime.Caller(0)
 				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  type mismatch (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a.Val), reflect.TypeOf(b.Val)))
 			} else {
-				x.Val = subfunc(a.Val, b.Val)
+				x.Val = func_sub(a.Val, b.Val)
 			}
 			node.PrintVals()
 			x.Data <- x.Val

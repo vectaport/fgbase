@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-func ConstNode(x Edge) {
+func FuncConst(x Edge) {
 
 
 	node:=MakeNode("const", nil, []*Edge{&x}, nil)

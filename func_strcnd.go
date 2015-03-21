@@ -16,7 +16,7 @@ func strcnd_rdy (n *Node) bool {
 	}
 }
 
-func StrCndNode(a, x, y Edge) {
+func FuncStrCnd(a, x, y Edge) {
 
 	node := MakeNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy)
 

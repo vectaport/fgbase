@@ -16,7 +16,7 @@ func strval_rdy (n *Node) bool {
 	}
 }
 
-func StrValNode(a, b, x, y Edge) {
+func FuncStrVal(a, b, x, y Edge) {
 
 	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)
 

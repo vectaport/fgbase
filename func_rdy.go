@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func RdyNode(a, b, x Edge) {
+func FuncRdy(a, b, x Edge) {
 
 	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil)
 
