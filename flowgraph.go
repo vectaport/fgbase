@@ -12,6 +12,7 @@ var Debug bool = false
 var GlobalExecCnt bool = false
 var Indent bool = false
 
+// empty interface for generic data flow
 type Datum interface{}
 
 type rdy_func func(*Node) bool
