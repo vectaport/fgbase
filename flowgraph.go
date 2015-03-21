@@ -43,7 +43,7 @@ type Node struct {
 	RdyFunc rdy_func
 }
 
-func MakeEdge(name string, init_val Datum) Edge {
+func NewEdge(name string, init_val Datum) Edge {
 	var e Edge
 	e.Data = make(chan Datum)
 	e.Ack = make(chan bool)
@@ -62,7 +62,7 @@ func (e *Edge) InitDst(n *Node) {
 	e.Rdy = e.Ack_rdy_init
 }
 
-func MakeNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
+func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1
