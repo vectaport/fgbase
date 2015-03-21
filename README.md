@@ -12,3 +12,5 @@ How to use goroutines, channels, and select to implement the flowgraph model is 
 
 
 #### flowgraph.Node augments a goroutine ####
+
+Godoc [documentation](https://godoc.org/github.com/vectaport/flowgraph)
