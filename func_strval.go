@@ -18,7 +18,7 @@ func strval_rdy (n *Node) bool {
 
 func FuncStrVal(a, b, x, y Edge) {
 
-	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)
+	node := NewNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)
 
 	for {
 		node.Printf("a.Rdy,b.Rdy %v,%v  x.Rdy,y.Rdy %v,%v\n", a.Rdy, b.Rdy, x.Rdy, y.Rdy);

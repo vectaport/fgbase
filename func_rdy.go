@@ -6,7 +6,7 @@ import (
 
 func FuncRdy(a, b, x Edge) {
 
-	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil)
+	node := NewNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil)
 
 	for {
 		if node.Rdy() {

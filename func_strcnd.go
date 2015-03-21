@@ -18,7 +18,7 @@ func strcnd_rdy (n *Node) bool {
 
 func FuncStrCnd(a, x, y Edge) {
 
-	node := MakeNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy)
+	node := NewNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy)
 
 	for {
 		node.Printf("a.Rdy %v  x.Rdy,y.Rdy %v,%v\n", a.Rdy, x.Rdy, y.Rdy);

@@ -30,7 +30,7 @@ func func_add(a, b Datum) Datum {
 
 func FuncAdd(a, b, x Edge) {
 
-	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil)
+	node := NewNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil)
 
 	for {
 		if node.Rdy() {
@@ -40,7 +40,7 @@ func FuncAdd(a, b, x Edge) {
 				_,nm,ln,_ := runtime.Caller(0)
 				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  type mismatch (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a.Val), reflect.TypeOf(b.Val)))
 			} else {
-				x.Val = funcadd(a.Val, b.Val)
+				x.Val = func_add(a.Val, b.Val)
 			}
 			node.PrintVals()
 

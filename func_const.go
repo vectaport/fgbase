@@ -6,7 +6,7 @@ import (
 func FuncConst(x Edge) {
 
 
-	node:=MakeNode("const", nil, []*Edge{&x}, nil)
+	node:=NewNode("const", nil, []*Edge{&x}, nil)
 
 	for {
 

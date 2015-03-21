@@ -10,7 +10,7 @@ func arbit_rdy (n *Node) bool {
 
 func FuncArbit(a, b, x Edge) {
 
-	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy)
+	node := NewNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy)
 
 	a_last := false
 
