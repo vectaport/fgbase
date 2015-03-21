@@ -1,6 +1,6 @@
 # flowgraph
 Package of Go flowgraph primitives and test programs
-----
+----------------------------------------------------
 
 Go offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming distributed systems across many cores and many Unix boxes.  But they do not offer a conceptual model that gives guidance on how to avoid the problems of distributed programming, the avoidance of global bottlenecks to achieve scalability, and the avoidance of deadlock or gridlock to ensure reliability.
 
@@ -8,5 +8,6 @@ Flowgraphs are a distinct model of concurrent programming that augment channels 
 
 How to use goroutines, channels, and select to implement the flowgraph model is not completely obvious, and this framework is an attempt to illustrate the necessary approach.  
 
+#### Flowgraph Edges are augmented channels ####
 
-
+#### Flowgraph Nodes are augmented goroutines ####
