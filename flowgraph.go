@@ -172,7 +172,7 @@ func (n *Node) Rdy() bool {
 	return true
 }
 
-func SinkVal(a Datum) () {
+func Sink(a Datum) () {
 }
 
 func ZeroTest(a Datum) bool {
