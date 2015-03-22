@@ -8,15 +8,22 @@ import (
 var node_id int64 = 0
 var global_exec_cnt int64 = 0
 
+// enable debug tracing
 var Debug bool = false
-var GlobalExecCnt bool = false
+
+// indent trace by node id
 var Indent bool = false
+
+// use global execution count
+var GlobalExecCnt bool = false
+
 
 // empty interface for generic data flow
 type Datum interface{}
 
 type rdy_func func(*Node) bool
 
+// flowgraph Edge (augmented channel)
 type Edge struct {
 
 	// values shared by upstream and downstream Node
@@ -33,7 +40,7 @@ type Edge struct {
 
 }
 
-
+// flowgraph Node (augmented goroutine)
 type Node struct {
 	Id int64
 	Name string
@@ -43,6 +50,7 @@ type Node struct {
 	RdyFunc rdy_func
 }
 
+// return new Edge to connect two Node's
 func NewEdge(name string, init_val Datum) Edge {
 	var e Edge
 	e.Data = make(chan Datum)
@@ -54,14 +62,7 @@ func NewEdge(name string, init_val Datum) Edge {
 	return e
 }
 
-func (e *Edge) InitSrc(n *Node) {
-	e.Rdy = e.Data_rdy_init
-}
-
-func (e *Edge) InitDst(n *Node) {
-	e.Rdy = e.Ack_rdy_init
-}
-
+// return new Node with slices of input and output Edge's and customizable ready-testing function
 func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
@@ -71,11 +72,11 @@ func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	n.Srcs = srcs
 	n.Dsts = dsts
 	for i := range n.Srcs {
-		n.Srcs[i].InitSrc(&n)
+		n.Srcs[i].Rdy = srcs[i].Data_rdy_init
 		n.Srcs[i].Val = srcs[i].Init_val
 	}
 	for i := range n.Dsts {
-		n.Dsts[i].InitDst(&n)
+		n.Dsts[i].Rdy = dsts[i].Ack_rdy_init
 	}
 	n.RdyFunc = ready
 	return n
@@ -100,6 +101,7 @@ func prefix_varlist(n Node) (format string, varlist []interface {}) {
 	return f,varl
 }
 
+// debug printing
 func (n Node) Printf(format string, v ...interface{}) {
 	if (!Debug /*|| format=="select\n"*/) {
 		return
@@ -110,6 +112,7 @@ func (n Node) Printf(format string, v ...interface{}) {
 	fmt.Printf(newfmt, varlist...)
 }
 
+// tracing output
 func (n Node) PrintStatus(done bool) {
 	if (!done && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
@@ -145,8 +148,10 @@ func (n Node) PrintStatus(done bool) {
 	fmt.Printf(newfmt, varlist...)
 }
 
+// tracing execution of Node
 func (n Node) PrintVals() { n.PrintStatus(true) }
 
+// increment execution count of Node
 func (n *Node) ExecCnt() {
 	if (GlobalExecCnt) {
 		c := atomic.AddInt64(&global_exec_cnt, 1)
@@ -156,6 +161,7 @@ func (n *Node) ExecCnt() {
 	}
 }
 
+// test readiness of Node to execute
 func (n *Node) Rdy() bool {
 	n.PrintStatus(false)
 	if (n.RdyFunc == nil) {
