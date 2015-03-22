@@ -172,9 +172,11 @@ func (n *Node) Rdy() bool {
 	return true
 }
 
+// sink value (to avoid unused error)
 func Sink(a Datum) () {
 }
 
+// test value for zero
 func ZeroTest(a Datum) bool {
 
 	switch a.(type) {
