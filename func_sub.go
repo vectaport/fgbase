@@ -28,6 +28,7 @@ func func_sub(a, b Datum) Datum {
 	}
 }
 
+// subtraction goroutine
 func FuncSub(a, b, x Edge) {
 
 	node := NewNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil)

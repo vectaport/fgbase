@@ -3,6 +3,7 @@ package flowgraph
 import (
 )
 
+// constant value goroutine
 func FuncConst(x Edge) {
 
 

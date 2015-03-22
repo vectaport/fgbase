@@ -4,6 +4,7 @@ import (
 	"reflect"
 )
 
+// steer condition goroutine
 func strcnd_rdy (n *Node) bool {
 	if n.Srcs[0].Rdy {
 		if Zerotest(n.Srcs[0].Val) {

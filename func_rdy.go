@@ -4,6 +4,7 @@ import (
 	"reflect"
 )
 
+// ready (synchronization) goroutine
 func FuncRdy(a, b, x Edge) {
 
 	node := NewNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil)
