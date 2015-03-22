@@ -4,7 +4,6 @@ import (
 	"reflect"
 )
 
-// steer condition goroutine
 func strcnd_rdy (n *Node) bool {
 	if n.Srcs[0].Rdy {
 		if Zerotest(n.Srcs[0].Val) {
@@ -17,6 +16,7 @@ func strcnd_rdy (n *Node) bool {
 	}
 }
 
+// steer condition goroutine
 func FuncStrCnd(a, x, y Edge) {
 
 	node := NewNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy)
