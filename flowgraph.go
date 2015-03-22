@@ -172,10 +172,10 @@ func (n *Node) Rdy() bool {
 	return true
 }
 
-func Sink(a Datum) () {
+func SinkVal(a Datum) () {
 }
 
-func Zerotest(a Datum) bool {
+func ZeroTest(a Datum) bool {
 
 	switch a.(type) {
         case int8: { return a.(int8)==0 }

@@ -6,7 +6,7 @@ import (
 
 func strval_rdy (n *Node) bool {
 	if n.Srcs[0].Rdy&&n.Srcs[1].Rdy {
-		if Zerotest(n.Srcs[0].Val) {
+		if ZeroTest(n.Srcs[0].Val) {
 			return n.Dsts[0].Rdy
 		} else {
 			return n.Dsts[1].Rdy
@@ -28,7 +28,7 @@ func FuncStrVal(a, b, x, y Edge) {
 			node.Printf("writing x.Data or y.Data and a.Ack\n")
 			x.Val = nil
 			y.Val = nil
-			if (Zerotest(a.Val)) {
+			if (ZeroTest(a.Val)) {
 				node.Printf("x write\n")
 				x.Val = b.Val
 				node.PrintVals()
