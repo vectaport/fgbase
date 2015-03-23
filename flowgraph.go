@@ -113,7 +113,7 @@ func (n Node) Tracef(format string, v ...interface{}) {
 }
 
 // tracing output
-func (n Node) PrintStatus(done bool) {
+func (n Node) TraceValRdy(done bool) {
 	if (!done && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
 	for i := range n.Srcs {
@@ -149,7 +149,7 @@ func (n Node) PrintStatus(done bool) {
 }
 
 // tracing execution of Node
-func (n Node) PrintVals() { n.PrintStatus(true) }
+func (n Node) TraceVal() { n.TraceValRdy(true) }
 
 // increment execution count of Node
 func (n *Node) ExecCnt() {
@@ -163,7 +163,7 @@ func (n *Node) ExecCnt() {
 
 // test readiness of Node to execute
 func (n *Node) Rdy() bool {
-	n.PrintStatus(false)
+	n.TraceValRdy(false)
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
 			if !n.Srcs[i].Rdy { return false }

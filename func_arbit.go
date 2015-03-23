@@ -23,14 +23,14 @@ func FuncArbit(a, b, x Edge) {
 			if(a.Rdy && !b.Rdy || a.Rdy && !a_last) {
 				a_last = true
 				x.Val = a.Val
-				node.PrintVals()
+				node.TraceVal()
 				a.Rdy = false
 				a.Ack <- true
 				node.Tracef("done writing x.Data and a.Ack\n")
 			} else if (b.Rdy) {
 				a_last = false
 				x.Val = b.Val
-				node.PrintVals()
+				node.TraceVal()
 				b.Rdy = false
 				b.Ack <- true
 				node.Tracef("done writing x.Data and b.Ack\n")
