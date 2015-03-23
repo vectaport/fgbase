@@ -4,6 +4,7 @@ import (
 	"reflect"
 )
 
+// promote pair of numeric values as necessary
 func Promote(a, b Datum) (abig, bbig Datum) {
 
 	if(reflect.TypeOf(a)==reflect.TypeOf(b)) {
