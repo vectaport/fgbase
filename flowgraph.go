@@ -113,8 +113,8 @@ func (n Node) Tracef(format string, v ...interface{}) {
 }
 
 // tracing output
-func (n Node) TraceValRdy(done bool) {
-	if (!done && !Debug) {return}
+func (n Node) TraceValRdy(val_only bool) {
+	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
 	for i := range n.Srcs {
 		varlist = append(varlist, n.Srcs[i].Name)
@@ -130,7 +130,7 @@ func (n Node) TraceValRdy(done bool) {
 	}
 	newfmt += ":"
 	for i := range n.Dsts {
-		if (done) {
+		if (val_only) {
 			varlist = append(varlist, n.Dsts[i].Name)
 			if (n.Dsts[i].Val != nil) {
 				varlist = append(varlist, n.Dsts[i].Val)
