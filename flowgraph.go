@@ -112,7 +112,7 @@ func (n Node) Tracef(format string, v ...interface{}) {
 	fmt.Printf(newfmt, varlist...)
 }
 
-// tracing output
+// tracing Node input values and output readiness
 func (n Node) TraceValRdy(val_only bool) {
 	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
@@ -148,7 +148,7 @@ func (n Node) TraceValRdy(val_only bool) {
 	fmt.Printf(newfmt, varlist...)
 }
 
-// tracing execution of Node
+// tracing Node execution
 func (n Node) TraceVal() { n.TraceValRdy(true) }
 
 // increment execution count of Node
