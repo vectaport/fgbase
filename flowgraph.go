@@ -102,7 +102,7 @@ func prefix_varlist(n Node) (format string, varlist []interface {}) {
 }
 
 // debug printing
-func (n Node) Printf(format string, v ...interface{}) {
+func (n Node) Tracef(format string, v ...interface{}) {
 	if (!Debug /*|| format=="select\n"*/) {
 		return
 	}

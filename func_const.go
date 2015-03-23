@@ -13,15 +13,15 @@ func FuncConst(x Edge) {
 
 		if node.Rdy() {
 			node.PrintVals()
-			node.Printf("writing x.Data: %d\n", x.Val.(int))
+			node.Tracef("writing x.Data: %d\n", x.Val.(int))
 			x.Data <- x.Val
 			x.Rdy = false
 		}
 
-		node.Printf("select\n")
+		node.Tracef("select\n")
 		select {
 		case x.Rdy = <-x.Ack:
-			node.Printf("x.Ack read\n")
+			node.Tracef("x.Ack read\n")
 		}
 	}
 	

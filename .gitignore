@@ -8,3 +8,5 @@ flowgraph.go.save
 *.go#
 
 .#arbitnode.go
+
+*.tmp
