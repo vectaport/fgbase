@@ -27,14 +27,13 @@ type rdy_func func(*Node) bool
 type Edge struct {
 
 	// values shared by upstream and downstream Node
-	Data chan Datum
-	Init_val Datum
-	Ack chan bool
 	Name string
+	Data chan Datum
+	Ack chan bool
 
 	// values unique to upstream and downstream Node
-	Rdy bool
 	Val Datum
+	Rdy bool
 
 }
 
