@@ -13,4 +13,8 @@ How to use goroutines, channels, and select to implement the flowgraph model is 
 
 #### flowgraph.Node augments a goroutine ####
 
+#### type acceptance built on type checking ####
+
+
+
 Godoc [documentation](https://godoc.org/github.com/vectaport/flowgraph)
