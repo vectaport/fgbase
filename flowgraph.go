@@ -28,10 +28,8 @@ type Edge struct {
 
 	// values shared by upstream and downstream Node
 	Data chan Datum
-	Data_rdy_init bool
 	Init_val Datum
 	Ack chan bool
-	Ack_rdy_init bool
 	Name string
 
 	// values unique to upstream and downstream Node
@@ -56,9 +54,7 @@ func NewEdge(name string, init_val Datum) Edge {
 	var e Edge
 	e.Data = make(chan Datum)
 	e.Ack = make(chan bool)
-	e.Init_val = init_val
-	e.Data_rdy_init = init_val != nil
-	e.Ack_rdy_init = init_val == nil
+	e.Val = init_val
 	e.Name = name
 	return e
 }
@@ -73,11 +69,11 @@ func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	n.Srcs = srcs
 	n.Dsts = dsts
 	for i := range n.Srcs {
-		n.Srcs[i].Rdy = srcs[i].Data_rdy_init
-		n.Srcs[i].Val = srcs[i].Init_val
+		n.Srcs[i].Val = n.Srcs[i].Val
+		n.Srcs[i].Rdy = n.Srcs[i].Val!=nil
 	}
 	for i := range n.Dsts {
-		n.Dsts[i].Rdy = dsts[i].Ack_rdy_init
+		n.Dsts[i].Rdy = n.Dsts[i].Val==nil
 	}
 	n.RdyFunc = ready
 	return n
