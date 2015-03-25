@@ -48,7 +48,7 @@ type Node struct {
 }
 
 // Return new Edge to connect two Node's.
-// Initialize optional data value to start flow
+// Initialize optional data value to start flow.
 func NewEdge(name string, init_val Datum) Edge {
 	var e Edge
 	e.Data = make(chan Datum)
