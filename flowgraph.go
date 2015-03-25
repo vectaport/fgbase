@@ -8,17 +8,17 @@ import (
 var node_id int64 = 0
 var global_exec_cnt int64 = 0
 
-// enable debug tracing
+// Enable debug tracing
 var Debug bool = false
 
-// indent trace by node id
+// Indent trace by node id
 var Indent bool = false
 
-// use global execution count
+// Use global execution count
 var GlobalExecCnt bool = false
 
 
-// empty interface for generic data flow
+// Empty interface for generic data flow
 type Datum interface{}
 
 type rdy_func func(*Node) bool
