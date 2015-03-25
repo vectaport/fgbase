@@ -47,7 +47,7 @@ type Node struct {
 	RdyFunc rdy_func
 }
 
-// Return new Edge to connect two Node's
+// Return new Edge to connect two Node's.
 // Initialize optional data value to start flow
 func NewEdge(name string, init_val Datum) Edge {
 	var e Edge
