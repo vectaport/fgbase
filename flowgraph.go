@@ -21,7 +21,7 @@ var GlobalExecCnt bool = false
 // Empty interface for generic data flow
 type Datum interface{}
 
-type rdy_func func(*Node) bool
+type RdyTest func(*Node) bool
 
 // flowgraph Edge (augmented channel)
 type Edge struct {
@@ -44,7 +44,7 @@ type Node struct {
 	Cnt int64
 	Srcs []*Edge
 	Dsts []*Edge
-	RdyFunc rdy_func
+	RdyFunc RdyTest
 }
 
 // Return new Edge to connect two Node's.
@@ -59,7 +59,7 @@ func NewEdge(name string, init_val Datum) Edge {
 }
 
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
-func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
+func NewNode(nm string, srcs, dsts []*Edge, ready RdyTest) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1
@@ -68,7 +68,6 @@ func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	n.Srcs = srcs
 	n.Dsts = dsts
 	for i := range n.Srcs {
-		n.Srcs[i].Val = n.Srcs[i].Val
 		n.Srcs[i].Rdy = n.Srcs[i].Val!=nil
 	}
 	for i := range n.Dsts {
