@@ -8,9 +8,12 @@ Flowgraphs are a distinct model of concurrent programming that augment channels 
 
 How to use goroutines, channels, and select to implement the flowgraph model is not completely obvious, and this framework is an attempt to illustrate one possible approach.  
 
-* flowgraph.Edge augments a channel
-* flowgraph.Node augments a goroutine
-* type acceptance using empty interfaces
+Features of github.com/vectaport/flowgraph:
+
+* flowgraph.Edge augments a channel with a ready-send acknowledge protocol
+* flowgraph.Node augments a goroutine with an empty interface data protocol
+* an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things
+* a way of rendering flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl) into compiled code
 
 
 
