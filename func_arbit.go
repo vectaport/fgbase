@@ -8,7 +8,7 @@ func arbit_rdy (n *Node) bool {
 	return (n.Srcs[0].Rdy || n.Srcs[1].Rdy) && n.Dsts[0].Rdy
 }
 
-// arbiter goroutine
+// Arbiter goroutine
 func FuncArbit(a, b, x Edge) {
 
 	node := NewNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy)

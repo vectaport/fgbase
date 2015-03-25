@@ -28,7 +28,7 @@ func func_add(a, b Datum) Datum {
 	}
 }
 
-// addition goroutine
+// Addition goroutine
 func FuncAdd(a, b, x Edge) {
 
 	node := NewNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil)

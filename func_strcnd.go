@@ -16,7 +16,7 @@ func strcnd_rdy (n *Node) bool {
 	}
 }
 
-// steer condition goroutine
+// Steer condition goroutine
 func FuncStrCnd(a, x, y Edge) {
 
 	node := NewNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy)

@@ -16,7 +16,7 @@ func strval_rdy (n *Node) bool {
 	}
 }
 
-// steer value goroutine
+// Steer value goroutine
 func FuncStrVal(a, b, x, y Edge) {
 
 	node := NewNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)

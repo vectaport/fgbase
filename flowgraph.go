@@ -50,7 +50,8 @@ type Node struct {
 	RdyFunc rdy_func
 }
 
-// return new Edge to connect two Node's
+// Return new Edge to connect two Node's
+// Initialize optional data value to start flow
 func NewEdge(name string, init_val Datum) Edge {
 	var e Edge
 	e.Data = make(chan Datum)
@@ -62,7 +63,7 @@ func NewEdge(name string, init_val Datum) Edge {
 	return e
 }
 
-// return new Node with slices of input and output Edge's and customizable ready-testing function
+// Return new Node with slices of input and output Edge's and customizable ready-testing function
 func NewNode(nm string, srcs, dsts []*Edge, ready rdy_func) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
@@ -101,7 +102,7 @@ func prefix_varlist(n Node) (format string, varlist []interface {}) {
 	return f,varl
 }
 
-// debug printing
+// Debug trace printing
 func (n Node) Tracef(format string, v ...interface{}) {
 	if (!Debug /*|| format=="select\n"*/) {
 		return
@@ -112,7 +113,7 @@ func (n Node) Tracef(format string, v ...interface{}) {
 	fmt.Printf(newfmt, varlist...)
 }
 
-// tracing Node input values and output readiness
+// Trace Node input values and output readiness
 func (n Node) TraceValRdy(val_only bool) {
 	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
@@ -148,10 +149,10 @@ func (n Node) TraceValRdy(val_only bool) {
 	fmt.Printf(newfmt, varlist...)
 }
 
-// tracing Node execution
+// Tracing Node execution
 func (n Node) TraceVal() { n.TraceValRdy(true) }
 
-// increment execution count of Node
+// Increment execution count of Node
 func (n *Node) ExecCnt() {
 	if (GlobalExecCnt) {
 		c := atomic.AddInt64(&global_exec_cnt, 1)
@@ -161,7 +162,7 @@ func (n *Node) ExecCnt() {
 	}
 }
 
-// test readiness of Node to execute
+// Test readiness of Node to execute
 func (n *Node) Rdy() bool {
 	n.TraceValRdy(false)
 	if (n.RdyFunc == nil) {
@@ -178,11 +179,11 @@ func (n *Node) Rdy() bool {
 	return true
 }
 
-// sink value (to avoid unused error)
+// Sink value (to avoid unused error)
 func Sink(a Datum) () {
 }
 
-// test value for zero
+// Test value for zero
 func ZeroTest(a Datum) bool {
 
 	switch a.(type) {
