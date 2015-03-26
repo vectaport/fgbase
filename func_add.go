@@ -39,7 +39,7 @@ func FuncAdd(a, b, x Edge) {
 
 			if(reflect.TypeOf(a.Val)!=reflect.TypeOf(b.Val)) {
 				_,nm,ln,_ := runtime.Caller(0)
-				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  type mismatch (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a.Val), reflect.TypeOf(b.Val)))
+				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for add operation (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a.Val), reflect.TypeOf(b.Val)))
 			} else {
 				x.Val = func_add(a.Val, b.Val)
 			}
