@@ -43,7 +43,7 @@ func FuncAdd(a, b, x Edge) {
 			} else {
 				x.Val = func_add(a.Val, b.Val)
 			}
-			node.TraceVal()
+			node.TraceVals()
 
 			x.Data <- x.Val
 			a.Ack <- true

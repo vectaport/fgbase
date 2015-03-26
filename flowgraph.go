@@ -144,10 +144,10 @@ func (n Node) TraceValRdy(val_only bool) {
 }
 
 // Tracing Node execution
-func (n Node) TraceVal() { n.TraceValRdy(true) }
+func (n Node) TraceVals() { n.TraceValRdy(true) }
 
 // Increment execution count of Node
-func (n *Node) ExecCnt() {
+func (n *Node) IncrExecCnt() {
 	if (GlobalExecCnt) {
 		c := atomic.AddInt64(&global_exec_cnt, 1)
 		n.Cnt = c-1
@@ -169,7 +169,7 @@ func (n *Node) Rdy() bool {
 	} else {
 		if !n.RdyFunc(n) { return false }
 	}
-	n.ExecCnt();
+	n.IncrExecCnt();
 	return true
 }
 

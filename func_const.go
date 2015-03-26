@@ -12,7 +12,7 @@ func FuncConst(x Edge) {
 	for {
 
 		if node.Rdy() {
-			node.TraceVal()
+			node.TraceVals()
 			node.Tracef("writing x.Data: %d\n", x.Val.(int))
 			x.Data <- x.Val
 			x.Rdy = false

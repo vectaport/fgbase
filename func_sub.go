@@ -45,7 +45,7 @@ func FuncSub(a, b, x Edge) {
 			} else {
 				x.Val = func_sub(a.Val, b.Val)
 			}
-			node.TraceVal()
+			node.TraceVals()
 			x.Data <- x.Val
 
 			a.Ack <- true

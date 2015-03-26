@@ -14,7 +14,7 @@ func FuncRdy(a, b, x Edge) {
 			node.Tracef("writing x.Data and a.Ack and b.Ack\n")
 
 			x.Val = a.Val
-			node.TraceVal()
+			node.TraceVals()
 
 			x.Data <- x.Val
 			a.Ack <- true

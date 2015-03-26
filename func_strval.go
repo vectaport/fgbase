@@ -31,14 +31,14 @@ func FuncStrVal(a, b, x, y Edge) {
 			if (ZeroTest(a.Val)) {
 				node.Tracef("x write\n")
 				x.Val = b.Val
-				node.TraceVal()
+				node.TraceVals()
 				x.Data <- x.Val
 				x.Rdy = false
 				
 			} else {
 				node.Tracef("y write\n")
 				y.Val = b.Val
-				node.TraceVal()
+				node.TraceVals()
 				y.Data <- y.Val
 				y.Rdy = false
 			}
