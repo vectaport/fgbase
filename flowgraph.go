@@ -83,11 +83,11 @@ func IsSink(e *Edge) bool {
 }
 
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
-func NewNode(nm string, srcs, dsts []*Edge, ready RdyTest) Node {
+func NewNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1
-	n.Name = nm
+	n.Name = name
 	n.Cnt = -1
 	n.Srcs = srcs
 	n.Dsts = dsts
