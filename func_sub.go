@@ -39,13 +39,11 @@ func FuncSub(a, b, x Edge) {
 		if node.Rdy() {
 			node.Tracef("writing x.Data and a.Ack and b.Ack\n")
 
-			atmp,btmp := Promote(a.Val, b.Val)
+			atmp,btmp,same := Promote(a.Val, b.Val)
 
-			ta := reflect.TypeOf(atmp)
-			tb := reflect.TypeOf(btmp)
-			if(ta!=tb) {
+			if(!same) {
 				_,nm,ln,_ := runtime.Caller(0)
-				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, node.Id, ta, tb))
+				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a), reflect.TypeOf(b)))
 			} else {
 				x.Val = func_sub(atmp, btmp)
 			}
