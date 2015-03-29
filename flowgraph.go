@@ -49,13 +49,37 @@ type Node struct {
 
 // Return new Edge to connect two Node's.
 // Initialize optional data value to start flow.
-func NewEdge(name string, init_val Datum) Edge {
+func new_edge(name string, init_val Datum, data chan Datum, ack chan bool) Edge {
 	var e Edge
-	e.Data = make(chan Datum)
-	e.Ack = make(chan bool)
-	e.Val = init_val
 	e.Name = name
+	e.Val = init_val
+	e.Data = data
+	e.Ack = ack
 	return e
+}
+
+// Initialize optional data value to start flow.
+func NewEdge(name string, init_val Datum) Edge {
+	return new_edge(name, init_val, make(chan Datum), make(chan bool))
+}
+
+// Initialize optional data value to start flow.
+func NewConstEdge(name string, init_val Datum) Edge {
+	return new_edge(name, init_val, nil, nil)
+}
+
+// Initialize optional data value to start flow.
+func NewSinkEdge(name string) Edge {
+	return new_edge(name, nil, nil, nil)
+}
+// Return true if Edge is an implied constant
+func IsConstant(e *Edge) bool { 
+	return e.Ack == nil && e.Val != nil
+}
+
+// Return true if Edge is an implied sink
+func IsSink(e *Edge) bool { 
+	return e.Ack == nil && e.Val == nil
 }
 
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
@@ -112,32 +136,37 @@ func (n Node) TraceValRdy(val_only bool) {
 	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
 	for i := range n.Srcs {
-		varlist = append(varlist, n.Srcs[i].Name)
-		var inval interface {}
-		if (n.Srcs[i].Rdy) {
-			inval = n.Srcs[i].Val
-		} else {
-			inval = "{}"
-		}
-		varlist = append(varlist, inval)
 		if (i!=0) { newfmt += "," }
-		newfmt += "%s=%v"
+		varlist = append(varlist, n.Srcs[i].Name)
+		newfmt += "%s="
+		if (n.Srcs[i].Rdy) {
+			varlist = append(varlist, n.Srcs[i].Val)
+			varlist = append(varlist, n.Srcs[i].Val)
+			newfmt += "%T(%v)"
+		} else {
+			varlist = append(varlist, "{}")
+			newfmt += "%s"
+		}
 	}
 	newfmt += ":"
 	for i := range n.Dsts {
+		if (i!=0) { newfmt += "," }
 		if (val_only) {
 			varlist = append(varlist, n.Dsts[i].Name)
+			newfmt += "%s="
 			if (n.Dsts[i].Val != nil) {
 				varlist = append(varlist, n.Dsts[i].Val)
+				varlist = append(varlist, n.Dsts[i].Val)
+				newfmt += "%T(%v)"
 			} else {
 				varlist = append(varlist, "{}")
+				newfmt += "%v"
 			}
 		} else {
 			varlist = append(varlist, n.Dsts[i].Name+".Ack")
 			varlist = append(varlist, n.Dsts[i].Rdy)
+			newfmt += "%s=%v"
 		}
-		if (i!=0) { newfmt += "," }
-		newfmt += "%s=%v"
 	}
 	newfmt += "\n"
 	fmt.Printf(newfmt, varlist...)
@@ -195,7 +224,7 @@ func ZeroTest(a Datum) bool {
 	case float64: { return a.(float64)==0.0 }
 	case complex64: { return a.(complex64)==0.0+0.0i }
 	case complex128: { return a.(complex128)==0.0+0.0i }
-	default: { return true }
+	default: { return false }
 	}
 }
 

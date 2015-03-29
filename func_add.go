@@ -37,34 +37,35 @@ func FuncAdd(a, b, x Edge) {
 		if node.Rdy() {
 			node.Tracef("writing x.Data and a.Ack and b.Ack\n")
 
-			if(reflect.TypeOf(a.Val)!=reflect.TypeOf(b.Val)) {
+			atmp,btmp := Promote(a.Val, b.Val)
+
+			ta := reflect.TypeOf(atmp)
+			tb := reflect.TypeOf(btmp)
+			if(ta!=tb) {
 				_,nm,ln,_ := runtime.Caller(0)
-				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for add operation (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a.Val), reflect.TypeOf(b.Val)))
+				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for add operation (%v,%v)", nm, ln, node.Id, ta, tb))
 			} else {
-				x.Val = func_add(a.Val, b.Val)
+				x.Val = func_add(atmp, btmp)
 			}
 			node.TraceVals()
 
-			x.Data <- x.Val
-			a.Ack <- true
-			b.Ack <- true
-			node.Tracef("done writing x.Data and a.Ack and b.Ack\n")
+			if(x.Data != nil) { x.Data <- x.Val; x.Rdy = false}
+			if(a.Ack !=nil ) {a.Ack <- true; a.Rdy = false}
+			if(b.Ack !=nil ) {b.Ack <- true; b.Rdy = false}
 
-			a.Rdy = false
-			b.Rdy = false
-			x.Rdy = false
+			node.Tracef("done writing x.Data and a.Ack and b.Ack\n")
 		}
 
 		node.Tracef("select\n")
 		select {
 		case a.Val = <-a.Data:
 			{
-				node.Tracef("a.Data read %v --  %v\n", reflect.TypeOf(a.Val), a.Val)
+				node.Tracef("a.Data read %v --  %v\n", reflect.TypeOf(a), a.Val)
 				a.Rdy = true
 			}
 		case b.Val = <-b.Data:
 			{
-				node.Tracef("b.Data read %v --  %v\n", reflect.TypeOf(b.Val), b.Val)
+				node.Tracef("b.Data read %v --  %v\n", reflect.TypeOf(b), b.Val)
 				b.Rdy = true
 			}
 		case x.Rdy = <-x.Ack:
