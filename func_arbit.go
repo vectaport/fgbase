@@ -1,7 +1,6 @@
 package flowgraph
 
 import (
-	"reflect"
 )
 
 func arbit_rdy (n *Node) bool {
@@ -39,21 +38,7 @@ func FuncArbit(a, b, x Edge) {
 			x.Rdy = false
 		}
 
-		node.Tracef("select\n")
-		select {
-		case a.Val = <-a.Data:
-			{
-				node.Tracef("a read %v --  %v\n", reflect.TypeOf(a.Val), a.Val)
-				a.Rdy = true
-			}
-		case b.Val = <-b.Data:
-			{
-				node.Tracef("b read %v --  %v\n", reflect.TypeOf(b.Val), b.Val)
-				b.Rdy = true
-			}
-		case x.Rdy = <-x.Ack:
-			node.Tracef("x.Ack read\n")
-		}
+		node.Select()
 
 	}
 

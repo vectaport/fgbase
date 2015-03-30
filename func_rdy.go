@@ -1,7 +1,6 @@
 package flowgraph
 
 import (
-	"reflect"
 )
 
 // Ready (synchronization) goroutine
@@ -26,21 +25,7 @@ func FuncRdy(a, b, x Edge) {
 			x.Rdy = false
 		}
 
-		node.Tracef("select\n")
-		select {
-		case a.Val = <-a.Data:
-			{
-				node.Tracef("a.Data read %v --  %v\n", reflect.TypeOf(a.Val), a.Val)
-				a.Rdy = true
-			}
-		case b.Val = <-b.Data:
-			{
-				node.Tracef("b.Data read %v --  %v\n", reflect.TypeOf(b.Val), b.Val)
-				b.Rdy = true
-			}
-		case x.Rdy = <-x.Ack:
-			node.Tracef("x.Ack read\n")
-		}
+		node.Select()
 
 	}
 

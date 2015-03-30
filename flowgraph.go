@@ -3,6 +3,7 @@ package flowgraph
 import (
 	"sync/atomic"
 	"fmt"
+	"reflect"
 )
 
 var node_id int64 = 0
@@ -35,16 +36,6 @@ type Edge struct {
 	Val Datum
 	Rdy bool
 
-}
-
-// flowgraph Node (augmented goroutine)
-type Node struct {
-	Id int64
-	Name string
-	Cnt int64
-	Srcs []*Edge
-	Dsts []*Edge
-	RdyFunc RdyTest
 }
 
 // Return new Edge to connect two Node's.
@@ -82,6 +73,17 @@ func IsSink(e *Edge) bool {
 	return e.Ack == nil && e.Val == nil
 }
 
+// flowgraph Node (augmented goroutine)
+type Node struct {
+	Id int64
+	Name string
+	Cnt int64
+	Srcs []*Edge
+	Dsts []*Edge
+	RdyFunc RdyTest
+	Cases []reflect.SelectCase
+}
+
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
 func NewNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
 	var n Node
@@ -91,17 +93,21 @@ func NewNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
 	n.Cnt = -1
 	n.Srcs = srcs
 	n.Dsts = dsts
+	var casel [] reflect.SelectCase
 	for i := range n.Srcs {
 		n.Srcs[i].Rdy = n.Srcs[i].Val!=nil
+		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Srcs[i].Data)})
 	}
 	for i := range n.Dsts {
 		n.Dsts[i].Rdy = n.Dsts[i].Val==nil
+		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
 	}
 	n.RdyFunc = ready
+	n.Cases = casel
 	return n
 }
 
-func prefix_varlist(n Node) (format string, varlist []interface {}) {
+func prefix_varlist(n *Node) (format string, varlist []interface {}) {
 	var varl [] interface {}
 	varl = append(varl, n.Name)
 	varl = append(varl, n.Id)
@@ -121,7 +127,7 @@ func prefix_varlist(n Node) (format string, varlist []interface {}) {
 }
 
 // Debug trace printing
-func (n Node) Tracef(format string, v ...interface{}) {
+func (n *Node) Tracef(format string, v ...interface{}) {
 	if (!Debug /*|| format=="select\n"*/) {
 		return
 	}
@@ -132,7 +138,7 @@ func (n Node) Tracef(format string, v ...interface{}) {
 }
 
 // Trace Node input values and output readiness
-func (n Node) TraceValRdy(val_only bool) {
+func (n *Node) TraceValRdy(val_only bool) {
 	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
 	for i := range n.Srcs {
@@ -173,7 +179,7 @@ func (n Node) TraceValRdy(val_only bool) {
 }
 
 // Tracing Node execution
-func (n Node) TraceVals() { n.TraceValRdy(true) }
+func (n *Node) TraceVals() { n.TraceValRdy(true) }
 
 // Increment execution count of Node
 func (n *Node) IncrExecCnt() {
@@ -228,3 +234,18 @@ func ZeroTest(a Datum) bool {
 	}
 }
 
+func (n *Node) Select() {
+	l := len(n.Srcs)
+	n.Tracef("select\n")
+	chosen,recv,recvOK := reflect.Select(n.Cases)
+	if (recvOK) {
+		if chosen<l {
+			n.Tracef("recv %s.Data\n")
+			n.Srcs[chosen].Val = recv.Interface()
+			n.Srcs[chosen].Rdy = true
+		} else {
+			n.Tracef("recv %s.Ack\n")
+			n.Dsts[chosen-l].Rdy = true
+		}
+	}
+}

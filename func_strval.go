@@ -1,7 +1,6 @@
 package flowgraph
 
 import (
-	"reflect"
 )
 
 func strval_rdy (n *Node) bool {
@@ -49,23 +48,7 @@ func FuncStrVal(a, b, x, y Edge) {
 			node.Tracef("done writing x.Data or y.Data and a.Ack and b.Ack\n")
 		}
 
-		node.Tracef("select\n")
-		select {
-		case a.Val = <-a.Data:
-			{
-				node.Tracef("a read %v --  %v\n", reflect.TypeOf(a.Val), a.Val)
-				a.Rdy = true
-			}
-		case b.Val = <-b.Data:
-			{
-				node.Tracef("a read %v --  %v\n", reflect.TypeOf(b.Val), b.Val)
-				b.Rdy = true
-			}
-		case x.Rdy = <-x.Ack:
-			node.Tracef("x.Ack read\n")
-		case y.Rdy = <-y.Ack:
-			node.Tracef("y.Ack read\n")
-		}
+		node.Select()
 
 	}
 

@@ -12,3 +12,5 @@ flowgraph.go.save
 *.tmp
 
 *.save
+
+.#select.go

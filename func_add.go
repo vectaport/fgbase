@@ -54,21 +54,7 @@ func FuncAdd(a, b, x Edge) {
 			node.Tracef("done writing x.Data and a.Ack and b.Ack\n")
 		}
 
-		node.Tracef("select\n")
-		select {
-		case a.Val = <-a.Data:
-			{
-				node.Tracef("a.Data read %v --  %v\n", reflect.TypeOf(a), a.Val)
-				a.Rdy = true
-			}
-		case b.Val = <-b.Data:
-			{
-				node.Tracef("b.Data read %v --  %v\n", reflect.TypeOf(b), b.Val)
-				b.Rdy = true
-			}
-		case x.Rdy = <-x.Ack:
-			node.Tracef("x.Ack read\n")
-		}
+		node.Select()
 
 	}
 

@@ -18,11 +18,7 @@ func FuncConst(x Edge) {
 			x.Rdy = false
 		}
 
-		node.Tracef("select\n")
-		select {
-		case x.Rdy = <-x.Ack:
-			node.Tracef("x.Ack read\n")
-		}
+		node.Select()
 	}
 	
 }
