@@ -19,5 +19,3 @@ Features of github.com/vectaport/flowgraph:
  * an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things
 * for rendering flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compiled code
 * see [github.com/vectaport/flowgraph_test](http://github.com/vectaport/flowgraph_test) for test benches
-
-Godoc [documentation](https://godoc.org/github.com/vectaport/flowgraph)
