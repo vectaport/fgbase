@@ -55,12 +55,12 @@ func MakeEdge(name string, init_val Datum) Edge {
 }
 
 // Initialize optional data value to start flow.
-func MakeConstEdge(name string, init_val Datum) Edge {
+func MakeEdgeConst(name string, init_val Datum) Edge {
 	return new_edge(name, init_val, nil, nil)
 }
 
 // Initialize optional data value to start flow.
-func MakeSinkEdge(name string) Edge {
+func MakeEdgeSink(name string) Edge {
 	return new_edge(name, nil, nil, nil)
 }
 // Return true if Edge is an implied constant
