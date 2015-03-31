@@ -10,7 +10,7 @@ func arbit_rdy (n *Node) bool {
 // Arbiter goroutine
 func FuncArbit(a, b, x Edge) {
 
-	node := NewNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy)
+	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy)
 
 	a_last := false
 
@@ -18,24 +18,18 @@ func FuncArbit(a, b, x Edge) {
 		node.Tracef("a.Rdy,b.Rdy %v,%v  x.Rdy %v\n", a.Rdy, b.Rdy, x.Rdy);
 
 		if node.Rdy() {
-			node.Tracef("writing x.Data  and either a.Ack or b.Ack\n")
 			if(a.Rdy && !b.Rdy || a.Rdy && !a_last) {
 				a_last = true
 				x.Val = a.Val
 				node.TraceVals()
-				a.Rdy = false
-				a.Ack <- true
-				node.Tracef("done writing x.Data and a.Ack\n")
+				if (a.Ack!=nil) { a.Ack <- true; a.Rdy = false }
 			} else if (b.Rdy) {
 				a_last = false
 				x.Val = b.Val
 				node.TraceVals()
-				b.Rdy = false
-				b.Ack <- true
-				node.Tracef("done writing x.Data and b.Ack\n")
+				if (b.Ack!=nil) { b.Ack <- true; b.Rdy = false }
 			}
-			x.Data <- x.Val
-			x.Rdy = false
+			if(x.Data!=nil) { x.Data <- x.Val; x.Rdy = false }
 		}
 
 		node.Select()

@@ -50,17 +50,17 @@ func new_edge(name string, init_val Datum, data chan Datum, ack chan bool) Edge 
 }
 
 // Initialize optional data value to start flow.
-func NewEdge(name string, init_val Datum) Edge {
+func MakeEdge(name string, init_val Datum) Edge {
 	return new_edge(name, init_val, make(chan Datum), make(chan bool))
 }
 
 // Initialize optional data value to start flow.
-func NewConstEdge(name string, init_val Datum) Edge {
+func MakeConstEdge(name string, init_val Datum) Edge {
 	return new_edge(name, init_val, nil, nil)
 }
 
 // Initialize optional data value to start flow.
-func NewSinkEdge(name string) Edge {
+func MakeSinkEdge(name string) Edge {
 	return new_edge(name, nil, nil, nil)
 }
 // Return true if Edge is an implied constant
@@ -71,6 +71,22 @@ func IsConstant(e *Edge) bool {
 // Return true if Edge is an implied sink
 func IsSink(e *Edge) bool { 
 	return e.Ack == nil && e.Val == nil
+}
+
+// Send data
+func (e *Edge) SendData() {
+	if(e.Data !=nil) {
+		e.Data <- e.Val
+		e.Rdy = false
+	}
+}
+
+// Send ack
+func (e *Edge) SendAck() {
+	if(e.Ack !=nil) {
+		e.Ack <- true
+		e.Rdy = false
+	}
 }
 
 // flowgraph Node (augmented goroutine)
@@ -85,7 +101,7 @@ type Node struct {
 }
 
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
-func NewNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
+func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1

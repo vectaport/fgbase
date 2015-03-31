@@ -18,34 +18,25 @@ func strval_rdy (n *Node) bool {
 // Steer value goroutine
 func FuncStrVal(a, b, x, y Edge) {
 
-	node := NewNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)
+	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)
 
 	for {
-		node.Tracef("a.Rdy,b.Rdy %v,%v  x.Rdy,y.Rdy %v,%v\n", a.Rdy, b.Rdy, x.Rdy, y.Rdy);
 
 		if node.Rdy() {
-			node.Tracef("writing x.Data or y.Data and a.Ack\n")
 			x.Val = nil
 			y.Val = nil
 			if (ZeroTest(a.Val)) {
-				node.Tracef("x write\n")
 				x.Val = b.Val
 				node.TraceVals()
-				x.Data <- x.Val
-				x.Rdy = false
+				if (x.Data != nil) {x.Data <- x.Val; x.Rdy = false}
 				
 			} else {
-				node.Tracef("y write\n")
 				y.Val = b.Val
 				node.TraceVals()
-				y.Data <- y.Val
-				y.Rdy = false
+				if (y.Data != nil) {y.Data <- y.Val; y.Rdy = false}
 			}
-			a.Ack <- true
-			b.Ack <- true
-			a.Rdy = false
-			b.Rdy = false
-			node.Tracef("done writing x.Data or y.Data and a.Ack and b.Ack\n")
+			if (a.Ack!=nil) {a.Ack <- true; a.Rdy = false}
+			if (b.Ack!=nil) {b.Ack <- true; b.Rdy = false}
 		}
 
 		node.Select()

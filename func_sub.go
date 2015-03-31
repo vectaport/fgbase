@@ -31,7 +31,7 @@ func func_sub(a, b Datum) Datum {
 // Subtraction goroutine
 func FuncSub(a, b, x Edge) {
 
-	node := NewNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil)
+	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil)
 
 	for {
 		node.Tracef("a.Rdy,b.Rdy %v,%v  x.Rdy %v\n", a.Rdy, b.Rdy, x.Rdy);

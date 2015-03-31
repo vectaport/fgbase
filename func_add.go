@@ -31,11 +31,10 @@ func func_add(a, b Datum) Datum {
 // Addition goroutine
 func FuncAdd(a, b, x Edge) {
 
-	node := NewNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil)
+	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil)
 
 	for {
 		if node.Rdy() {
-			node.Tracef("writing x.Data and a.Ack and b.Ack\n")
 
 			atmp,btmp,same := Promote(a.Val, b.Val)
 
@@ -51,7 +50,6 @@ func FuncAdd(a, b, x Edge) {
 			if(a.Ack !=nil ) {a.Ack <- true; a.Rdy = false}
 			if(b.Ack !=nil ) {b.Ack <- true; b.Rdy = false}
 
-			node.Tracef("done writing x.Data and a.Ack and b.Ack\n")
 		}
 
 		node.Select()
