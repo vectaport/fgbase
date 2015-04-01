@@ -22,19 +22,20 @@ var GlobalExecCnt bool = false
 // Empty interface for generic data flow
 type Datum interface{}
 
+// Function signature for evaluating readiness of Node to fire
 type RdyTest func(*Node) bool
 
-// flowgraph Edge (augmented channel)
+// flowgraph Edge
 type Edge struct {
 
 	// values shared by upstream and downstream Node
-	Name string
-	Data chan Datum
-	Ack chan bool
+	Name string       // for trace
+	Data chan Datum   // downstream data channel
+	Ack chan bool     // upstream request channel
 
 	// values unique to upstream and downstream Node
-	Val Datum
-	Rdy bool
+	Val Datum         // generic data
+	Rdy bool          // readiness of I/O
 
 }
 
@@ -89,15 +90,15 @@ func (e *Edge) SendAck() {
 	}
 }
 
-// flowgraph Node (augmented goroutine)
+// flowgraph Node
 type Node struct {
-	Id int64
-	Name string
-	Cnt int64
-	Srcs []*Edge
-	Dsts []*Edge
-	RdyFunc RdyTest
-	Cases []reflect.SelectCase
+	Id int64                   // unique id
+	Name string                // for tracing
+	Cnt int64                  // execution count
+	Srcs []*Edge               // upstream links
+	Dsts []*Edge               // downstream links
+	RdyFunc RdyTest            // func to test Edge readiness
+	Cases []reflect.SelectCase // select cases to read from Edge's
 }
 
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
@@ -122,6 +123,13 @@ func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
 	n.Cases = casel
 	return n
 }
+
+/*
+// Return new Node with slices of input and output Edge's and customizable ready-testing function
+func MakeNode2(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNodeFunc) Node {
+	var n Node = MakeNode(name, srcs, dsts, ready)
+}
+*/
 
 func prefix_varlist(n *Node) (format string, varlist []interface {}) {
 	var varl [] interface {}

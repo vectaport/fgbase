@@ -44,11 +44,12 @@ func FuncAdd(a, b, x Edge) {
 			} else {
 				x.Val = func_add(atmp, btmp)
 			}
+
 			node.TraceVals()
 
-			if(x.Data != nil) { x.Data <- x.Val; x.Rdy = false}
-			if(a.Ack !=nil ) {a.Ack <- true; a.Rdy = false}
-			if(b.Ack !=nil ) {b.Ack <- true; b.Rdy = false}
+			x.SendData()
+			a.SendAck()
+			b.SendAck()
 
 		}
 
