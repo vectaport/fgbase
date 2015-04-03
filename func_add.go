@@ -39,7 +39,7 @@ func add_func(n *Node) {
 
 	if(!same) {
 		_,nm,ln,_ := runtime.Caller(0)
-		x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for add operation (%v,%v)", nm, ln, n.Id, reflect.TypeOf(a), reflect.TypeOf(b)))
+		x.Val = errors.New(fmt.Sprintf("%s:%d (node.ID %d)  incompatible type for add operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b)))
 	} else {
 		x.Val = _add_func(atmp, btmp)
 	}

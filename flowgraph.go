@@ -6,8 +6,8 @@ import (
 	"reflect"
 )
 
-var node_id int64 = 0
-var global_exec_cnt int64 = 0
+var nodeID int64
+var globalExecCnt int64
 
 // Enable debug tracing
 var Debug bool = false
@@ -45,30 +45,30 @@ type Edge struct {
 
 // Return new Edge to connect two Node's.
 // Initialize optional data value to start flow.
-func new_edge(name string, init_val Datum, data chan Datum, ack chan bool) Edge {
+func newEdge(name string, initVal Datum, data chan Datum, ack chan bool) Edge {
 	var e Edge
 	e.Name = name
-	e.Val = init_val
+	e.Val = initVal
 	e.Data = data
 	e.Ack = ack
 	return e
 }
 
 // MakeEdge initializes optional data value to start flow.
-func MakeEdge(name string, init_val Datum) Edge {
-	return new_edge(name, init_val, make(chan Datum), make(chan bool))
+func MakeEdge(name string, initVal Datum) Edge {
+	return newEdge(name, initVal, make(chan Datum), make(chan bool))
 }
 
 // MakeEdgeConst initializes a dangling edge to provide a constant value.
-func MakeEdgeConst(name string, init_val Datum) Edge {
-	return new_edge(name, init_val, nil, nil)
+func MakeEdgeConst(name string, initVal Datum) Edge {
+	return newEdge(name, initVal, nil, nil)
 }
 
 // MakeEdgeSink initializes a dangling edge to provide a sink for values.
 func MakeEdgeSink(name string) Edge {
-	return new_edge(name, nil, nil, nil)
+	return newEdge(name, nil, nil, nil)
 }
-// IsConstat returns true if Edge is an implied constant
+// IsConstant returns true if Edge is an implied constant
 func IsConstant(e *Edge) bool { 
 	return e.Ack == nil && e.Val != nil
 }
@@ -103,7 +103,7 @@ func (e *Edge) SendAck(n *Node) {
 
 // Node of a flowgraph
 type Node struct {
-	Id int64                   // unique id
+	ID int64                   // unique id
 	Name string                // for tracing
 	Cnt int64                  // execution count
 	Srcs []*Edge               // upstream links
@@ -116,8 +116,8 @@ type Node struct {
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
 func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Node {
 	var n Node
-	i := atomic.AddInt64(&node_id, 1)
-	n.Id = i-1
+	i := atomic.AddInt64(&nodeID, 1)
+	n.ID = i-1
 	n.Name = name
 	n.Cnt = -1
 	n.Srcs = srcs
@@ -137,10 +137,10 @@ func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Nod
 	return n
 }
 
-func prefix_varlist(n *Node) (format string, varlist []interface {}) {
+func prefixVarlist(n *Node) (format string, varlist []interface {}) {
 	var varl [] interface {}
 	varl = append(varl, n.Name)
-	varl = append(varl, n.Id)
+	varl = append(varl, n.ID)
 	if (n.Cnt>=0) {
 		varl = append(varl, n.Cnt)
 	} else {
@@ -148,7 +148,7 @@ func prefix_varlist(n *Node) (format string, varlist []interface {}) {
 	}
 	var f string
 	if (Indent) {
-		for i := int64(0);i<n.Id;i++ {
+		for i := int64(0);i<n.ID;i++ {
 			f += "\t"
 		}
 	}
@@ -161,17 +161,17 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	if (!Debug /*|| format=="select\n"*/) {
 		return
 	}
-	newfmt,varlist := prefix_varlist(n)
+	newfmt,varlist := prefixVarlist(n)
 	newfmt += format
 	varlist = append(varlist, v...)
 	fmt.Printf(newfmt, varlist...)
 }
 
 // TraceValRdy lists Node input values and output readiness
-func (n *Node) TraceValRdy(val_only bool) {
-	if (!val_only && !Debug) {return}
-	newfmt,varlist := prefix_varlist(n)
-	if !val_only { newfmt += "[" }
+func (n *Node) TraceValRdy(valOnly bool) {
+	if (!valOnly && !Debug) {return}
+	newfmt,varlist := prefixVarlist(n)
+	if !valOnly { newfmt += "[" }
 	for i := range n.Srcs {
 		if (i!=0) { newfmt += "," }
 		varlist = append(varlist, n.Srcs[i].Name)
@@ -190,7 +190,7 @@ func (n *Node) TraceValRdy(val_only bool) {
 	newfmt += ":"
 	for i := range n.Dsts {
 		if (i!=0) { newfmt += "," }
-		if (val_only) {
+		if (valOnly) {
 			varlist = append(varlist, n.Dsts[i].Name)
 			newfmt += "%s="
 			if (n.Dsts[i].Val != nil) {
@@ -210,7 +210,7 @@ func (n *Node) TraceValRdy(val_only bool) {
 //			newfmt += "%s=%+v"
 		}
 	}
-	if !val_only { newfmt += "]" }
+	if !valOnly { newfmt += "]" }
 	newfmt += "\n"
 	fmt.Printf(newfmt, varlist...)
 }
@@ -221,7 +221,7 @@ func (n *Node) TraceVals() { n.TraceValRdy(true) }
 // IncrExecCnt increments execution count of Node
 func (n *Node) IncrExecCnt() {
 	if (GlobalExecCnt) {
-		c := atomic.AddInt64(&global_exec_cnt, 1)
+		c := atomic.AddInt64(&globalExecCnt, 1)
 		n.Cnt = c-1
 	} else {
 		n.Cnt = n.Cnt+1
