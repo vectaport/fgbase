@@ -29,7 +29,7 @@ func steercRdy (n *Node) bool {
 	return false
 }
 
-// FuncSteerc steers a condition one of two ways (if !a { x = a } else { y = a }).
+// FuncSteerc steers a condition one of two ways (if a==0 { x = a } else { y = a }).
 func FuncSteerc(a, x, y Edge) {
 
 	node := MakeNode("steerc", []*Edge{&a}, []*Edge{&x, &y}, steercRdy, steercFire)
