@@ -2,7 +2,7 @@
 Package of Go flowgraph primitives
 ----------------------------------
 
-* [Godoc](https://godoc.org/github.com/vectaport/flowgraph)  
+* [![GoDoc](https://godoc.org/github.com/vectaport/flowgraph?status.svg)](https://godoc.org/github.com/vectaport/flowgraph)
 * [Wiki](https://github.com/vectaport/flowgraph/wiki)
 
 Go offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming distributed systems across many cores and many Unix boxes.  But so much is possible with goroutines it requires the application or invention of extra concepts to construct scaleable and reliable systems that won't deadlock or be throttled by bottlenecks.
