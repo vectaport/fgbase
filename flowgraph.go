@@ -1,3 +1,7 @@
+/*
+Package flowgraph layers a ready-send flow mechanism on top of goroutines.
+*/
+
 package flowgraph
 
 import (
