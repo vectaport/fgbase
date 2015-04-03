@@ -3,13 +3,11 @@ package flowgraph
 import (
 )
 
-func strvalFire (n *Node) {
+func steervFire (n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	x.Val = nil
-	y.Val = nil
 	if (ZeroTest(a.Val)) {
 		x.Val = b.Val
 	} else {
@@ -17,7 +15,7 @@ func strvalFire (n *Node) {
 	}
 }
 
-func strvalRdy (n *Node) bool {
+func steervRdy (n *Node) bool {
 	if n.Srcs[0].Rdy&&n.Srcs[1].Rdy {
 		if ZeroTest(n.Srcs[0].Val) {
 			return n.Dsts[0].Rdy
@@ -27,10 +25,10 @@ func strvalRdy (n *Node) bool {
 	return false
 }
 
-// FuncStrVal steers the second value by the first (if !a { x = b } else { y = b }).
-func FuncStrVal(a, b, x, y Edge) {
+// FuncSteerv steers the second value by the first (if !a { x = b } else { y = b }).
+func FuncSteerv(a, b, x, y Edge) {
 
-	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strvalRdy, strvalFire)
+	node := MakeNode("steerv", []*Edge{&a, &b}, []*Edge{&x, &y}, steervRdy, steervFire)
 	node.Run()
 
 }

@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-func strcndFire (n *Node) {
+func steercFire (n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
@@ -16,7 +16,7 @@ func strcndFire (n *Node) {
 	}
 }
 
-func strcndRdy (n *Node) bool {
+func steercRdy (n *Node) bool {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
@@ -29,10 +29,10 @@ func strcndRdy (n *Node) bool {
 	return false
 }
 
-// FuncStrCnd steers a condition one of two ways (if !a { x = a } else { y = a }).
-func FuncStrCnd(a, x, y Edge) {
+// FuncSteerc steers a condition one of two ways (if !a { x = a } else { y = a }).
+func FuncSteerc(a, x, y Edge) {
 
-	node := MakeNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcndRdy, strcndFire)
+	node := MakeNode("steerc", []*Edge{&a}, []*Edge{&x, &y}, steercRdy, steercFire)
 	node.Run()
 
 }
