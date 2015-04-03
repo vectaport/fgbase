@@ -14,7 +14,7 @@ How to use goroutines, channels, and select to implement the flowgraph model is 
 Features of github.com/vectaport/flowgraph:
 
 * flowgraph.Edge augments a channel with a ready-send acknowledge protocol
- * ready-send guaranteees that unbuffered writes never lead to deadlock
+ * ready-send can guarantee that unbuffered writes never lead to deadlock
 * flowgraph.Node augments a goroutine with an empty interface data protocol
  * an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things
 * for rendering flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compiled code
