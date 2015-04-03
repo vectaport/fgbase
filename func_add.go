@@ -48,7 +48,7 @@ func add_func(n *Node) {
 // Addition goroutine
 func FuncAdd(a, b, x Edge) {
 
-	node := MakeNode2("add", []*Edge{&a, &b}, []*Edge{&x}, nil, add_func)
+	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, add_func)
 	node.Run()
 }
 

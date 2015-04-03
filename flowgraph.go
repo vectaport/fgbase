@@ -114,30 +114,7 @@ type Node struct {
 }
 
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
-func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
-	var n Node
-	i := atomic.AddInt64(&node_id, 1)
-	n.Id = i-1
-	n.Name = name
-	n.Cnt = -1
-	n.Srcs = srcs
-	n.Dsts = dsts
-	var casel [] reflect.SelectCase
-	for i := range n.Srcs {
-		n.Srcs[i].Rdy = n.Srcs[i].Val!=nil
-		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Srcs[i].Data)})
-	}
-	for i := range n.Dsts {
-		n.Dsts[i].Rdy = n.Dsts[i].Val==nil
-		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
-	}
-	n.Cases = casel
-	n.RdyFunc = ready
-	return n
-}
-
-// Return new Node with slices of input and output Edge's and customizable ready-testing function
-func MakeNode2(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Node {
+func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
 	n.Id = i-1

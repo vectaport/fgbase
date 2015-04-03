@@ -25,7 +25,7 @@ func arbit_rdy (n *Node) bool {
 // Arbiter goroutine
 func FuncArbit(a, b, x Edge) {
 
-	node := MakeNode2("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy, arbit_func)
+	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy, arbit_func)
 	a.Aux = false // aux value that means "a" won the arbitration last
 	node.Run()
 

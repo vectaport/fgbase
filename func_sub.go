@@ -46,7 +46,7 @@ func sub_func(n *Node) {
 // Subtraction goroutine
 func FuncSub(a, b, x Edge) {
 
-	node := MakeNode2("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, sub_func)
+	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, sub_func)
 	node.Run()
 }
 

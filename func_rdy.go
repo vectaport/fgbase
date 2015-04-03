@@ -12,6 +12,6 @@ func rdy_func(n *Node) {
 // Ready (synchronization) goroutine
 func FuncRdy(a, b, x Edge) {
 
-	node := MakeNode2("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdy_func)
+	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdy_func)
 	node.Run()
 }

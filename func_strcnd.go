@@ -34,7 +34,7 @@ func strcnd_rdy (n *Node) bool {
 // Steer condition goroutine
 func FuncStrCnd(a, x, y Edge) {
 
-	node := MakeNode2("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy, strcnd_func)
+	node := MakeNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy, strcnd_func)
 	node.Run()
 
 }

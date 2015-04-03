@@ -32,7 +32,7 @@ func strval_rdy (n *Node) bool {
 // Steer value goroutine
 func FuncStrVal(a, b, x, y Edge) {
 
-	node := MakeNode2("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy, strval_func)
+	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy, strval_func)
 	node.Run()
 
 }
