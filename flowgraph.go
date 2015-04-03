@@ -19,16 +19,16 @@ var Indent bool = false
 var GlobalExecCnt bool = false
 
 
-// Empty interface for generic data flow
+// Datum is an empty interface for generic data flow.
 type Datum interface{}
 
-// Function signature for evaluating readiness of Node to fire
+// RdyTest is the function signature for evaluating readiness of Node to fire.
 type RdyTest func(*Node) bool
 
-// Function signature for firing off flowgraph stub
+// Firenode is the function signature for firing off flowgraph stub.
 type FireNode func(*Node)
 
-// flowgraph Edge
+// Edge of a flowgraph.
 type Edge struct {
 
 	// values shared by upstream and downstream Node
@@ -54,31 +54,31 @@ func new_edge(name string, init_val Datum, data chan Datum, ack chan bool) Edge 
 	return e
 }
 
-// Initialize optional data value to start flow.
+// MakeEdge initializes optional data value to start flow.
 func MakeEdge(name string, init_val Datum) Edge {
 	return new_edge(name, init_val, make(chan Datum), make(chan bool))
 }
 
-// Initialize optional data value to start flow.
+// MakeEdgeConst initializes a dangling edge to provide a constant value.
 func MakeEdgeConst(name string, init_val Datum) Edge {
 	return new_edge(name, init_val, nil, nil)
 }
 
-// Initialize optional data value to start flow.
+// MakeEdgeSink initializes a dangling edge to provide a sink for values.
 func MakeEdgeSink(name string) Edge {
 	return new_edge(name, nil, nil, nil)
 }
-// Return true if Edge is an implied constant
+// IsConstat returns true if Edge is an implied constant
 func IsConstant(e *Edge) bool { 
 	return e.Ack == nil && e.Val != nil
 }
 
-// Return true if Edge is an implied sink
+// IsSink returns true if Edge is an implied sink
 func IsSink(e *Edge) bool { 
 	return e.Ack == nil && e.Val == nil
 }
 
-// Send data
+// SendData writes to the Data channel
 func (e *Edge) SendData(n *Node) {
 	if(e.Data !=nil && e.Val != nil) {
 		n.Tracef("%s.Data <- %v\n", e.Name, e.Val)
@@ -88,7 +88,7 @@ func (e *Edge) SendData(n *Node) {
 	}
 }
 
-// Send ack
+// SendAck writes true to the Ack channel
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.Nack) {
