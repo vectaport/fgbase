@@ -21,12 +21,10 @@ func strval_rdy (n *Node) bool {
 	if n.Srcs[0].Rdy&&n.Srcs[1].Rdy {
 		if ZeroTest(n.Srcs[0].Val) {
 			return n.Dsts[0].Rdy
-		} else {
-			return n.Dsts[1].Rdy
 		}
-	} else {
-		return false
+		return n.Dsts[1].Rdy
 	}
+	return false
 }
 
 // Steer value goroutine

@@ -1,7 +1,6 @@
 package flowgraph
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -37,7 +36,7 @@ func sub_func(n *Node) {
 
 	if(!same) {
 		_,nm,ln,_ := runtime.Caller(0)
-		x.Val = errors.New(fmt.Sprintf("%s:%d (node.ID %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b)))
+		x.Val = fmt.Errorf("%s:%d (node.ID %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b))
 	} else {
 		x.Val = _sub_func(atmp, btmp)
 	}
