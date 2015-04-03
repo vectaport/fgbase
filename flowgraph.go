@@ -25,7 +25,7 @@ type Datum interface{}
 // RdyTest is the function signature for evaluating readiness of Node to fire.
 type RdyTest func(*Node) bool
 
-// Firenode is the function signature for firing off flowgraph stub.
+// FireNode is the function signature for firing off flowgraph stub.
 type FireNode func(*Node)
 
 // Edge of a flowgraph.
@@ -101,7 +101,7 @@ func (e *Edge) SendAck(n *Node) {
 	}
 }
 
-// flowgraph Node
+// Node of a flowgraph
 type Node struct {
 	Id int64                   // unique id
 	Name string                // for tracing
@@ -113,7 +113,7 @@ type Node struct {
 	Cases []reflect.SelectCase // select cases to read from Edge's
 }
 
-// Return new Node with slices of input and output Edge's and customizable ready-testing function
+// MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
 func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Node {
 	var n Node
 	i := atomic.AddInt64(&node_id, 1)
@@ -156,7 +156,7 @@ func prefix_varlist(n *Node) (format string, varlist []interface {}) {
 	return f,varl
 }
 
-// Debug trace printing
+// Tracef for debug trace printing.
 func (n *Node) Tracef(format string, v ...interface{}) {
 	if (!Debug /*|| format=="select\n"*/) {
 		return
@@ -167,7 +167,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	fmt.Printf(newfmt, varlist...)
 }
 
-// Trace Node input values and output readiness
+// TraceValRdy lists Node input values and output readiness
 func (n *Node) TraceValRdy(val_only bool) {
 	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
@@ -215,10 +215,10 @@ func (n *Node) TraceValRdy(val_only bool) {
 	fmt.Printf(newfmt, varlist...)
 }
 
-// Tracing Node execution
+// TraceVals lists input and output values for a Node.
 func (n *Node) TraceVals() { n.TraceValRdy(true) }
 
-// Increment execution count of Node
+// IncrExecCnt increments execution count of Node
 func (n *Node) IncrExecCnt() {
 	if (GlobalExecCnt) {
 		c := atomic.AddInt64(&global_exec_cnt, 1)
@@ -228,7 +228,7 @@ func (n *Node) IncrExecCnt() {
 	}
 }
 
-// Test readiness of Node to execute
+// RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
@@ -254,7 +254,7 @@ func (n *Node) Fire() {
 func Sink(a Datum) () {
 }
 
-// Test value for zero
+// ZeroTest returns true if value is a numeric zero.
 func ZeroTest(a Datum) bool {
 
 	switch a.(type) {
@@ -276,7 +276,7 @@ func ZeroTest(a Datum) bool {
 	}
 }
 
-// Send all data and acks after new result is computed
+// SendAll writes all data and acks after new result is computed.
 func (n *Node) SendAll() {
 	n.TraceVals()
 	for i := range n.Srcs {
@@ -287,7 +287,7 @@ func (n *Node) SendAll() {
 	}
 }
 
-// Receive one data or ack and mark that input as ready
+// RecvOne reads one data or ack and marks that input as ready.
 func (n *Node) RecvOne() {
 	l := len(n.Srcs)
 	n.TraceValRdy(false)
@@ -304,7 +304,7 @@ func (n *Node) RecvOne() {
 	}
 }
 
-// Event loop to run forever
+// Run is an event loop that runs forever.
 func (n *Node) Run() {
 	for {
 		if(n.RdyAll()) {
