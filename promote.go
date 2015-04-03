@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func bigger_type(a, b Datum) bool {
+func biggerType(a, b Datum) bool {
 	switch a.(type) {
 	case bool: { }
 	case int8, uint8: {
@@ -59,8 +59,8 @@ func Promote(a, b Datum) (abig, bbig Datum, same bool) {
 
 	if(ta==tb) { return a,b,true }
 
-	a_bigger := bigger_type(a, b)
-	if (a_bigger) {
+	aBigger := biggerType(a, b)
+	if (aBigger) {
 		if(tb.ConvertibleTo(ta)) { return a,reflect.ValueOf(b).Convert(ta).Interface(),true }
 		if(ta.ConvertibleTo(tb)) { return reflect.ValueOf(a).Convert(tb).Interface(),b,true }
 	} else {
