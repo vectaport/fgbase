@@ -304,7 +304,7 @@ func (n *Node) RecvOne() {
 	}
 }
 
-// event loop to run forever
+// Event loop to run forever
 func (n *Node) Run() {
 	for {
 		if(n.RdyAll()) {
