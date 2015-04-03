@@ -3,6 +3,20 @@ package flowgraph
 import (
 )
 
+func strval_func (n *Node) {
+	a := n.Srcs[0]
+	b := n.Srcs[1]
+	x := n.Dsts[0]
+	y := n.Dsts[1]
+	x.Val = nil
+	y.Val = nil
+	if (ZeroTest(a.Val)) {
+		x.Val = b.Val
+	} else {
+		y.Val = b.Val
+	}
+}
+
 func strval_rdy (n *Node) bool {
 	if n.Srcs[0].Rdy&&n.Srcs[1].Rdy {
 		if ZeroTest(n.Srcs[0].Val) {
@@ -18,29 +32,7 @@ func strval_rdy (n *Node) bool {
 // Steer value goroutine
 func FuncStrVal(a, b, x, y Edge) {
 
-	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy)
-
-	for {
-
-		if node.Rdy() {
-			x.Val = nil
-			y.Val = nil
-			if (ZeroTest(a.Val)) {
-				x.Val = b.Val
-				node.TraceVals()
-				if (x.Data != nil) {x.Data <- x.Val; x.Rdy = false}
-				
-			} else {
-				y.Val = b.Val
-				node.TraceVals()
-				if (y.Data != nil) {y.Data <- y.Val; y.Rdy = false}
-			}
-			if (a.Ack!=nil) {a.Ack <- true; a.Rdy = false}
-			if (b.Ack!=nil) {b.Ack <- true; b.Rdy = false}
-		}
-
-		node.Select()
-
-	}
+	node := MakeNode2("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy, strval_func)
+	node.Run()
 
 }

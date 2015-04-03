@@ -3,25 +3,15 @@ package flowgraph
 import (
 )
 
+func rdy_func(n *Node) {
+	a := n.Srcs[0]
+	x := n.Dsts[0]
+	x.Val = a.Val
+}
+
 // Ready (synchronization) goroutine
 func FuncRdy(a, b, x Edge) {
 
-	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil)
-
-	for {
-		if node.Rdy() {
-			node.Tracef("writing x.Data and a.Ack and b.Ack\n")
-
-			x.Val = a.Val
-			node.TraceVals()
-			
-			if (x.Data!= nil) {x.Data <- x.Val; x.Rdy = false}
-			if (a.Ack!=nil) {a.Ack<- true; a.Rdy = false}
-			if (b.Ack!=nil) {b.Ack<- true; b.Rdy = false}
-		}
-
-		node.Select()
-
-	}
-
+	node := MakeNode2("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdy_func)
+	node.Run()
 }

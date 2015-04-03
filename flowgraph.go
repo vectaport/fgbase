@@ -25,6 +25,9 @@ type Datum interface{}
 // Function signature for evaluating readiness of Node to fire
 type RdyTest func(*Node) bool
 
+// Function signature for firing off flowgraph stub
+type FireNode func(*Node)
+
 // flowgraph Edge
 type Edge struct {
 
@@ -36,7 +39,8 @@ type Edge struct {
 	// values unique to upstream and downstream Node
 	Val Datum         // generic data
 	Rdy bool          // readiness of I/O
-
+	Nack bool         // set true to inhibit acking
+	Aux Datum         // auxiliary empty interface to hold state
 }
 
 // Return new Edge to connect two Node's.
@@ -75,18 +79,25 @@ func IsSink(e *Edge) bool {
 }
 
 // Send data
-func (e *Edge) SendData() {
-	if(e.Data !=nil) {
+func (e *Edge) SendData(n *Node) {
+	if(e.Data !=nil && e.Val != nil) {
+		n.Tracef("%s.Data <- %v\n", e.Name, e.Val)
 		e.Data <- e.Val
 		e.Rdy = false
+		e.Val = nil
 	}
 }
 
 // Send ack
-func (e *Edge) SendAck() {
+func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
-		e.Ack <- true
-		e.Rdy = false
+		if (!e.Nack) {
+			n.Tracef("%s.Ack <- true\n", e.Name)
+			e.Ack <- true
+			e.Rdy = false
+		} else {
+			e.Nack = false
+		}
 	}
 }
 
@@ -98,6 +109,7 @@ type Node struct {
 	Srcs []*Edge               // upstream links
 	Dsts []*Edge               // downstream links
 	RdyFunc RdyTest            // func to test Edge readiness
+	FireFunc FireNode          // func to fire Node execution
 	Cases []reflect.SelectCase // select cases to read from Edge's
 }
 
@@ -119,17 +131,34 @@ func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest) Node {
 		n.Dsts[i].Rdy = n.Dsts[i].Val==nil
 		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
 	}
-	n.RdyFunc = ready
 	n.Cases = casel
+	n.RdyFunc = ready
 	return n
 }
 
-/*
 // Return new Node with slices of input and output Edge's and customizable ready-testing function
-func MakeNode2(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNodeFunc) Node {
-	var n Node = MakeNode(name, srcs, dsts, ready)
+func MakeNode2(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Node {
+	var n Node
+	i := atomic.AddInt64(&node_id, 1)
+	n.Id = i-1
+	n.Name = name
+	n.Cnt = -1
+	n.Srcs = srcs
+	n.Dsts = dsts
+	var casel [] reflect.SelectCase
+	for i := range n.Srcs {
+		n.Srcs[i].Rdy = n.Srcs[i].Val!=nil
+		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Srcs[i].Data)})
+	}
+	for i := range n.Dsts {
+		n.Dsts[i].Rdy = n.Dsts[i].Val==nil
+		casel = append(casel, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
+	}
+	n.Cases = casel
+	n.RdyFunc = ready
+	n.FireFunc = fire
+	return n
 }
-*/
 
 func prefix_varlist(n *Node) (format string, varlist []interface {}) {
 	var varl [] interface {}
@@ -165,6 +194,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 func (n *Node) TraceValRdy(val_only bool) {
 	if (!val_only && !Debug) {return}
 	newfmt,varlist := prefix_varlist(n)
+	if !val_only { newfmt += "[" }
 	for i := range n.Srcs {
 		if (i!=0) { newfmt += "," }
 		varlist = append(varlist, n.Srcs[i].Name)
@@ -173,6 +203,8 @@ func (n *Node) TraceValRdy(val_only bool) {
 			varlist = append(varlist, n.Srcs[i].Val)
 			varlist = append(varlist, n.Srcs[i].Val)
 			newfmt += "%T(%v)"
+//			varlist = append(varlist, n.Srcs[i])
+//			newfmt += "%+v"
 		} else {
 			varlist = append(varlist, "{}")
 			newfmt += "%s"
@@ -193,11 +225,15 @@ func (n *Node) TraceValRdy(val_only bool) {
 				newfmt += "%v"
 			}
 		} else {
-			varlist = append(varlist, n.Dsts[i].Name+".Ack")
+			varlist = append(varlist, n.Dsts[i].Name+".Rdy")
 			varlist = append(varlist, n.Dsts[i].Rdy)
 			newfmt += "%s=%v"
+//			varlist = append(varlist, n.Dsts[i].Name)
+//			varlist = append(varlist, n.Dsts[i])
+//			newfmt += "%s=%+v"
 		}
 	}
+	if !val_only { newfmt += "]" }
 	newfmt += "\n"
 	fmt.Printf(newfmt, varlist...)
 }
@@ -216,8 +252,7 @@ func (n *Node) IncrExecCnt() {
 }
 
 // Test readiness of Node to execute
-func (n *Node) Rdy() bool {
-	n.TraceValRdy(false)
+func (n *Node) RdyAll() bool {
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
 			if !n.Srcs[i].Rdy { return false }
@@ -231,6 +266,12 @@ func (n *Node) Rdy() bool {
 	n.IncrExecCnt();
 	return true
 }
+
+// Fire node using function pointer
+func (n *Node) Fire() {
+	if (n.FireFunc!=nil) { n.FireFunc(n) }
+}
+
 
 // Sink value (to avoid unused error)
 func Sink(a Datum) () {
@@ -258,18 +299,43 @@ func ZeroTest(a Datum) bool {
 	}
 }
 
-func (n *Node) Select() {
+// Send all data and acks after new result is computed
+func (n *Node) SendAll() {
+	n.TraceVals()
+	for i := range n.Srcs {
+		n.Srcs[i].SendAck(n)
+	}
+	for i := range n.Dsts {
+		n.Dsts[i].SendData(n)
+	}
+}
+
+// Receive one data or ack and mark that input as ready
+func (n *Node) RecvOne() {
 	l := len(n.Srcs)
-	n.Tracef("select\n")
+	n.TraceValRdy(false)
 	chosen,recv,recvOK := reflect.Select(n.Cases)
 	if (recvOK) {
 		if chosen<l {
-			n.Tracef("recv %s.Data\n")
 			n.Srcs[chosen].Val = recv.Interface()
 			n.Srcs[chosen].Rdy = true
+			n.Tracef("%T(%v) <- %s.Data\n", n.Srcs[chosen].Val, n.Srcs[chosen].Val, n.Srcs[chosen].Name)
 		} else {
-			n.Tracef("recv %s.Ack\n")
 			n.Dsts[chosen-l].Rdy = true
+			n.Tracef("true <- %s.Ack\n", n.Dsts[chosen-l].Name)
 		}
 	}
 }
+
+// event loop to run forever
+func (n *Node) Run() {
+	for {
+		if(n.RdyAll()) {
+			n.Fire()
+			n.SendAll()
+		}
+
+		n.RecvOne()
+	}
+}
+

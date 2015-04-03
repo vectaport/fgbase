@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-func func_sub(a, b Datum) Datum {
+func _sub_func(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)-b.(int8) }
@@ -28,36 +28,25 @@ func func_sub(a, b Datum) Datum {
 	}
 }
 
+func sub_func(n *Node) {
+	a := n.Srcs[0]
+	b := n.Srcs[1]
+	x := n.Dsts[0]
+
+	atmp,btmp,same := Promote(a.Val, b.Val)
+
+	if(!same) {
+		_,nm,ln,_ := runtime.Caller(0)
+		x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, n.Id, reflect.TypeOf(a), reflect.TypeOf(b)))
+	} else {
+		x.Val = _sub_func(atmp, btmp)
+	}
+}
+
 // Subtraction goroutine
 func FuncSub(a, b, x Edge) {
 
-	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil)
-
-	for {
-		node.Tracef("a.Rdy,b.Rdy %v,%v  x.Rdy %v\n", a.Rdy, b.Rdy, x.Rdy);
-
-		if node.Rdy() {
-			node.Tracef("writing x.Data and a.Ack and b.Ack\n")
-
-			atmp,btmp,same := Promote(a.Val, b.Val)
-
-			if(!same) {
-				_,nm,ln,_ := runtime.Caller(0)
-				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a), reflect.TypeOf(b)))
-			} else {
-				x.Val = func_sub(atmp, btmp)
-			}
-			node.TraceVals()
-
-			if(x.Data != nil) { x.Data <- x.Val; x.Rdy = false}
-			if(a.Ack !=nil ) {a.Ack <- true; a.Rdy = false}
-			if(b.Ack !=nil ) {b.Ack <- true; b.Rdy = false}
-
-			node.Tracef("done writing x.Data and a.Ack and b.Ack\n")
-		}
-
-		node.Select()
-
-	}
-
+	node := MakeNode2("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, sub_func)
+	node.Run()
 }
+

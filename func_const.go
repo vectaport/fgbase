@@ -3,20 +3,15 @@ package flowgraph
 import (
 )
 
+func const_func(n *Node) {
+	x := n.Dsts[0]
+	x.Val = x.Aux
+}
+
 // Constant value goroutine
-func FuncConst(x Edge) {
+func FuncConst(x Edge, c Datum) {
 
-
-	node:=MakeNode("const", nil, []*Edge{&x}, nil)
-
-	for {
-
-		if node.Rdy() {
-			node.TraceVals()
-			if(x.Data!=nil) {x.Data <- x.Val; x.Rdy = false }
-		}
-
-		node.Select()
-	}
-	
+	node:=MakeNode2("const", nil, []*Edge{&x}, nil, const_func)
+	x.Aux = c
+	node.Run()
 }

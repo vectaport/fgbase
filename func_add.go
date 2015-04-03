@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-func func_add(a, b Datum) Datum {
+func _add_func(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)+b.(int8) }
@@ -28,33 +28,27 @@ func func_add(a, b Datum) Datum {
 	}
 }
 
+// Addition primitive
+func add_func(n *Node) {
+
+	a := n.Srcs[0]
+	b := n.Srcs[1]
+	x := n.Dsts[0]
+
+	atmp,btmp,same := Promote(a.Val, b.Val)
+
+	if(!same) {
+		_,nm,ln,_ := runtime.Caller(0)
+		x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for add operation (%v,%v)", nm, ln, n.Id, reflect.TypeOf(a), reflect.TypeOf(b)))
+	} else {
+		x.Val = _add_func(atmp, btmp)
+	}
+}
+
 // Addition goroutine
 func FuncAdd(a, b, x Edge) {
 
-	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil)
-
-	for {
-		if node.Rdy() {
-
-			atmp,btmp,same := Promote(a.Val, b.Val)
-
-			if(!same) {
-				_,nm,ln,_ := runtime.Caller(0)
-				x.Val = errors.New(fmt.Sprintf("%s:%d (node.Id %d)  incompatible type for add operation (%v,%v)", nm, ln, node.Id, reflect.TypeOf(a), reflect.TypeOf(b)))
-			} else {
-				x.Val = func_add(atmp, btmp)
-			}
-
-			node.TraceVals()
-
-			x.SendData()
-			a.SendAck()
-			b.SendAck()
-
-		}
-
-		node.Select()
-
-	}
-
+	node := MakeNode2("add", []*Edge{&a, &b}, []*Edge{&x}, nil, add_func)
+	node.Run()
 }
+
