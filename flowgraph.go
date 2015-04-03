@@ -10,13 +10,13 @@ var nodeID int64
 var globalExecCnt int64
 
 // Enable debug tracing
-var Debug bool = false
+var Debug = false
 
 // Indent trace by node id
-var Indent bool = false
+var Indent = false
 
 // Use global execution count
-var GlobalExecCnt bool = false
+var GlobalExecCnt = false
 
 
 // Datum is an empty interface for generic data flow.
