@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-func strval_func (n *Node) {
+func strvalFire (n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -17,7 +17,7 @@ func strval_func (n *Node) {
 	}
 }
 
-func strval_rdy (n *Node) bool {
+func strvalRdy (n *Node) bool {
 	if n.Srcs[0].Rdy&&n.Srcs[1].Rdy {
 		if ZeroTest(n.Srcs[0].Val) {
 			return n.Dsts[0].Rdy
@@ -30,7 +30,7 @@ func strval_rdy (n *Node) bool {
 // FuncStrVal steers the second value by the first (if !a { x = b } else { y = b }).
 func FuncStrVal(a, b, x, y Edge) {
 
-	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy, strval_func)
+	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strvalRdy, strvalFire)
 	node.Run()
 
 }

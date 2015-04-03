@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-func _sub_func(a, b Datum) Datum {
+func subFire2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)-b.(int8) }
@@ -27,7 +27,7 @@ func _sub_func(a, b Datum) Datum {
 	}
 }
 
-func sub_func(n *Node) {
+func subFire(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -38,14 +38,14 @@ func sub_func(n *Node) {
 		_,nm,ln,_ := runtime.Caller(0)
 		x.Val = fmt.Errorf("%s:%d (node.ID %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b))
 	} else {
-		x.Val = _sub_func(atmp, btmp)
+		x.Val = subFire2(atmp, btmp)
 	}
 }
 
 // FuncSub subtracts values and returns the difference (x = a - b).
 func FuncSub(a, b, x Edge) {
 
-	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, sub_func)
+	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, subFire)
 	node.Run()
 }
 

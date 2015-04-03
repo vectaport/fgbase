@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-func const_func(n *Node) {
+func constFire(n *Node) {
 	x := n.Dsts[0]
 	x.Val = x.Aux
 }
@@ -11,7 +11,7 @@ func const_func(n *Node) {
 // FuncConst produces a constant value (x = c).
 func FuncConst(x Edge, c Datum) {
 
-	node:=MakeNode("const", nil, []*Edge{&x}, nil, const_func)
+	node:=MakeNode("const", nil, []*Edge{&x}, nil, constFire)
 	x.Aux = c
 	node.Run()
 }

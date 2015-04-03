@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-func arbit_func (n *Node) {
+func arbitFire (n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -18,14 +18,14 @@ func arbit_func (n *Node) {
 	}
 }
 
-func arbit_rdy (n *Node) bool {
+func arbitRdy (n *Node) bool {
 	return (n.Srcs[0].Rdy || n.Srcs[1].Rdy) && n.Dsts[0].Rdy
 }
 
 // FuncArbit arbitrates between two values (select { case a: x = a case b: x = b }).
 func FuncArbit(a, b, x Edge) {
 
-	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbit_rdy, arbit_func)
+	node := MakeNode("arbit", []*Edge{&a, &b}, []*Edge{&x}, arbitRdy, arbitFire)
 	a.Aux = false // aux value that means "a" won the arbitration last
 	node.Run()
 

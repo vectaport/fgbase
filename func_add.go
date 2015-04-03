@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-func _add_func(a, b Datum) Datum {
+func addFire2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)+b.(int8) }
@@ -28,7 +28,7 @@ func _add_func(a, b Datum) Datum {
 }
 
 // Addition primitive
-func add_func(n *Node) {
+func addFire(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -40,14 +40,14 @@ func add_func(n *Node) {
 		_,nm,ln,_ := runtime.Caller(0)
 		x.Val = fmt.Errorf("%s:%d (node.ID %d)  incompatible type for add operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b))
 	} else {
-		x.Val = _add_func(atmp, btmp)
+		x.Val = addFire2(atmp, btmp)
 	}
 }
 
 // FuncAdd adds values and returns the sum (x = a + b).
 func FuncAdd(a, b, x Edge) {
 
-	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, add_func)
+	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, addFire)
 	node.Run()
 }
 
