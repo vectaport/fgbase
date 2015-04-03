@@ -26,9 +26,8 @@ func strcnd_rdy (n *Node) bool {
 		} else {
 			return y.Rdy
 		}
-	} else {
-		return false
 	}
+	return false
 }
 
 // Steer condition goroutine
