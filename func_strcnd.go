@@ -23,9 +23,8 @@ func strcnd_rdy (n *Node) bool {
 	if a.Rdy {
 		if ZeroTest(a.Val) {
 			return x.Rdy
-		} else {
-			return y.Rdy
 		}
+		return y.Rdy
 	}
 	return false
 }
