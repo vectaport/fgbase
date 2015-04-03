@@ -8,7 +8,7 @@ func const_func(n *Node) {
 	x.Val = x.Aux
 }
 
-// Constant value goroutine
+// FuncConst produces a constant value (x = c).
 func FuncConst(x Edge, c Datum) {
 
 	node:=MakeNode("const", nil, []*Edge{&x}, nil, const_func)

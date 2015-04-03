@@ -27,7 +27,7 @@ func strval_rdy (n *Node) bool {
 	return false
 }
 
-// Steer value goroutine
+// FuncStrVal steers the second value by the first (if !a { x = b } else { y = b }).
 func FuncStrVal(a, b, x, y Edge) {
 
 	node := MakeNode("strval", []*Edge{&a, &b}, []*Edge{&x, &y}, strval_rdy, strval_func)

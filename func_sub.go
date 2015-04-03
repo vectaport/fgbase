@@ -42,7 +42,7 @@ func sub_func(n *Node) {
 	}
 }
 
-// Subtraction goroutine
+// FuncSub subtracts values and returns the difference (x = a - b).
 func FuncSub(a, b, x Edge) {
 
 	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, sub_func)

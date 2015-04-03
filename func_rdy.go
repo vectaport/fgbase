@@ -9,7 +9,7 @@ func rdy_func(n *Node) {
 	x.Val = a.Val
 }
 
-// Ready (synchronization) goroutine
+// FuncRdy waits for two values before passing on the first (x = b).
 func FuncRdy(a, b, x Edge) {
 
 	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdy_func)

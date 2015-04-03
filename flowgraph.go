@@ -114,7 +114,11 @@ type Node struct {
 }
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
-func MakeNode(name string, srcs, dsts []*Edge, ready RdyTest, fire FireNode) Node {
+func MakeNode(
+	name string, 
+	srcs, dsts []*Edge, 
+	ready RdyTest, 
+	fire FireNode) Node {
 	var n Node
 	i := atomic.AddInt64(&nodeID, 1)
 	n.ID = i-1

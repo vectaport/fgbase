@@ -44,7 +44,7 @@ func add_func(n *Node) {
 	}
 }
 
-// Addition goroutine
+// FuncAdd adds values and returns the sum (x = a + b).
 func FuncAdd(a, b, x Edge) {
 
 	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, add_func)

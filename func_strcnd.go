@@ -29,7 +29,7 @@ func strcnd_rdy (n *Node) bool {
 	return false
 }
 
-// Steer condition goroutine
+// FuncStrCnd steers a condition one of two ways (if !a { x = a } else { y = a }).
 func FuncStrCnd(a, x, y Edge) {
 
 	node := MakeNode("strcnd", []*Edge{&a}, []*Edge{&x, &y}, strcnd_rdy, strcnd_func)
