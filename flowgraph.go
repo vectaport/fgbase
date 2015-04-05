@@ -5,13 +5,17 @@ Package flowgraph layers a ready-send flow mechanism on top of goroutines.
 package flowgraph
 
 import (
-	"sync/atomic"
-	"fmt"
+	"log"
+	"os"
 	"reflect"
+	"sync/atomic"
 )
 
 var nodeID int64
 var globalExecCnt int64
+
+// Log for tracing flowgraph execution
+var StdoutLog = log.New(os.Stdout, "", 0)
 
 // Enable debug tracing
 var Debug = false
@@ -21,10 +25,6 @@ var Indent = false
 
 // Use global execution count
 var GlobalExecCnt = false
-
-
-// Datum is an empty interface for generic data flow.
-type Datum interface{}
 
 // RdyTest is the function signature for evaluating readiness of Node to fire.
 type RdyTest func(*Node) bool
@@ -164,32 +164,55 @@ func prefixVarlist(n *Node) (format string, varlist []interface {}) {
 	return f,varl
 }
 
-// Tracef for debug trace printing.
+func addSliceToVarlist(d Datum, format string, varlist []interface {}) (newfmt string, newvarlist []interface {}) {
+	m := 8
+	l := Len(d)
+	if l < m { m = l }
+	varlist = append(varlist, d)
+	format += "%T(["
+	for i := 0; i<m; i++ {
+		if i!=0 {format += " "}
+		varlist = append(varlist, Index(d,i))
+		format += "%+v"
+	}
+	if m<l {format += " ..."}
+	format += "])"
+	return format,varlist
+}
+
+// Tracef for debug trace printing.  Uses atomic log mechanism.
 func (n *Node) Tracef(format string, v ...interface{}) {
-	if (!Debug /*|| format=="select\n"*/) {
+	if (!Debug) {
 		return
 	}
 	newfmt,varlist := prefixVarlist(n)
 	newfmt += format
 	varlist = append(varlist, v...)
-	fmt.Printf(newfmt, varlist...)
+	StdoutLog.Printf(newfmt, varlist...)
 }
 
 // TraceValRdy lists Node input values and output readiness
 func (n *Node) TraceValRdy(valOnly bool) {
+
 	if (!valOnly && !Debug) {return}
 	newfmt,varlist := prefixVarlist(n)
-	if !valOnly { newfmt += "[" }
+	if !valOnly { newfmt += "<<" }
 	for i := range n.Srcs {
 		if (i!=0) { newfmt += "," }
 		varlist = append(varlist, n.Srcs[i].Name)
 		newfmt += "%s="
 		if (n.Srcs[i].Rdy) {
-			varlist = append(varlist, n.Srcs[i].Val)
-			varlist = append(varlist, n.Srcs[i].Val)
-			newfmt += "%T(%v)"
-//			varlist = append(varlist, n.Srcs[i])
-//			newfmt += "%+v"
+			if IsSlice(n.Srcs[i].Val) {
+				newfmt,varlist = addSliceToVarlist(n.Srcs[i].Val, newfmt, varlist)
+			} else {
+				if true { 
+					varlist = append(varlist, n.Srcs[i].Val)
+					newfmt += "%v"
+				} else {
+					varlist = append(varlist, n.Srcs[i])
+					newfmt += "%+v"
+				}
+			}
 		} else {
 			varlist = append(varlist, "{}")
 			newfmt += "%s"
@@ -201,26 +224,33 @@ func (n *Node) TraceValRdy(valOnly bool) {
 		if (valOnly) {
 			varlist = append(varlist, n.Dsts[i].Name)
 			newfmt += "%s="
-			if (n.Dsts[i].Val != nil) {
-				varlist = append(varlist, n.Dsts[i].Val)
-				varlist = append(varlist, n.Dsts[i].Val)
-				newfmt += "%T(%v)"
+			if IsSlice(n.Dsts[i].Val) {
+				newfmt,varlist = addSliceToVarlist(n.Dsts[i].Val, newfmt, varlist)
 			} else {
-				varlist = append(varlist, "{}")
-				newfmt += "%v"
+				if (n.Dsts[i].Val != nil) {
+					varlist = append(varlist, n.Dsts[i].Val)
+					varlist = append(varlist, n.Dsts[i].Val)
+					newfmt += "%T(%v)"
+				} else {
+					varlist = append(varlist, "{}")
+					newfmt += "%v"
+				}
 			}
 		} else {
-			varlist = append(varlist, n.Dsts[i].Name+".Rdy")
-			varlist = append(varlist, n.Dsts[i].Rdy)
-			newfmt += "%s=%v"
-//			varlist = append(varlist, n.Dsts[i].Name)
-//			varlist = append(varlist, n.Dsts[i])
-//			newfmt += "%s=%+v"
+			if true {
+				varlist = append(varlist, n.Dsts[i].Name+".Rdy")
+				varlist = append(varlist, n.Dsts[i].Rdy)
+				newfmt += "%s=%v"
+			} else {
+				varlist = append(varlist, n.Dsts[i].Name)
+				varlist = append(varlist, n.Dsts[i])
+				newfmt += "%s=%+v"
+			}
 		}
 	}
-	if !valOnly { newfmt += "]" }
+	if !valOnly { newfmt += ">>" }
 	newfmt += "\n"
-	fmt.Printf(newfmt, varlist...)
+	StdoutLog.Printf(newfmt, varlist...)
 }
 
 // TraceVals lists input and output values for a Node.
@@ -258,32 +288,6 @@ func (n *Node) Fire() {
 }
 
 
-// Sink value (to avoid unused error)
-func Sink(a Datum) () {
-}
-
-// ZeroTest returns true if value is a numeric zero.
-func ZeroTest(a Datum) bool {
-
-	switch a.(type) {
-        case int8: { return a.(int8)==0 }
-        case uint8: { return a.(uint8)==0 }
-        case int16: { return a.(int16)==0 }
-        case uint16: { return a.(uint16)==0 }
-        case int32: { return a.(int32)==0 }
-        case uint32: { return a.(uint32)==0 }
-	case int64: { return a.(int64)==0 }
-        case uint64: { return a.(uint64)==0 }
-	case int: { return a.(int)==0 }
-	case uint: { return a.(uint)==0 }
-	case float32: { return a.(float32)==0.0 }
-	case float64: { return a.(float64)==0.0 }
-	case complex64: { return a.(complex64)==0.0+0.0i }
-	case complex128: { return a.(complex128)==0.0+0.0i }
-	default: { return false }
-	}
-}
-
 // SendAll writes all data and acks after new result is computed.
 func (n *Node) SendAll() {
 	n.TraceVals()
@@ -316,8 +320,8 @@ func (n *Node) RecvOne() {
 func (n *Node) Run() {
 	for {
 		if(n.RdyAll()) {
-			n.Fire()
-			n.SendAll()
+			n.Fire()	
+		n.SendAll()
 		}
 
 		n.RecvOne()
