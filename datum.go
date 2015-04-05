@@ -7,11 +7,7 @@ import (
 // Datum is an empty interface for generic data flow.
 type Datum interface{}
 
-// Sink value (to avoid unused error)
-func Sink(a Datum) () {
-}
-
-// ZeroTest returns true if value is a numeric zero.
+// ZeroTest returns true if empty interface (Datum) is a numeric zero.
 func ZeroTest(a Datum) bool {
 
 	switch a.(type) {
