@@ -51,7 +51,7 @@ func MakeNode(
 	return n
 }
 
-func prefixVarlist(n *Node) (format string, varlist []interface {}) {
+func prefixTracel(n *Node) (format string, tracel []interface {}) {
 	var varl [] interface {}
 	varl = append(varl, n.Name)
 	varl = append(varl, n.ID)
@@ -70,20 +70,20 @@ func prefixVarlist(n *Node) (format string, varlist []interface {}) {
 	return f,varl
 }
 
-func addSliceToVarlist(d Datum, format string, varlist []interface {}) (newfmt string, newvarlist []interface {}) {
+func addSliceToTracel(d Datum, format string, tracel []interface {}) (newfmt string, newtracel []interface {}) {
 	m := 8
 	l := Len(d)
 	if l < m { m = l }
-	varlist = append(varlist, d)
+	tracel = append(tracel, d)
 	format += "%T(["
 	for i := 0; i<m; i++ {
 		if i!=0 {format += " "}
-		varlist = append(varlist, Index(d,i))
+		tracel = append(tracel, Index(d,i))
 		format += "%+v"
 	}
 	if m<l {format += " ..."}
 	format += "])"
-	return format,varlist
+	return format,tracel
 }
 
 // Tracef for debug trace printing.  Uses atomic log mechanism.
@@ -91,36 +91,36 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	if (!Debug) {
 		return
 	}
-	newfmt,varlist := prefixVarlist(n)
+	newfmt,tracel := prefixTracel(n)
 	newfmt += format
-	varlist = append(varlist, v...)
-	StdoutLog.Printf(newfmt, varlist...)
+	tracel = append(tracel, v...)
+	StdoutLog.Printf(newfmt, tracel...)
 }
 
 // TraceValRdy lists Node input values and output readiness
 func (n *Node) TraceValRdy(valOnly bool) {
 
 	if (!valOnly && !Debug) {return}
-	newfmt,varlist := prefixVarlist(n)
+	newfmt,tracel := prefixTracel(n)
 	if !valOnly { newfmt += "<<" }
 	for i := range n.Srcs {
 		if (i!=0) { newfmt += "," }
-		varlist = append(varlist, n.Srcs[i].Name)
+		tracel = append(tracel, n.Srcs[i].Name)
 		newfmt += "%s="
 		if (n.Srcs[i].Rdy) {
 			if IsSlice(n.Srcs[i].Val) {
-				newfmt,varlist = addSliceToVarlist(n.Srcs[i].Val, newfmt, varlist)
+				newfmt,tracel = addSliceToTracel(n.Srcs[i].Val, newfmt, tracel)
 			} else {
 				if true { 
-					varlist = append(varlist, n.Srcs[i].Val)
+					tracel = append(tracel, n.Srcs[i].Val)
 					newfmt += "%v"
 				} else {
-					varlist = append(varlist, n.Srcs[i])
+					tracel = append(tracel, n.Srcs[i])
 					newfmt += "%+v"
 				}
 			}
 		} else {
-			varlist = append(varlist, "{}")
+			tracel = append(tracel, "{}")
 			newfmt += "%s"
 		}
 	}
@@ -128,35 +128,35 @@ func (n *Node) TraceValRdy(valOnly bool) {
 	for i := range n.Dsts {
 		if (i!=0) { newfmt += "," }
 		if (valOnly) {
-			varlist = append(varlist, n.Dsts[i].Name)
+			tracel = append(tracel, n.Dsts[i].Name)
 			newfmt += "%s="
 			if IsSlice(n.Dsts[i].Val) {
-				newfmt,varlist = addSliceToVarlist(n.Dsts[i].Val, newfmt, varlist)
+				newfmt,tracel = addSliceToTracel(n.Dsts[i].Val, newfmt, tracel)
 			} else {
 				if (n.Dsts[i].Val != nil) {
-					varlist = append(varlist, n.Dsts[i].Val)
-					varlist = append(varlist, n.Dsts[i].Val)
+					tracel = append(tracel, n.Dsts[i].Val)
+					tracel = append(tracel, n.Dsts[i].Val)
 					newfmt += "%T(%v)"
 				} else {
-					varlist = append(varlist, "{}")
+					tracel = append(tracel, "{}")
 					newfmt += "%v"
 				}
 			}
 		} else {
 			if true {
-				varlist = append(varlist, n.Dsts[i].Name+".Rdy")
-				varlist = append(varlist, n.Dsts[i].Rdy)
+				tracel = append(tracel, n.Dsts[i].Name+".Rdy")
+				tracel = append(tracel, n.Dsts[i].Rdy)
 				newfmt += "%s=%v"
 			} else {
-				varlist = append(varlist, n.Dsts[i].Name)
-				varlist = append(varlist, n.Dsts[i])
+				tracel = append(tracel, n.Dsts[i].Name)
+				tracel = append(tracel, n.Dsts[i])
 				newfmt += "%s=%+v"
 			}
 		}
 	}
 	if !valOnly { newfmt += ">>" }
 	newfmt += "\n"
-	StdoutLog.Printf(newfmt, varlist...)
+	StdoutLog.Printf(newfmt, tracel...)
 }
 
 // TraceVals lists input and output values for a Node.
