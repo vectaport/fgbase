@@ -227,7 +227,7 @@ func (n *Node) Run() {
 	for {
 		if(n.RdyAll()) {
 			n.Fire()	
-		n.SendAll()
+			n.SendAll()
 		}
 
 		n.RecvOne()
