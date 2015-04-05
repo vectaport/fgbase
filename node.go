@@ -113,7 +113,8 @@ func (n *Node) TraceValRdy(valOnly bool) {
 			} else {
 				if true { 
 					tracel = append(tracel, n.Srcs[i].Val)
-					newfmt += "%v"
+					tracel = append(tracel, n.Srcs[i].Val)
+					newfmt += "%T(%v)"
 				} else {
 					tracel = append(tracel, n.Srcs[i])
 					newfmt += "%+v"
