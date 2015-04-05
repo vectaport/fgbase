@@ -33,18 +33,20 @@ func ZeroTest(a Datum) bool {
 	}
 }
 
+// IsSlice returns true if empty interace (Datum) is a slice.
 func IsSlice (d Datum) bool {
 	return reflect.ValueOf(d).Kind()==reflect.Slice
 }
 
+// Index returns the nth element of an empty interface (Datum) that is a slice.
 func Index(d Datum, i int) Datum {
 	return reflect.ValueOf(d).Index(i).Interface()
 }
 
+// Len returns the length of an empty interface (Datum) if it is a slice.
 func Len(d Datum) int {
 	if IsSlice(d) { 
 		return reflect.ValueOf(d).Len()
-	} else {
-		return 0
 	}
+	return 0
 }
