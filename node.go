@@ -229,7 +229,6 @@ func (n *Node) Run() {
 			n.Fire()	
 			n.SendAll()
 		}
-
 		n.RecvOne()
 	}
 }
