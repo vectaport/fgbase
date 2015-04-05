@@ -222,7 +222,7 @@ func (n *Node) RecvOne() {
 	}
 }
 
-// Run is an event loop that runs forever.
+// Run is an event loop that runs forever for each Node.
 func (n *Node) Run() {
 	for {
 		if(n.RdyAll()) {
