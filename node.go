@@ -88,7 +88,7 @@ func addSliceToTracel(d Datum, format string, tracel []interface {}) (newfmt str
 
 // Tracef for debug trace printing.  Uses atomic log mechanism.
 func (n *Node) Tracef(format string, v ...interface{}) {
-	if (!Debug) {
+	if (TraceLevel<V) {
 		return
 	}
 	newfmt,tracel := prefixTracel(n)
@@ -100,7 +100,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 // TraceValRdy lists Node input values and output readiness
 func (n *Node) TraceValRdy(valOnly bool) {
 
-	if (!valOnly && !Debug) {return}
+	if (!valOnly && TraceLevel<VV || TraceLevel==Q)  {return}
 	newfmt,tracel := prefixTracel(n)
 	if !valOnly { newfmt += "<<" }
 	for i := range n.Srcs {
@@ -215,10 +215,14 @@ func (n *Node) RecvOne() {
 		if chosen<l {
 			n.Srcs[chosen].Val = recv.Interface()
 			n.Srcs[chosen].Rdy = true
-			n.Tracef("%T(%v) <- %s.Data\n", n.Srcs[chosen].Val, n.Srcs[chosen].Val, n.Srcs[chosen].Name)
+			if (TraceLevel>=VV) {
+				n.Tracef("%T(%v) <- %s.Data\n", n.Srcs[chosen].Val, n.Srcs[chosen].Val, n.Srcs[chosen].Name)
+			}
 		} else {
 			n.Dsts[chosen-l].Rdy = true
-			n.Tracef("true <- %s.Ack\n", n.Dsts[chosen-l].Name)
+			if (TraceLevel>=VV) {
+				n.Tracef("true <- %s.Ack\n", n.Dsts[chosen-l].Name)
+			}
 		}
 	}
 }

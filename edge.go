@@ -53,7 +53,9 @@ func (e *Edge) IsSink() bool {
 // SendData writes to the Data channel
 func (e *Edge) SendData(n *Node) {
 	if(e.Data !=nil && e.Val != nil) {
-		n.Tracef("%s.Data <- %v\n", e.Name, e.Val)
+		if (TraceLevel>=VV) {
+			n.Tracef("%s.Data <- %v\n", e.Name, e.Val)
+		}
 		e.Data <- e.Val
 		e.Rdy = false
 		e.Val = nil
@@ -64,7 +66,9 @@ func (e *Edge) SendData(n *Node) {
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.Nack) {
-			n.Tracef("%s.Ack <- true\n", e.Name)
+			if (TraceLevel>=VV) {
+				n.Tracef("%s.Ack <- true\n", e.Name)
+			}
 			e.Ack <- true
 			e.Rdy = false
 		} else {
