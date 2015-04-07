@@ -20,8 +20,10 @@ func steervFire (n *Node) {
 	y := n.Dsts[1]
 	if (ZeroTest(a.Val)) {
 		x.Val = b.Val
+		y.NoOut = true
 	} else {
 		y.Val = b.Val
+		x.NoOut = true
 	}
 }
 

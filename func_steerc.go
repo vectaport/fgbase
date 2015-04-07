@@ -11,8 +11,10 @@ func steercFire (n *Node) {
 	y.Val = nil
 	if (ZeroTest(a.Val)) {
 		x.Val = a.Val
+		y.NoOut = true
 	} else {
 		y.Val = a.Val
+		x.NoOut = true
 	}
 }
 

@@ -11,7 +11,7 @@ type Edge struct {
 	// values unique to upstream and downstream Node
 	Val Datum         // generic empty interface
 	Rdy bool          // readiness of I/O
-	Nack bool         // set true to inhibit acking
+	NoOut bool        // set true to inhibit one output, data or ack
 	Aux Datum         // auxiliary empty interface to hold state
 }
 
@@ -52,27 +52,39 @@ func (e *Edge) IsSink() bool {
 
 // SendData writes to the Data channel
 func (e *Edge) SendData(n *Node) {
-	if(e.Data !=nil && e.Val != nil) {
-		if (TraceLevel>=VV) {
-			n.Tracef("%s.Data <- %v\n", e.Name, e.Val)
+	if(e.Data !=nil) {
+		if (!e.NoOut) {
+			if (TraceLevel>=VV) {
+				if (e.Val==nil) {
+					n.Tracef("%s.Data <- <nil>\n", e.Name)
+				} else {
+					n.Tracef("%s.Data <- %T(%v)\n", e.Name, e.Val, e.Val)
+				}
+			}
+			if (e.Val == nil) {
+				e.Data <- nil
+			} else {
+				e.Data <- e.Val
+			}
+			e.Rdy = false
+			e.Val = nil
+		} else {
+			e.NoOut = false
 		}
-		e.Data <- e.Val
-		e.Rdy = false
-		e.Val = nil
 	}
 }
 
 // SendAck writes true to the Ack channel
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
-		if (!e.Nack) {
+		if (!e.NoOut) {
 			if (TraceLevel>=VV) {
 				n.Tracef("%s.Ack <- true\n", e.Name)
 			}
 			e.Ack <- true
 			e.Rdy = false
 		} else {
-			e.Nack = false
+			e.NoOut = false
 		}
 	}
 }

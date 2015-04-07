@@ -1,9 +1,7 @@
 package flowgraph
 
 import (
-	"fmt"
 	"reflect"
-	"runtime"
 )
 
 func subFire2(a, b Datum) Datum {
@@ -32,11 +30,11 @@ func subFire(n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 
-	atmp,btmp,same := Promote(a.Val, b.Val)
+	atmp,btmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		_,nm,ln,_ := runtime.Caller(0)
-		x.Val = fmt.Errorf("%s:%d (node.ID %d)  incompatible type for subtraction operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b))
+		n.Errorf("incompatible types for subtraction (%v-%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		x.Val = nil
 	} else {
 		x.Val = subFire2(atmp, btmp)
 	}

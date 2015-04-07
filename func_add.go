@@ -1,9 +1,7 @@
 package flowgraph
 
 import (
-	"fmt"
 	"reflect"
-	"runtime"
 )
 
 func addFire2(a, b Datum) Datum {
@@ -23,6 +21,7 @@ func addFire2(a, b Datum) Datum {
 	case float64: { return a.(float64)+b.(float64) }
 	case complex64: { return a.(complex64)+b.(complex64) }
 	case complex128: { return a.(complex128)+b.(complex128) }
+	case string: { return a.(string)+b.(string) }
 	default: { return nil }
 	}
 }
@@ -34,11 +33,11 @@ func addFire(n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 
-	atmp,btmp,same := Promote(a.Val, b.Val)
+	atmp,btmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		_,nm,ln,_ := runtime.Caller(0)
-		x.Val = fmt.Errorf("%s:%d (node.ID %d)  incompatible type for add operation (%v,%v)", nm, ln, n.ID, reflect.TypeOf(a), reflect.TypeOf(b))
+		n.Errorf("incompatible types for addition (%v+%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		x.Val = nil
 	} else {
 		x.Val = addFire2(atmp, btmp)
 	}

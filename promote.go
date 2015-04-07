@@ -52,7 +52,7 @@ func biggerType(a, b Datum) bool {
 }
 
 // Promote pair of numeric empty interfaces (Datum) as necessary
-func Promote(a, b Datum) (abig, bbig Datum, same bool) {
+func Promote(n *Node, a, b Datum) (abig, bbig Datum, same bool) {
 
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)
@@ -61,13 +61,25 @@ func Promote(a, b Datum) (abig, bbig Datum, same bool) {
 
 	aBigger := biggerType(a, b)
 	if (aBigger) {
-		if(tb.ConvertibleTo(ta)) { return a,reflect.ValueOf(b).Convert(ta).Interface(),true }
-		if(ta.ConvertibleTo(tb)) { return reflect.ValueOf(a).Convert(tb).Interface(),b,true }
-	} else {
-		if(ta.ConvertibleTo(tb)) { return reflect.ValueOf(a).Convert(tb).Interface(),b,true }
-		if(tb.ConvertibleTo(ta)) { return a,reflect.ValueOf(b).Convert(ta).Interface(),true }
+		if(tb.ConvertibleTo(ta)) { 
+			if (TraceLevel>=VVV && n!=nil) { n.Tracef("promoting %v to %v\n", tb, ta) }
+			return a,reflect.ValueOf(b).Convert(ta).Interface(),true 
+		}
 	}
 
+	if(ta.ConvertibleTo(tb)) { 
+		if (TraceLevel>=VVV && n!=nil) { n.Tracef("promoting %v to %v\n", ta, tb) }
+		return reflect.ValueOf(a).Convert(tb).Interface(),b,true 
+	}
+
+	if (!aBigger) {
+		if(tb.ConvertibleTo(ta)) { 
+			if (TraceLevel>=VVV && n!=nil) { n.Tracef("promoting %v to %v\n", tb, ta) }
+			return a,reflect.ValueOf(b).Convert(ta).Interface(),true 
+		}
+	}
+
+	if (TraceLevel>=VVV && n!=nil) { n.Tracef("no promotion between %v to %v\n", tb, ta) }
 	return a,b,false
 }
 

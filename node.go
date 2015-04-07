@@ -2,6 +2,7 @@ package flowgraph
 
 import (
 	"reflect"
+	"runtime"
 	"sync/atomic"
 )
 
@@ -20,7 +21,7 @@ type Node struct {
 // RdyTest is the function signature for evaluating readiness of Node to fire.
 type RdyTest func(*Node) bool
 
-// FireNode is the function signature for firing off flowgraph stub.
+// FireNode is the function signature for firing off a flowgraph primitive (or stub).
 type FireNode func(*Node)
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
@@ -97,6 +98,18 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	StdoutLog.Printf(newfmt, tracel...)
 }
 
+// Errorf for logging of error messages.  Uses atomic log mechanism.
+func (n *Node) Errorf(format string, v ...interface{}) {
+	_,nm,ln,_ := runtime.Caller(1)
+	newfmt,tracel := prefixTracel(n)
+	newfmt += format
+	tracel = append(tracel, v...)
+	newfmt += " -- %s:%d "
+	tracel = append(tracel, nm)
+	tracel = append(tracel, ln)
+	StderrLog.Printf(newfmt, tracel...)
+}
+
 // TraceValRdy lists Node input values and output readiness
 func (n *Node) TraceValRdy(valOnly bool) {
 
@@ -104,53 +117,63 @@ func (n *Node) TraceValRdy(valOnly bool) {
 	newfmt,tracel := prefixTracel(n)
 	if !valOnly { newfmt += "<<" }
 	for i := range n.Srcs {
+		srci := n.Srcs[i]
 		if (i!=0) { newfmt += "," }
-		tracel = append(tracel, n.Srcs[i].Name)
+		tracel = append(tracel, srci.Name)
 		newfmt += "%s="
-		if (n.Srcs[i].Rdy) {
-			if IsSlice(n.Srcs[i].Val) {
-				newfmt,tracel = addSliceToTracel(n.Srcs[i].Val, newfmt, tracel)
+		if (srci.Rdy) {
+			if IsSlice(srci.Val) {
+				newfmt,tracel = addSliceToTracel(srci.Val, newfmt, tracel)
 			} else {
 				if true { 
-					tracel = append(tracel, n.Srcs[i].Val)
-					tracel = append(tracel, n.Srcs[i].Val)
-					newfmt += "%T(%v)"
+					if srci.Val==nil  {
+						newfmt += "<nil>"
+					} else {
+						tracel = append(tracel, srci.Val)
+						tracel = append(tracel, srci.Val)
+						newfmt += "%T(%v)"
+					}
 				} else {
-					tracel = append(tracel, n.Srcs[i])
+					tracel = append(tracel, srci)
 					newfmt += "%+v"
 				}
 			}
 		} else {
-			tracel = append(tracel, "{}")
-			newfmt += "%s"
+			newfmt += "{}"
 		}
 	}
 	newfmt += ":"
 	for i := range n.Dsts {
+		dsti := n.Dsts[i]
 		if (i!=0) { newfmt += "," }
 		if (valOnly) {
-			tracel = append(tracel, n.Dsts[i].Name)
+			tracel = append(tracel, dsti.Name)
 			newfmt += "%s="
-			if IsSlice(n.Dsts[i].Val) {
-				newfmt,tracel = addSliceToTracel(n.Dsts[i].Val, newfmt, tracel)
+			if IsSlice(dsti.Val) {
+				newfmt,tracel = addSliceToTracel(dsti.Val, newfmt, tracel)
 			} else {
-				if (n.Dsts[i].Val != nil) {
-					tracel = append(tracel, n.Dsts[i].Val)
-					tracel = append(tracel, n.Dsts[i].Val)
+				if (dsti.Val != nil) {
+					tracel = append(tracel, dsti.Val)
+					tracel = append(tracel, dsti.Val)
 					newfmt += "%T(%v)"
 				} else {
-					tracel = append(tracel, "{}")
-					newfmt += "%v"
+					newfmt += func () string { 
+						if (dsti.NoOut) { 
+							return "{}" 
+						} else { 
+							return "<nil>" 
+						}
+					} ()
 				}
 			}
 		} else {
 			if true {
-				tracel = append(tracel, n.Dsts[i].Name+".Rdy")
-				tracel = append(tracel, n.Dsts[i].Rdy)
+				tracel = append(tracel, dsti.Name+".Rdy")
+				tracel = append(tracel, dsti.Rdy)
 				newfmt += "%s=%v"
 			} else {
-				tracel = append(tracel, n.Dsts[i].Name)
-				tracel = append(tracel, n.Dsts[i])
+				tracel = append(tracel, dsti.Name)
+				tracel = append(tracel, dsti)
 				newfmt += "%s=%+v"
 			}
 		}
@@ -210,18 +233,24 @@ func (n *Node) SendAll() {
 func (n *Node) RecvOne() {
 	l := len(n.Srcs)
 	n.TraceValRdy(false)
-	chosen,recv,recvOK := reflect.Select(n.Cases)
+	i,recv,recvOK := reflect.Select(n.Cases)
 	if (recvOK) {
-		if chosen<l {
-			n.Srcs[chosen].Val = recv.Interface()
-			n.Srcs[chosen].Rdy = true
+		if i<l {
+			srci := n.Srcs[i]
+			srci.Val = recv.Interface()
+			srci.Rdy = true
 			if (TraceLevel>=VV) {
-				n.Tracef("%T(%v) <- %s.Data\n", n.Srcs[chosen].Val, n.Srcs[chosen].Val, n.Srcs[chosen].Name)
+				if (srci.Val==nil) {
+					n.Tracef("<nil> <- %s.Data\n", srci.Name)
+				} else {
+					n.Tracef("%T(%v) <- %s.Data\n", srci.Val, srci.Val, srci.Name)
+				}
 			}
 		} else {
-			n.Dsts[chosen-l].Rdy = true
+			dsti := n.Dsts[i-l]
+			dsti.Rdy = true
 			if (TraceLevel>=VV) {
-				n.Tracef("true <- %s.Ack\n", n.Dsts[chosen-l].Name)
+				n.Tracef("true <- %s.Ack\n", dsti.Name)
 			}
 		}
 	}

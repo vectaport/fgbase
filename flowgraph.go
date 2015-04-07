@@ -15,11 +15,15 @@ var globalExecCnt int64
 // Log for tracing flowgraph execution
 var StdoutLog = log.New(os.Stdout, "", 0)
 
+// Log for collecting error messages
+var StderrLog = log.New(os.Stderr, "", 0)
+
 // Trace levels
 const (
 	Q = iota
 	V
 	VV
+	VVV
 )
 
 // Enable execution tracing, writes to StdoutLog if TraceLevel>Q

@@ -10,11 +10,11 @@ func arbitFire (n *Node) {
 	if(a.Rdy && !b.Rdy || a.Rdy && !a.Aux.(bool)) {
 		a.Aux = true
 		x.Val = a.Val
-		b.Nack = true
+		b.NoOut = true
 	} else if (b.Rdy) {
 		a.Aux = false
 		x.Val = b.Val
-		a.Nack = true
+		a.NoOut = true
 	}
 }
 
