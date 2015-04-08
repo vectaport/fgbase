@@ -8,11 +8,11 @@ func arbitFire (n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	if(a.Rdy && !b.Rdy || a.Rdy && !a.Aux.(bool)) {
-		a.Aux = true
+		a.Aux = true // aLast = true
 		x.Val = a.Val
 		b.NoOut = true
 	} else if (b.Rdy) {
-		a.Aux = false
+		a.Aux = false // aLast = false
 		x.Val = b.Val
 		a.NoOut = true
 	}
