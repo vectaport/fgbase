@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Flowgraph by vectaport</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Flowgraph</h1>
+        <p>Ready-send coordination layer on top of goroutines.</p>
+
+        <p class="view"><a href="https://github.com/vectaport/flowgraph">View the Project on GitHub <small>vectaport/flowgraph</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/vectaport/flowgraph/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/vectaport/flowgraph/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/vectaport/flowgraph">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="flowgraph" class="anchor" href="#flowgraph" aria-hidden="true"><span class="octicon octicon-link"></span></a>flowgraph</h1>
+
+<h2>
+<a id="package-of-go-flowgraph-primitives" class="anchor" href="#package-of-go-flowgraph-primitives" aria-hidden="true"><span class="octicon octicon-link"></span></a>Package of Go flowgraph primitives</h2>
+
+<ul>
+<li><a href="https://godoc.org/github.com/vectaport/flowgraph"><img src="https://godoc.org/github.com/vectaport/flowgraph?status.svg" alt="GoDoc"></a></li>
+<li><a href="https://github.com/vectaport/flowgraph/wiki">Wiki</a></li>
+</ul>
+
+<p>Go offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming distributed systems across many cores and many Unix boxes.  But so much is possible with goroutines it requires the application or invention of extra concepts to construct scaleable and reliable systems that won't deadlock or be throttled by bottlenecks.</p>
+
+<p>Flowgraphs are a distinct model of concurrent programming that augment channels with ready-send handshake mechanisms to ensure that no data is sent before the receiver is ready.  <a href="http://en.wikipedia.org/wiki/Message_Passing_Interface">MPI</a> (a framework for distributed supercomputer computation) directly supports flowgraph computation, but doesn't address flow-based computation within a single Unix process.  Go with its goroutines (more efficient than threads according to Rob Pike) facilitates taking the MPI model down to whatever granularity the concurrent programmer wants.</p>
+
+<p>How to use goroutines, channels, and select to implement the flowgraph model is not completely obvious, and this framework is an attempt to illustrate one possible approach.  </p>
+
+<p>Features of github.com/vectaport/flowgraph:</p>
+
+<ul>
+<li>flowgraph.Edge augments a channel with a ready-send acknowledge protocol
+
+<ul>
+<li>ready-send can guarantee that unbuffered writes never lead to deadlock</li>
+</ul>
+</li>
+<li>flowgraph.Node augments a goroutine with an empty interface data protocol
+
+<ul>
+<li>an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things</li>
+</ul>
+</li>
+<li>test benches at <a href="http://github.com/vectaport/flowgraph_test">github.com/vectaport/flowgraph_test</a>
+</li>
+</ul>
+
+<p>The flowgraph package can be used to render flowgraphs drawn and simulated in <a href="http://github.com/vectaport/ipl-1.1">github.com/vectaport/ipl</a> into compilable Go code.  <em>ipl</em> is an implementation of a flowgraph language suggested by <a href="http://karlfant.net">Karl Fant</a>.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/vectaport">vectaport</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
