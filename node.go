@@ -62,7 +62,7 @@ func prefixTracel(n *Node) (format string, tracel []interface {}) {
 		varl = append(varl, "*")
 	}
 	var f string
-	if (Indent) {
+	if (TraceIndent) {
 		for i := int64(0);i<n.ID;i++ {
 			f += "\t"
 		}
@@ -95,7 +95,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	newfmt,tracel := prefixTracel(n)
 	newfmt += format
 	tracel = append(tracel, v...)
-	StdoutLog.Printf(newfmt, tracel...)
+	stdoutLog.Printf(newfmt, tracel...)
 }
 
 // Errorf for logging of error messages.  Uses atomic log mechanism.
@@ -107,7 +107,7 @@ func (n *Node) Errorf(format string, v ...interface{}) {
 	newfmt += " -- %s:%d "
 	tracel = append(tracel, nm)
 	tracel = append(tracel, ln)
-	StderrLog.Printf(newfmt, tracel...)
+	stderrLog.Printf(newfmt, tracel...)
 }
 
 // TraceValRdy lists Node input values and output readiness
@@ -180,7 +180,7 @@ func (n *Node) TraceValRdy(valOnly bool) {
 	}
 	if !valOnly { newfmt += ">>" }
 	newfmt += "\n"
-	StdoutLog.Printf(newfmt, tracel...)
+	stdoutLog.Printf(newfmt, tracel...)
 }
 
 // TraceVals lists input and output values for a Node.
@@ -188,7 +188,7 @@ func (n *Node) TraceVals() { n.TraceValRdy(true) }
 
 // IncrExecCnt increments execution count of Node
 func (n *Node) IncrExecCnt() {
-	if (GlobalExecCnt) {
+	if (GlobalExecCntFlg) {
 		c := atomic.AddInt64(&globalExecCnt, 1)
 		n.Cnt = c-1
 	} else {

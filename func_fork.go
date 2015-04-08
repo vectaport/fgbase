@@ -1,7 +1,6 @@
 package flowgraph
 
 import (
-	"reflect"
 )
 
 func forkFire (n *Node) { 
@@ -10,10 +9,7 @@ func forkFire (n *Node) {
 	y := n.Dsts[1]
 	x.Val = a.Val; 
 	if IsSlice(a.Val) {
-		at := reflect.TypeOf(a.Val)
-		av := reflect.ValueOf(a.Val)
-		y.Val = reflect.MakeSlice(at, av.Len(), av.Cap()).Interface()
-		reflect.Copy(reflect.ValueOf(y.Val), reflect.ValueOf(a.Val))
+		y.Val = CopySlice(a.Val)
 	} else {
 		y.Val = a.Val
 	}

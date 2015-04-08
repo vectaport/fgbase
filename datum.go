@@ -46,3 +46,12 @@ func Len(d Datum) int {
 	}
 	return 0
 }
+
+// CopySlice retuns a copy of a slice from an empty interface (as an empty interface).
+func CopySlice(d Datum) Datum {
+	dt := reflect.TypeOf(d)
+	dv := reflect.ValueOf(d)
+	r := reflect.MakeSlice(dt, dv.Len(), dv.Cap()).Interface()
+	reflect.Copy(reflect.ValueOf(r), reflect.ValueOf(d))
+	return r
+}

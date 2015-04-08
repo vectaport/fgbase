@@ -9,16 +9,22 @@ import (
 	"os"
 )
 
+// Unique node id.
 var nodeID int64
+
+// Global count of number of Node's executed.
 var globalExecCnt int64
 
-// Log for tracing flowgraph execution
-var StdoutLog = log.New(os.Stdout, "", 0)
+// Log for tracing flowgraph execution.
+var stdoutLog = log.New(os.Stdout, "", 0)
 
-// Log for collecting error messages
-var StderrLog = log.New(os.Stderr, "", 0)
+// Log for collecting error messages.
+var stderrLog = log.New(os.Stderr, "", 0)
 
-// Trace levels
+// Use global execution count.
+var GlobalExecCntFlg = false
+
+// Trace level constants
 const (
 	Q = iota
 	V
@@ -30,8 +36,6 @@ const (
 var TraceLevel = Q
 
 // Indent trace by node id
-var Indent = false
+var TraceIndent = false
 
-// Use global execution count
-var GlobalExecCnt = false
 
