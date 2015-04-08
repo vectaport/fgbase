@@ -17,5 +17,6 @@ Features of github.com/vectaport/flowgraph:
  * ready-send can guarantee that unbuffered writes never lead to deadlock
 * flowgraph.Node augments a goroutine with an empty interface data protocol
  * an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things
-* for rendering flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compiled code
-* see [github.com/vectaport/flowgraph_test](http://github.com/vectaport/flowgraph_test) for test benches
+* test benches at [github.com/vectaport/flowgraph_test](http://github.com/vectaport/flowgraph_test)
+
+The flowgraph package can be used to render flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compilable Go code.  ipl is an implementation of a flowgraph language suggested by [Karl Fant](http://karlfant.net).
