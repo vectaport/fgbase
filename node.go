@@ -95,7 +95,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	newfmt,tracel := prefixTracel(n)
 	newfmt += format
 	tracel = append(tracel, v...)
-	stdoutLog.Printf(newfmt, tracel...)
+	StdoutLog.Printf(newfmt, tracel...)
 }
 
 // Errorf for logging of error messages.  Uses atomic log mechanism.
@@ -107,7 +107,7 @@ func (n *Node) Errorf(format string, v ...interface{}) {
 	newfmt += " -- %s:%d "
 	tracel = append(tracel, nm)
 	tracel = append(tracel, ln)
-	stderrLog.Printf(newfmt, tracel...)
+	StderrLog.Printf(newfmt, tracel...)
 }
 
 // TraceValRdy lists Node input values and output readiness
@@ -180,7 +180,7 @@ func (n *Node) TraceValRdy(valOnly bool) {
 	}
 	if !valOnly { newfmt += ">>" }
 	newfmt += "\n"
-	stdoutLog.Printf(newfmt, tracel...)
+	StdoutLog.Printf(newfmt, tracel...)
 }
 
 // TraceVals lists input and output values for a Node.

@@ -16,10 +16,10 @@ var nodeID int64
 var globalExecCnt int64
 
 // Log for tracing flowgraph execution.
-var stdoutLog = log.New(os.Stdout, "", 0)
+var StdoutLog = log.New(os.Stdout, "", 0)
 
 // Log for collecting error messages.
-var stderrLog = log.New(os.Stderr, "", 0)
+var StderrLog = log.New(os.Stderr, "", 0)
 
 // Use global execution count.
 var GlobalExecCntFlg = false
