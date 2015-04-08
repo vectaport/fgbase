@@ -74,7 +74,7 @@ func prefixTracel(n *Node) (format string, tracel []interface {}) {
 func addSliceToTracel(d Datum, format string, tracel []interface {}) (newfmt string, newtracel []interface {}) {
 	m := 8
 	l := Len(d)
-	if l < m { m = l }
+	if l < m || TraceLevel==VVV { m = l }
 	tracel = append(tracel, d)
 	format += "%T(["
 	for i := 0; i<m; i++ {
@@ -82,7 +82,7 @@ func addSliceToTracel(d Datum, format string, tracel []interface {}) (newfmt str
 		tracel = append(tracel, Index(d,i))
 		format += "%+v"
 	}
-	if m<l {format += " ..."}
+	if m<l && TraceLevel<VVV {format += " ..."}
 	format += "])"
 	return format,tracel
 }
