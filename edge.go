@@ -36,13 +36,14 @@ func MakeEdgeConst(name string, initVal Datum) Edge {
 	return newEdge(name, initVal, nil, nil)
 }
 
-// MakeEdgeSink initializes a dangling edge to provide a sink for values.
-func MakeEdgeSink(name string) Edge {
-	return newEdge(name, nil, nil, nil)
-}
 // IsConstant returns true if Edge is an implied constant
 func (e *Edge) IsConstant() bool { 
 	return e.Ack == nil && e.Val != nil
+}
+
+// MakeEdgeSink initializes a dangling edge to provide a sink for values.
+func MakeEdgeSink(name string) Edge {
+	return newEdge(name, nil, nil, nil)
 }
 
 // IsSink returns true if Edge is an implied sink
