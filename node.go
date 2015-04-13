@@ -13,23 +13,23 @@ type Node struct {
 	Cnt int64                  // execution count
 	Srcs []*Edge               // upstream links
 	Dsts []*Edge               // downstream links
-	RdyFunc RdyTest            // func to test Edge readiness
-	FireFunc FireNode          // func to fire Node execution
+	RdyFunc NodeRdy            // func to test Edge readiness
+	FireFunc NodeFire          // func to fire Node execution
 	Cases []reflect.SelectCase // select cases to read from Edge's
 }
 
-// RdyTest is the function signature for evaluating readiness of Node to fire.
-type RdyTest func(*Node) bool
+// NodeRdy is the function signature for evaluating readiness of Node to fire.
+type NodeRdy func(*Node) bool
 
-// FireNode is the function signature for firing off a flowgraph primitive (or stub).
-type FireNode func(*Node)
+// NodeFire is the function signature for firing off a flowgraph primitive (or stub).
+type NodeFire func(*Node)
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
 func MakeNode(
 	name string, 
 	srcs, dsts []*Edge, 
-	ready RdyTest, 
-	fire FireNode) Node {
+	ready NodeRdy, 
+	fire NodeFire) Node {
 	var n Node
 	i := atomic.AddInt64(&nodeID, 1)
 	n.ID = i-1
