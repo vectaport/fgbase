@@ -41,7 +41,7 @@ func dstFire (n *Node) {
 	rw.Flush()
 }
 
-// FuncDst writes data to an io.ReadWriter and waits for an acknowledging '\n'.
+// FuncDst writes data and waits for an acknowledging '\n'.
 func FuncDst(a Edge, rw io.ReadWriter) {
 	
 	node := MakeNode("dst", []*Edge{&a}, nil, nil, dstFire)
