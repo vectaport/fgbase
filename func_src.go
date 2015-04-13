@@ -10,7 +10,7 @@ func srcFire (n *Node) {
 	rw := x.Aux.(*bufio.ReadWriter)
 	var err error
 
-	// read data string from io.Reader
+	// read data string
 	x.Val, err = rw.ReadString('\n')
 	if err != nil {
 		n.Errorf("%v", err)
@@ -19,7 +19,7 @@ func srcFire (n *Node) {
 		return
 	}
 
-	// write ack thru io.Writer
+	// write ack
 	_, err = rw.WriteString("\n")
 	if err != nil {
 		n.Errorf("%v", err)
