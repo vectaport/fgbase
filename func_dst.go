@@ -17,7 +17,7 @@ func dstFire (n *Node) {
 	rw := s.RW
 	var err error
 
-	// read ack from io.Reader
+	// read ack
 	if s.Initialized  {
 		_, err = rw.ReadString('\n')
 		if err != nil {
@@ -30,7 +30,7 @@ func dstFire (n *Node) {
 		s.Initialized = true
 	}
 	
-	// write data to io.Writer
+	// write data
 	_, err = rw.WriteString(fmt.Sprintf("%v\n", a.Val))
 	if err != nil {
 		n.Errorf("%v", err)
