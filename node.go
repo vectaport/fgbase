@@ -160,9 +160,8 @@ func (n *Node) TraceValRdy(valOnly bool) {
 					newfmt += func () string { 
 						if (dsti.NoOut) { 
 							return "{}" 
-						} else { 
-							return "<nil>" 
 						}
+						return "<nil>" 
 					} ()
 				}
 			}
