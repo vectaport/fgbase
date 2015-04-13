@@ -30,7 +30,7 @@ func srcFire (n *Node) {
 	rw.Flush()
 }
 
-// FuncSrc reads a value from an io.WriterReader and writes a new-line in response.
+// FuncSrc reads a value from an io.ReadWriter and writes a new-line in response.
 func FuncSrc(x Edge, rw io.ReadWriter) {
 
 	node := MakeNode("src", nil, []*Edge{&x}, nil, srcFire)
