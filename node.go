@@ -22,6 +22,9 @@ type Node struct {
 type NodeRdy func(*Node) bool
 
 // NodeFire is the function signature for firing off a flowgraph primitive (or stub).
+// Any error message should be written using Node.Errorf and
+// nil written to any output Edge.
+
 type NodeFire func(*Node)
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
