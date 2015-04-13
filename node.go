@@ -188,7 +188,7 @@ func (n *Node) TraceVals() { n.TraceValRdy(true) }
 // IncrExecCnt increments execution count of Node
 func (n *Node) IncrExecCnt() {
 	if (GlobalStats) {
-		c := atomic.AddInt64(&globalExecCnt, 1)
+		c := atomic.AddInt64(&globalFireCnt, 1)
 		n.Cnt = c-1
 	} else {
 		n.Cnt = n.Cnt+1
