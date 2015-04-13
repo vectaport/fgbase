@@ -29,7 +29,7 @@ func ZeroTest(a Datum) bool {
 	}
 }
 
-// IsSlice returns true if empty interace (Datum) is a slice.
+// IsSlice returns true if empty interface (Datum) is a slice.
 func IsSlice (d Datum) bool {
 	return reflect.ValueOf(d).Kind()==reflect.Slice
 }
