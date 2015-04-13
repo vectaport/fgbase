@@ -22,7 +22,7 @@ var StdoutLog = log.New(os.Stdout, "", 0)
 var StderrLog = log.New(os.Stderr, "", 0)
 
 // Use global execution count.
-var GlobalExecCntFlg = false
+var GlobalStats = false
 
 // Trace level constants
 const (

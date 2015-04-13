@@ -6,13 +6,19 @@ import (
 	"io"
 )      			
 
+type irw struct {
+	Initialized bool
+	RW *bufio.ReadWriter
+} 
+
 func dstFire (n *Node) {	 
 	a := n.Srcs[0] 		 
-	rw := a.Aux.(*bufio.ReadWriter)
+	s := a.Aux.(*irw)
+	rw := s.RW
 	var err error
 
-	// wait until a newline response has been read
-	if a.Val == nil  {
+	// read ack from io.Reader
+	if s.Initialized  {
 		_, err = rw.ReadString('\n')
 		if err != nil {
 			n.Errorf("%v", err)
@@ -21,10 +27,10 @@ func dstFire (n *Node) {
 			return
 		}
 	} else {
-		a.Val = nil
+		s.Initialized = true
 	}
 	
-	// write this string and flush it out of the buffer
+	// write data to io.Writer
 	_, err = rw.WriteString(fmt.Sprintf("%v\n", a.Val))
 	if err != nil {
 		n.Errorf("%v", err)
@@ -35,14 +41,13 @@ func dstFire (n *Node) {
 	rw.Flush()
 }
 
-// FuncDst writes a value to an io.Reader and waits for a new-line terminated response.
+// FuncDst writes data to an io.Reader and waits for an acknowledging '\n'.
 func FuncDst(a Edge, rw io.ReadWriter) {
 	
 	node := MakeNode("dst", []*Edge{&a}, nil, nil, dstFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
-	a.Aux = bufio.NewReadWriter(reader, writer)
-	a.Val = true // initial state
+	a.Aux = &irw{RW: bufio.NewReadWriter(reader, writer)}
 	node.Run()
 	
 }
