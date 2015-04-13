@@ -30,7 +30,7 @@ func srcFire (n *Node) {
 	rw.Flush()
 }
 
-// FuncSrc reads a data value from and writes a '\n' acknowledgement.
+// FuncSrc reads a data value and writes a '\n' acknowledgement.
 func FuncSrc(x Edge, rw io.ReadWriter) {
 
 	node := MakeNode("src", nil, []*Edge{&x}, nil, srcFire)
