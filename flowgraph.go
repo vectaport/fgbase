@@ -34,7 +34,7 @@ var TraceIndent = false
 
 
 // Unique node id.
-var nodeID int64
+var NodeID int64
 
 // Global count of number of Node firings.
 var globalFireCnt int64

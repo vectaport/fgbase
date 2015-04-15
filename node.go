@@ -33,7 +33,7 @@ func MakeNode(
 	ready NodeRdy, 
 	fire NodeFire) Node {
 	var n Node
-	i := atomic.AddInt64(&nodeID, 1)
+	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i-1
 	n.Name = name
 	n.Cnt = -1
