@@ -16,10 +16,10 @@ func forkFire (n *Node) {
 }
 
 // FuncFork sends a value two ways (x = a; y = a)
-func FuncFork(a, x, y Edge) {
+func FuncFork(a, x, y Edge) Node {
 
 	node := MakeNode("fork", []*Edge{&a}, []*Edge{&x, &y}, nil, forkFire)
-	node.Run()
+	return node
 	
 }
 	

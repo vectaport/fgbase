@@ -37,9 +37,9 @@ func modFire(n *Node) {
 }
 
 // FuncMod is the module operator (x = a % b).
-func FuncMod(a, b, x Edge) {
+func FuncMod(a, b, x Edge) Node {
 
 	node := MakeNode("mod", []*Edge{&a, &b}, []*Edge{&x}, nil, modFire)
-	node.Run()
+	return node
 }
 

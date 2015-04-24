@@ -35,13 +35,13 @@ func srcFire (n *Node) {
 }
 
 // FuncSrc reads a data value and writes a '\n' acknowledgement.
-func FuncSrc(x Edge, rw io.ReadWriter) {
+func FuncSrc(x Edge, rw io.ReadWriter) Node {
 
 	node := MakeNode("src", nil, []*Edge{&x}, nil, srcFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
 	x.Aux = bufio.NewReadWriter(reader, writer)
-	node.Run()
+	return node
 	
 }
 	

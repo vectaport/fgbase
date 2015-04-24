@@ -28,9 +28,9 @@ func steervFire (n *Node) {
 }
 
 // FuncSteerv steers the second value by the first (if a==0 { x = b } else { y = b }).
-func FuncSteerv(a, b, x, y Edge) {
+func FuncSteerv(a, b, x, y Edge) Node {
 
 	node := MakeNode("steerv", []*Edge{&a, &b}, []*Edge{&x, &y}, steervRdy, steervFire)
-	node.Run()
+	return node
 
 }

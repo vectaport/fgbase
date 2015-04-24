@@ -43,8 +43,8 @@ func (e *Edge) Const(d Datum) {
 	e.Ack = nil
 }
 	
-// IsConstant returns true if Edge provides a constant value.
-func (e *Edge) IsConstant() bool { 
+// IsConst returns true if Edge provides a constant value.
+func (e *Edge) IsConst() bool { 
 	return e.Data == nil && e.Val != nil
 }
 
