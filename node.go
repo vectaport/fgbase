@@ -20,17 +20,17 @@ type Node struct {
 	Srcs []*Edge                    // upstream links
 	Dsts []*Edge                    // downstream links
 	RdyFunc NodeRdy                 // func to test Edge readiness
-	FireFunc NodeFire               // func to fire Node execution
+	FireFunc NodeFire               // func to trigger Node execution
 	RunFunc NodeRun                 // func to repeatedly run Node execution
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	caseToEdgeDir map [int] edgeDir // map from selected case to associated Edge
 }
 
-// NodeRdy is the function signature for evaluating readiness of Node to fire.
+// NodeRdy is the function signature for evaluating readiness of a Node to execute.
 type NodeRdy func(*Node) bool
 
-// NodeFire is the function signature for firing off a flowgraph primitive (or stub).
+// NodeFire is the function signature for executing a Node.
 // Any error message should be written using Node.Errorf and
 // nil written to any output Edge.
 type NodeFire func(*Node)
@@ -214,8 +214,8 @@ func (n *Node) TraceValRdy(valOnly bool) {
 // TraceVals lists input and output values for a Node.
 func (n *Node) TraceVals() { n.TraceValRdy(true) }
 
-// IncrExecCnt increments execution count of Node
-func (n *Node) IncrExecCnt() {
+// IncrFireCnt increments execution count of Node
+func (n *Node) IncrFireCnt() {
 	if (GlobalStats) {
 		c := atomic.AddInt64(&globalFireCnt, 1)
 		n.Cnt = c-1
@@ -236,7 +236,7 @@ func (n *Node) RdyAll() bool {
 	} else {
 		if !n.RdyFunc(n) { return false }
 	}
-	n.IncrExecCnt();
+	n.IncrFireCnt();
 	return true
 }
 
@@ -257,7 +257,7 @@ func (n *Node) SendAll() {
 	}
 }
 
-// RecvOne reads one data or ack and marks and decrements RdyCnt.
+// RecvOne reads one data or ack and decrements RdyCnt.
 func (n *Node) RecvOne() {
 	n.TraceValRdy(false)
 	i,recv,recvOK := reflect.Select(n.cases)
