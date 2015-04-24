@@ -58,7 +58,6 @@ func MakeNode(
 	for i := range n.Srcs {
 		n.Srcs[i].RdyCnt = func () int {
 			if n.Srcs[i].Val!=nil { return 0 }; return 1}()
-		if false { n.Tracef("Src %d RdyCnt set to %d\n", i, n.Srcs[i].RdyCnt) }
 		if n.Srcs[i].Data != nil {
 			j := len(*n.Srcs[i].Data)
 			*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum))
@@ -68,15 +67,36 @@ func MakeNode(
 		}
 	}
 	for i := range n.Dsts {
-		n.Dsts[i].RdyCnt = func (b bool) int {if b { return 0 }; return 1 } (n.Dsts[i].Val==nil)
-		if false { n.Tracef("Dst %d RdyCnt set to %d\n", i, n.Dsts[i].RdyCnt) }
+		n.Dsts[i].RdyCnt = func (b bool) int {if b { return 0 }; return len(*n.Dsts[i].Data) } (n.Dsts[i].Val==nil)
 		if n.Dsts[i].Ack!=nil {
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{n.Dsts[i], false}
 			cnt = cnt+1
 		}
 	}
+
 	return n
+}
+
+	
+func (n *Node) TraceRdyCnt() {
+	f, v := prefixTracel(n)
+	f += "<<"
+	for i := range n.Srcs {
+		if i!=0 { f += "," }
+		f += "%s{%d}"
+		v = append(v, n.Srcs[i].Name)
+		v = append(v, n.Srcs[i].RdyCnt)
+	}
+	f += ":"
+	for i := range n.Dsts {
+		if i!=0 { f += "," }
+		f += "%s{%d}"
+		v = append(v, n.Dsts[i].Name)
+		v = append(v, n.Dsts[i].RdyCnt)
+	}
+	f += ">>\n"
+	StdoutLog.Printf(f, v...)
 }
 
 func prefixTracel(n *Node) (format string, tracel []interface {}) {
@@ -142,33 +162,28 @@ func (n *Node) Errorf(format string, v ...interface{}) {
 // TraceValRdy lists Node input values and output values or readiness.
 func (n *Node) TraceValRdy(valOnly bool) {
 
-	if (!valOnly && TraceLevel<VV || TraceLevel==Q)  {return}
+	if (!valOnly && TraceLevel<VVV || TraceLevel==Q)  {return}
 	newfmt,tracel := prefixTracel(n)
 	if !valOnly { newfmt += "<<" }
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
 		if (i!=0) { newfmt += "," }
 		tracel = append(tracel, srci.Name)
-		newfmt += "%s="
+		newfmt += "%s"
 		if (srci.Rdy()) {
 			if IsSlice(srci.Val) {
 				newfmt,tracel = addSliceToTracel(srci.Val, newfmt, tracel)
 			} else {
-				if true { 
-					if srci.Val==nil  {
-						newfmt += "<nil>"
-					} else {
-						tracel = append(tracel, srci.Val)
-						tracel = append(tracel, srci.Val)
-						newfmt += "%T(%v)"
-					}
+				if srci.Val==nil  {
+					newfmt += "=<nil>"
 				} else {
-					tracel = append(tracel, srci)
-					newfmt += "%+v"
+					tracel = append(tracel, srci.Val)
+					tracel = append(tracel, srci.Val)
+					newfmt += "=%T(%v)"
 				}
 			}
 		} else {
-			newfmt += "{}"
+			newfmt += "={}"
 		}
 	}
 	newfmt += ":"
@@ -196,9 +211,13 @@ func (n *Node) TraceValRdy(valOnly bool) {
 			}
 		} else {
 			if true {
-				tracel = append(tracel, dsti.Name+".RdyCnt")
-				tracel = append(tracel, dsti.RdyCnt)
-				newfmt += "%s=%v"
+				tracel = append(tracel, dsti.Name)
+				if dsti.RdyCnt==1 {
+					newfmt += "%s={}"
+				} else {
+					tracel = append(tracel, dsti.RdyCnt)
+					newfmt += "%s={%v}"
+				}
 			} else {
 				tracel = append(tracel, dsti.Name)
 				tracel = append(tracel, dsti)
