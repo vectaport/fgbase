@@ -2,6 +2,7 @@ package flowgraph
 
 import (
 	"fmt"
+
 	"github.com/ledyba/go-fft/fft"
 )
 
