@@ -4,11 +4,11 @@ import (
 )
 
 func steervRdy (n *Node) bool {
-	if n.Srcs[0].Rdy&&n.Srcs[1].Rdy {
+	if n.Srcs[0].Rdy()&&n.Srcs[1].Rdy() {
 		if ZeroTest(n.Srcs[0].Val) {
-			return n.Dsts[0].Rdy
+			return n.Dsts[0].Rdy()
 		}
-		return n.Dsts[1].Rdy
+		return n.Dsts[1].Rdy()
 	}
 	return false
 }

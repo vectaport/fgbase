@@ -7,6 +7,7 @@ package flowgraph
 import (
 	"log"
 	"os"
+	"time"
 )
 
 // Log for tracing flowgraph execution.
@@ -32,10 +33,24 @@ var TraceLevel = Q
 // Indent trace by node id tabs.
 var TraceIndent = false
 
-
 // Unique node id.
 var NodeID int64
 
 // Global count of number of Node firings.
 var globalFireCnt int64
 
+// RunAll launches each node as a goroutine.
+func RunAll(n []Node, timeout time.Duration) {
+	for i:=0; i<len(n); i++ {
+		var node = n[i]
+		go node.Run()
+	}
+
+	time.Sleep(timeout)
+	StdoutLog.Printf("\n")
+}
+
+// MakeGraph returns a slice of Edge and a slice of Node.
+func MakeGraph(sze, szn int) ([]Edge,[]Node) {
+	return MakeEdges(sze),MakeNodes(szn)
+}

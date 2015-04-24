@@ -9,9 +9,9 @@ func constFire(n *Node) {
 }
 
 // FuncConst produces a constant value (x = c).
-func FuncConst(x Edge, c Datum) {
+func FuncConst(x Edge, c Datum) Node {
 
 	node:=MakeNode("const", nil, []*Edge{&x}, nil, constFire)
 	x.Aux = c
-	node.Run()
+	return node
 }
