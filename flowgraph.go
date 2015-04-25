@@ -1,12 +1,10 @@
-/*
-Package flowgraph layers a ready-send flow mechanism on top of goroutines.
-*/
-
+// Package flowgraph layers a ready-send flow mechanism on top of goroutines.
 package flowgraph
 
 import (
 	"log"
 	"os"
+	"time"
 )
 
 // Log for tracing flowgraph execution.
@@ -20,22 +18,36 @@ var GlobalStats = false
 
 // Trace level constants.
 const (
-	Q = iota
-	V
-	VV
-	VVV
+	Q = iota  // quiet
+	V         // trace Node firing
+	VV        // trace channel IO
+	VVV       // trace state before select
 )
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
 
-// Indent trace by node id tabs.
+// Indent trace by Node id tabs.
 var TraceIndent = false
 
-
-// Unique node id.
+// Unique Node id.
 var NodeID int64
 
 // Global count of number of Node firings.
 var globalFireCnt int64
 
+// RunAll calls Run for each Node.
+func RunAll(n []Node, timeout time.Duration) {
+	for i:=0; i<len(n); i++ {
+		var node = n[i]
+		go node.Run()
+	}
+
+	if timeout>0 { time.Sleep(timeout) }
+	StdoutLog.Printf("\n")
+}
+
+// MakeGraph returns a slice of Edge and a slice of Node.
+func MakeGraph(sze, szn int) ([]Edge,[]Node) {
+	return MakeEdges(sze),MakeNodes(szn)
+}

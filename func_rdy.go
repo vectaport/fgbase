@@ -10,8 +10,8 @@ func rdyFire(n *Node) {
 }
 
 // FuncRdy waits for two values before passing on the first (b; x = a).
-func FuncRdy(a, b, x Edge) {
+func FuncRdy(a, b, x Edge) Node {
 
 	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdyFire)
-	node.Run()
+	return node
 }

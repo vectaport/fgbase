@@ -44,9 +44,9 @@ func addFire(n *Node) {
 }
 
 // FuncAdd adds values and returns the sum (x = a + b).
-func FuncAdd(a, b, x Edge) {
+func FuncAdd(a, b, x Edge) Node {
 
 	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, addFire)
-	node.Run()
+	return node
 }
 

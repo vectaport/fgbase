@@ -1,54 +1,68 @@
 package flowgraph
 
+import (
+	"strconv"
+)
+
 // Edge of a flowgraph.
 type Edge struct {
 
 	// values shared by upstream and downstream Node
-	Name string       // for trace
-	Data chan Datum   // downstream data channel
-	Ack chan bool     // upstream request channel
+	Name string        // for trace
+	Data *[]chan Datum // slice of data channels
+	Ack chan bool      // request (or acknowledge) channel
 
 	// values unique to upstream and downstream Node
-	Val Datum         // generic empty interface
-	Rdy bool          // readiness of I/O
-	NoOut bool        // set true to inhibit one output, data or ack
-	Aux Datum         // auxiliary empty interface to hold state
+	Val Datum          // generic empty interface
+	RdyCnt int         // readiness of I/O
+	NoOut bool         // set true to inhibit one output, data or ack
+	Aux Datum          // auxiliary empty interface to hold state
 }
 
 // Return new Edge to connect two Node's.
 // Initialize optional data value to start flow.
-func newEdge(name string, initVal Datum, data chan Datum, ack chan bool) Edge {
+func newEdge(name string, initVal Datum) Edge {
 	var e Edge
 	e.Name = name
 	e.Val = initVal
-	e.Data = data
-	e.Ack = ack
+	dc := make([]chan Datum, 0)
+	e.Data = &dc
+	e.Ack = make(chan bool)
 	return e
 }
 
 // MakeEdge initializes optional data value to start flow.
 func MakeEdge(name string, initVal Datum) Edge {
-	return newEdge(name, initVal, make(chan Datum), make(chan bool))
+	return newEdge(name, initVal)
 }
 
-// MakeEdgeConst initializes a dangling edge to provide a constant value.
-func MakeEdgeConst(name string, initVal Datum) Edge {
-	return newEdge(name, initVal, nil, nil)
+// Const sets up an Edge to provide a constant value.
+func (e *Edge) Const(d Datum) {
+	e.Val = d
+	e.Data = nil
+	e.Ack = nil
+}
+	
+// IsConst returns true if Edge provides a constant value.
+func (e *Edge) IsConst() bool { 
+	return e.Data == nil && e.Val != nil
 }
 
-// IsConstant returns true if Edge is an implied constant
-func (e *Edge) IsConstant() bool { 
-	return e.Ack == nil && e.Val != nil
+// Sink sets up an Edge as a value sink.
+func (e *Edge) Sink() {
+	e.Val = nil
+	e.Data = nil
+	e.Ack = nil
 }
 
-// MakeEdgeSink initializes a dangling edge to provide a sink for values.
-func MakeEdgeSink(name string) Edge {
-	return newEdge(name, nil, nil, nil)
-}
-
-// IsSink returns true if Edge is an implied sink
+// IsSink returns true if Edge is a value sink.
 func (e *Edge) IsSink() bool { 
-	return e.Ack == nil && e.Val == nil
+	return e.Data == nil && e.Val == nil
+}
+
+// Rdy tests if RdyCnt has return to zero.
+func (e *Edge) Rdy() bool {
+	return e.RdyCnt==0
 }
 
 // SendData writes to the Data channel
@@ -62,12 +76,10 @@ func (e *Edge) SendData(n *Node) {
 					n.Tracef("%s.Data <- %T(%v)\n", e.Name, e.Val, e.Val)
 				}
 			}
-			if (e.Val == nil) {
-				e.Data <- nil
-			} else {
-				e.Data <- e.Val
+			for i := range *e.Data {
+				(*e.Data)[i] <- e.Val
 			}
-			e.Rdy = false
+			e.RdyCnt = len(*e.Data)
 			e.Val = nil
 		} else {
 			e.NoOut = false
@@ -83,11 +95,21 @@ func (e *Edge) SendAck(n *Node) {
 				n.Tracef("%s.Ack <- true\n", e.Name)
 			}
 			e.Ack <- true
-			e.Rdy = false
+			e.RdyCnt = 1
 		} else {
 			e.NoOut = false
 		}
 	}
+}
+
+// MakeEdges returns a slice of Edge.
+func MakeEdges(sz int) []Edge {
+	e := make([]Edge, sz)
+	for i:=0; i<sz; i++ {
+		nm := "e" + strconv.Itoa(i)
+		e[i] = MakeEdge(nm, nil)
+	}
+	return e
 }
 
 

@@ -42,13 +42,13 @@ func dstFire (n *Node) {
 }
 
 // FuncDst writes data and waits for an acknowledging '\n'.
-func FuncDst(a Edge, rw io.ReadWriter) {
+func FuncDst(a Edge, rw io.ReadWriter) Node {
 	
 	node := MakeNode("dst", []*Edge{&a}, nil, nil, dstFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
 	a.Aux = &irw{RW: bufio.NewReadWriter(reader, writer)}
-	node.Run()
+	return node
 	
 }
 	
