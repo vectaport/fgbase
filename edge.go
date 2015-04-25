@@ -70,10 +70,14 @@ func (e *Edge) SendData(n *Node) {
 	if(e.Data !=nil) {
 		if (!e.NoOut) {
 			if (TraceLevel>=VV) {
+				nm := e.Name + ".Data"
+				if len(*e.Data)>1 {
+					nm += "{" + strconv.Itoa(len(*e.Data)) + "}"
+				}
 				if (e.Val==nil) {
-					n.Tracef("%s.Data <- <nil>\n", e.Name)
+					n.Tracef("%s <- <nil>\n", nm)
 				} else {
-					n.Tracef("%s.Data <- %T(%v)\n", e.Name, e.Val, e.Val)
+					n.Tracef("%s <- %T(%v)\n", nm, e.Val, e.Val)
 				}
 			}
 			for i := range *e.Data {
@@ -92,7 +96,7 @@ func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.NoOut) {
 			if (TraceLevel>=VV) {
-				n.Tracef("%s.Ack <- true\n", e.Name)
+				n.Tracef("%s.Ack <-\n", e.Name)
 			}
 			e.Ack <- true
 			e.RdyCnt = 1

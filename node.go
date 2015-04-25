@@ -3,6 +3,7 @@ package flowgraph
 import (
 	"reflect"
 	"runtime"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -296,7 +297,11 @@ func (n *Node) RecvOne() {
 			dsti := n.caseToEdgeDir[i].edge
 			dsti.RdyCnt--
 			if (TraceLevel>=VV) {
-				n.Tracef("true <- %s.Ack\n", dsti.Name)
+				nm := dsti.Name + ".Ack"
+				if len(*dsti.Data)>1 {
+					nm += "{" + strconv.Itoa(dsti.RdyCnt+1) + "}"
+				}
+				n.Tracef("<- %s\n", nm)
 			}
 		}
 	}
