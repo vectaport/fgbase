@@ -57,29 +57,29 @@ func Promote(n *Node, a, b Datum) (aBig, bBig Datum, same bool) {
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)
 
-	if(ta==tb) { return a,b,true }
+	if ta==tb { return a,b,true }
 
 	aBigger := biggerType(a, b)
-	if (aBigger) {
-		if(tb.ConvertibleTo(ta)) { 
-			if (TraceLevel>=VVV && n!=nil) { n.Tracef("promoting %v to %v\n", tb, ta) }
+	if aBigger {
+		if tb.ConvertibleTo(ta) { 
+			if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 0: promoting %v to %v\n", tb, ta) }
 			return a,reflect.ValueOf(b).Convert(ta).Interface(),true 
 		}
 	}
 
-	if(ta.ConvertibleTo(tb)) { 
-		if (TraceLevel>=VVV && n!=nil) { n.Tracef("promoting %v to %v\n", ta, tb) }
+	if ta.ConvertibleTo(tb) { 
+		if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 1: promoting %v to %v\n", ta, tb) }
 		return reflect.ValueOf(a).Convert(tb).Interface(),b,true 
 	}
 
-	if (!aBigger) {
-		if(tb.ConvertibleTo(ta)) { 
-			if (TraceLevel>=VVV && n!=nil) { n.Tracef("promoting %v to %v\n", tb, ta) }
+	if !aBigger {
+		if tb.ConvertibleTo(ta) { 
+			if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 2: promoting %v to %v\n", tb, ta) }
 			return a,reflect.ValueOf(b).Convert(ta).Interface(),true 
 		}
 	}
 
-	if (TraceLevel>=VVV && n!=nil) { n.Tracef("no promotion between %v to %v\n", tb, ta) }
+	if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 3: no promotion between %v to %v\n", tb, ta) }
 	return a,b,false
 }
 
