@@ -15,7 +15,8 @@ func forkFire (n *Node) {
 	}
 }
 
-// FuncFork sends a value two ways (x = a; y = a)
+// FuncFork sends a value two ways (x = a; y = a).
+// If the value is a slice it is duplicated onto the second output.
 func FuncFork(a, x, y Edge) Node {
 
 	node := MakeNode("fork", []*Edge{&a}, []*Edge{&x, &y}, nil, forkFire)
