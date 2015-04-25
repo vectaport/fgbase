@@ -13,7 +13,7 @@ type edgeDir struct {
 }
 	
 
-// Node of a flowgraph
+// Node of a flowgraph.
 type Node struct {
 	ID int64                        // unique id
 	Name string                     // for tracing
@@ -77,27 +77,6 @@ func MakeNode(
 	}
 
 	return n
-}
-
-	
-func (n *Node) TraceRdyCnt() {
-	f, v := prefixTracel(n)
-	f += "<<"
-	for i := range n.Srcs {
-		if i!=0 { f += "," }
-		f += "%s{%d}"
-		v = append(v, n.Srcs[i].Name)
-		v = append(v, n.Srcs[i].RdyCnt)
-	}
-	f += ":"
-	for i := range n.Dsts {
-		if i!=0 { f += "," }
-		f += "%s{%d}"
-		v = append(v, n.Dsts[i].Name)
-		v = append(v, n.Dsts[i].RdyCnt)
-	}
-	f += ">>\n"
-	StdoutLog.Printf(f, v...)
 }
 
 func prefixTracel(n *Node) (format string, tracel []interface {}) {
@@ -234,7 +213,7 @@ func (n *Node) TraceValRdy(valOnly bool) {
 // TraceVals lists input and output values for a Node.
 func (n *Node) TraceVals() { n.TraceValRdy(true) }
 
-// IncrFireCnt increments execution count of Node
+// IncrFireCnt increments execution count of Node.
 func (n *Node) IncrFireCnt() {
 	if (GlobalStats) {
 		c := atomic.AddInt64(&globalFireCnt, 1)
@@ -260,7 +239,7 @@ func (n *Node) RdyAll() bool {
 	return true
 }
 
-// Fire node using function pointer
+// Fire node using function pointer.
 func (n *Node) Fire() {
 	if (n.FireFunc!=nil) { n.FireFunc(n) }
 }
