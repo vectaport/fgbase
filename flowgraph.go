@@ -1,4 +1,5 @@
 // Package flowgraph layers a ready-send flow mechanism on top of goroutines.
+// https://github.com/vectaport/flowgraph/wiki
 package flowgraph
 
 import (
