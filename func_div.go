@@ -35,7 +35,7 @@ func divFire(n *Node) {
 	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for division (%v*%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.Errorf("incompatible types for division (%v/%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 		return
 	}
