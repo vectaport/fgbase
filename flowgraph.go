@@ -34,8 +34,8 @@ var TraceIndent = false
 // Unique Node id.
 var NodeID int64
 
-// Global count of number of Node firings.
-var globalFireCnt int64
+// Global count of number of Node executions.
+var globalWorkCnt int64
 
 // RunAll calls Run for each Node.
 func RunAll(n []Node, timeout time.Duration) {
