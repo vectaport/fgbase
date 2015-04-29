@@ -16,35 +16,35 @@ func qsortFire (n *Node) {
 		n.Errorf("not of type Interface2 (%T)\n", a.Val)
 		return
 	}
+
 	l := Len(a.Val)
 	d := a.Val.(Interface2)
 	if l <= 1024 {
-		n.Tracef("Sorted before?  %v\n", d.Sorted())
 		Sort(d)
-		n.Tracef("Sorted after?  %v\n", d.Sorted())
-		x.Val=d
+		x.Val=x.AckWrap(d)
 		return
 	}
-	n.Tracef("READY FOR SPECIAL SORT\n")
+
 	mlo,mhi := doPivot(d, 0, l)
-	n.Tracef("mlo,mhi %d,%d\n", mlo, mhi)
 	maxDepth := 0
 	for i := l; i > 0; i >>= 1 {
 		maxDepth++
 	}
 	maxDepth *= 2
 	maxDepth--
-	n.Tracef("Sorted before?  %v\n", d.Sorted())
 	quickSort(d, 0, mlo, maxDepth)
 	quickSort(d, mhi, l, maxDepth)
-	n.Tracef("Sorted after?  %v\n", d.Sorted())
-	x.Val = d
+	x.Val = x.AckWrap(d)
 }
 
 // FuncQsort recursively implements a quicksort with goroutines (x=qsort(a)).
-func FuncQsort(a, x Edge) Node {
-
-	node := MakeNode("qsort", []*Edge{&a}, []*Edge{&x}, nil, qsortFire)
-	return node
+func FuncQsort(a, x Edge, poolSz int) []Node {
+	
+	n := MakeNodes(poolSz)
+	for i:=0; i<poolSz; i++ {
+		aa, xx := a,x  // make a copy of the Edge's for each one
+		n[i] = MakeNode2("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortFire)
+	}
+	return n
 
 }

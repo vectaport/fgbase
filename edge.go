@@ -1,6 +1,7 @@
 package flowgraph
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -74,10 +75,20 @@ func (e *Edge) SendData(n *Node) {
 				if len(*e.Data)>1 {
 					nm += "{" + strconv.Itoa(len(*e.Data)) + "}"
 				}
-				if (e.Val==nil) {
-					n.Tracef("%s <- <nil>\n", nm)
+				ev := e.Val
+				var asterisk string
+				if _,ok := ev.(ackWrap); ok {
+					ev = ev.(ackWrap).d
+					asterisk += " *"
+				}
+				if (ev==nil) {
+					n.Tracef("%s <- <nil>%s\n", nm, asterisk)
 				} else {
-					n.Tracef("%s <- %T(%v)\n", nm, e.Val, e.Val)
+					n.Tracef("%s <- %s%s\n", nm, 
+						func() string {
+							if IsSlice(ev) { return TraceSlice(ev) }
+							return fmt.Sprintf("%T(%v)", ev, ev)}(),
+						asterisk)
 				}
 			}
 			for i := range *e.Data {
@@ -117,3 +128,7 @@ func MakeEdges(sz int) []Edge {
 }
 
 
+// AckWrap bundles an ack channel and a Datum to pass acks downstream.
+func (e *Edge) AckWrap(d Datum) Datum {
+	return ackWrap{e.Ack, d}
+}

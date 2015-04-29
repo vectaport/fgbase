@@ -40,12 +40,7 @@ type NodeWork func(*Node)
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-// MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
-func MakeNode(
-	name string, 
-	srcs, dsts []*Edge, 
-	ready NodeRdy, 
-	work NodeWork) Node {
+func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reuseChan bool) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i-1
@@ -62,7 +57,11 @@ func MakeNode(
 			if n.Srcs[i].Val!=nil { return 0 }; return 1}()
 		if n.Srcs[i].Data != nil {
 			j := len(*n.Srcs[i].Data)
-			*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum))
+			if j==0 || !reuseChan {
+				*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum))
+			} else {
+				j = 0
+			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf((*n.Srcs[i].Data)[j])})
 			n.caseToEdgeDir[cnt] = edgeDir{n.Srcs[i], true}
 			cnt = cnt+1
@@ -71,6 +70,9 @@ func MakeNode(
 	for i := range n.Dsts {
 		n.Dsts[i].RdyCnt = func (b bool) int {if b { return 0 }; return len(*n.Dsts[i].Data) } (n.Dsts[i].Val==nil)
 		if n.Dsts[i].Ack!=nil {
+			if reuseChan {
+				n.Dsts[i].Ack = make(chan bool)
+			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{n.Dsts[i], false}
 			cnt = cnt+1
@@ -80,37 +82,59 @@ func MakeNode(
 	return n
 }
 
-func prefixTracef(n *Node) (format string) {
-	var addNodeAddr = false
-	var varl [] interface {}
-	varl = append(varl, n.Name)
-	varl = append(varl, n.ID)
-	if (n.Cnt>=0) {
-		varl = append(varl, n.Cnt)
-	} else {
-		varl = append(varl, "*")
-	}
-	if (addNodeAddr) { varl = append(varl, n) }
-	var f string
-	if (TraceIndent) {
-		for i := int64(0);i<n.ID;i++ {
-			f += "\t"
-		}
-	}
-	if (addNodeAddr) { f += "%s(%d:%v:%p) " } else { f += "%s(%d:%v) " }
-	return fmt.Sprintf(f, varl...)
+// MakeNode2 returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
+// The Edge data channels get reused.
+func MakeNode2(
+	name string, 
+	srcs, dsts []*Edge, 
+	ready NodeRdy, 
+	work NodeWork) Node {
+	return makeNode(name, srcs, dsts, ready, work, true)
 }
 
-func addSliceToTracel(d Datum) string {
+// MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
+func MakeNode(
+	name string, 
+	srcs, dsts []*Edge, 
+	ready NodeRdy, 
+	work NodeWork) Node {
+	return makeNode(name, srcs, dsts, ready, work, false)
+}
+
+func prefixTracef(n *Node) (format string) {
+	var addNodeAddr = TraceLevel>=VVVV
+	var newFmt string
+	if (TraceIndent) {
+		for i := int64(0);i<n.ID;i++ {
+			newFmt += "\t"
+		}
+	}
+	newFmt += n.Name
+	newFmt += fmt.Sprintf("(%d", n.ID)
+	if (n.Cnt>=0) {
+		newFmt += fmt.Sprintf(":%d", n.ID)
+	} else {
+		newFmt += ":*"
+	}
+	if (addNodeAddr) { 
+		newFmt += fmt.Sprintf(":%p", n)
+	}
+	newFmt += ") "
+	return newFmt
+}
+
+// TraceSlice returns a ellipse shortened string representation of a 
+// slice when TraceLevel<VVVV.
+func TraceSlice(d Datum) string {
 	m := 8
 	l := Len(d)
-	if l < m || TraceLevel==VVV { m = l }
+	if l < m || TraceLevel==VVVV { m = l }
 	newFmt := fmt.Sprintf("%T([", d)
 	for i := 0; i<m; i++ {
 		if i!=0 {newFmt += " "}
 		newFmt += fmt.Sprintf("%+v", Index(d,i))
 	}
-	if m<l && TraceLevel<VVV {newFmt += " ..."}
+	if m<l && TraceLevel<VVVV {newFmt += " ..."}
 	newFmt += "])"
 	return newFmt
 }
@@ -144,7 +168,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 		newFmt += fmt.Sprintf("%s=", srci.Name)
 		if (srci.Rdy()) {
 			if IsSlice(srci.Val) {
-				newFmt +=addSliceToTracel(srci.Val)
+				newFmt +=TraceSlice(srci.Val)
 			} else {
 				if srci.Val==nil  {
 					newFmt += "<nil>"
@@ -165,14 +189,18 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 	var newFmt string
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
+		dstiv := dsti.Val
+		if _,ok := dstiv.(ackWrap); ok {
+			dstiv = dstiv.(ackWrap).d // remove wrapper for tracing
+		}
 		if (i!=0) { newFmt += "," }
 		if (valOnly) {
 			newFmt += fmt.Sprintf("%s=", dsti.Name)
-			if IsSlice(dsti.Val) {
-				newFmt += addSliceToTracel(dsti.Val)
+			if IsSlice(dstiv) {
+				newFmt += TraceSlice(dstiv)
 			} else {
-				if (dsti.Val != nil) {
-					newFmt += fmt.Sprintf("%T(%v)", dsti.Val, dsti.Val)
+				if (dstiv != nil) {
+					newFmt += fmt.Sprintf("%T(%v)", dstiv, dstiv)
 				} else {
 					newFmt += func () string { 
 						if (dsti.NoOut) { 
@@ -262,12 +290,23 @@ func (n *Node) RecvOne() {
 		if n.caseToEdgeDir[i].srcFlag {
 			srci := n.caseToEdgeDir[i].edge
 			srci.Val = recv.Interface()
+			var asterisk string
+			if _,ok := srci.Val.(ackWrap); ok {
+				srci.Ack = srci.Val.(ackWrap).ack
+				srci.Val = srci.Val.(ackWrap).d
+				asterisk += " *"
+			}
 			srci.RdyCnt--
 			if (TraceLevel>=VV) {
 				if (srci.Val==nil) {
-					n.Tracef("<nil> <- %s.Data\n", srci.Name)
+					n.Tracef("<nil> <- %s.Data%s\n", srci.Name, asterisk)
 				} else {
-					n.Tracef("%T(%v) <- %s.Data\n", srci.Val, srci.Val, srci.Name)
+					n.Tracef("%s <- %s.Data%s\n", 
+						func() string {
+							if IsSlice(srci.Val) { return TraceSlice(srci.Val) }
+							return fmt.Sprintf("%T(%v)", srci.Val, srci.Val)}(), 
+						srci.Name,
+						asterisk)
 				}
 			}
 		} else {
@@ -308,4 +347,3 @@ func MakeNodes(sz int) []Node {
 	n := make([]Node, sz)
 	return n
 }
-
