@@ -18,9 +18,11 @@ type Edge struct {
 	RdyCnt int         // readiness of I/O
 	NoOut bool         // set true to inhibit one output, data or ack
 	Aux Datum          // auxiliary empty interface to hold state
+	Ack2 chan bool     // alternate channel for ack steering
+
 }
 
-// Return new Edge to connect two Node's.
+// Return new Edge to connect one upstream Node to one or more downstream Node's.
 // Initialize optional data value to start flow.
 func newEdge(name string, initVal Datum) Edge {
 	var e Edge
@@ -78,8 +80,8 @@ func (e *Edge) SendData(n *Node) {
 				ev := e.Val
 				var asterisk string
 				if _,ok := ev.(ackWrap); ok {
+					asterisk += fmt.Sprintf(" *(%p)", ev.(ackWrap).ack)
 					ev = ev.(ackWrap).d
-					asterisk += " *"
 				}
 				if (ev==nil) {
 					n.Tracef("%s <- <nil>%s\n", nm, asterisk)
@@ -106,10 +108,18 @@ func (e *Edge) SendData(n *Node) {
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.NoOut) {
-			if (TraceLevel>=VV) {
-				n.Tracef("%s.Ack <-\n", e.Name)
+			if e.Ack2 != nil {
+				if (TraceLevel>=VV) {
+					n.Tracef("%s.Ack2(%p) <-\n", e.Name, e.Ack2)
+				}
+				e.Ack2 <- true
+				e.Ack2 = nil
+			} else {
+				if (TraceLevel>=VV) {
+					n.Tracef("%s.Ack(%p) <-\n", e.Name, e.Ack)
+				}
+				e.Ack <- true
 			}
-			e.Ack <- true
 			e.RdyCnt = 1
 		} else {
 			e.NoOut = false

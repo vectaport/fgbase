@@ -12,7 +12,6 @@ type edgeDir struct {
 	edge *Edge
 	srcFlag bool
 }
-	
 
 // Node of a flowgraph.
 type Node struct {
@@ -26,6 +25,7 @@ type Node struct {
 	RunFunc NodeRun                 // func to repeatedly run Node
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
+	dataBackup []reflect.Value      // backup data channels
 	caseToEdgeDir map [int] edgeDir // map from selected case to associated Edge
 }
 
@@ -63,6 +63,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 				j = 0
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf((*n.Srcs[i].Data)[j])})
+			n.dataBackup = append(n.dataBackup, n.cases[cnt].Chan)  // backup copy
 			n.caseToEdgeDir[cnt] = edgeDir{n.Srcs[i], true}
 			cnt = cnt+1
 		}
@@ -112,7 +113,7 @@ func prefixTracef(n *Node) (format string) {
 	newFmt += n.Name
 	newFmt += fmt.Sprintf("(%d", n.ID)
 	if (n.Cnt>=0) {
-		newFmt += fmt.Sprintf(":%d", n.ID)
+		newFmt += fmt.Sprintf(":%d", n.Cnt)
 	} else {
 		newFmt += ":*"
 	}
@@ -126,6 +127,9 @@ func prefixTracef(n *Node) (format string) {
 // TraceSlice returns a ellipse shortened string representation of a 
 // slice when TraceLevel<VVVV.
 func TraceSlice(d Datum) string {
+	if false {
+		return fmt.Sprintf("%p[0:%d]", d, Len(d.(Interface2)))
+	}
 	m := 8
 	l := Len(d)
 	if l < m || TraceLevel==VVVV { m = l }
@@ -231,14 +235,13 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 // traceValRdy lists Node input values and output values or readiness.
 func (n *Node) traceValRdy(valOnly bool) {
 
-	if (!valOnly && TraceLevel<VVV || TraceLevel==Q)  {return}
 	newFmt := n.traceValRdySrc(valOnly)
 	newFmt += n.traceValRdyDst(valOnly)
 	StdoutLog.Printf(newFmt)
 }
 
 // TraceVals lists input and output values for a Node.
-func (n *Node) TraceVals() { n.traceValRdy(true) }
+func (n *Node) TraceVals() { if TraceLevel!=Q { n.traceValRdy(true) } }
 
 // IncrWorkCnt increments execution count of Node.
 func (n *Node) IncrWorkCnt() {
@@ -262,7 +265,14 @@ func (n *Node) RdyAll() bool {
 	} else {
 		if !n.RdyFunc(n) { return false }
 	}
+
 	n.IncrWorkCnt();
+
+	// restore data channels for next use
+	for i := range n.dataBackup {
+		n.cases[i].Chan = n.dataBackup[i]
+	}
+
 	return true
 }
 
@@ -283,44 +293,48 @@ func (n *Node) SendAll() {
 }
 
 // RecvOne reads one data or ack and decrements RdyCnt.
-func (n *Node) RecvOne() {
-	n.traceValRdy(false)
+func (n *Node) RecvOne() (recvOK bool) {
+	if TraceLevel >= VVV {n.traceValRdy(false)}
 	i,recv,recvOK := reflect.Select(n.cases)
-	if (recvOK) {
-		if n.caseToEdgeDir[i].srcFlag {
-			srci := n.caseToEdgeDir[i].edge
-			srci.Val = recv.Interface()
-			var asterisk string
-			if _,ok := srci.Val.(ackWrap); ok {
-				srci.Ack = srci.Val.(ackWrap).ack
-				srci.Val = srci.Val.(ackWrap).d
-				asterisk += " *"
-			}
-			srci.RdyCnt--
-			if (TraceLevel>=VV) {
-				if (srci.Val==nil) {
-					n.Tracef("<nil> <- %s.Data%s\n", srci.Name, asterisk)
-				} else {
-					n.Tracef("%s <- %s.Data%s\n", 
-						func() string {
-							if IsSlice(srci.Val) { return TraceSlice(srci.Val) }
-							return fmt.Sprintf("%T(%v)", srci.Val, srci.Val)}(), 
-						srci.Name,
-						asterisk)
-				}
-			}
-		} else {
-			dsti := n.caseToEdgeDir[i].edge
-			dsti.RdyCnt--
-			if (TraceLevel>=VV) {
-				nm := dsti.Name + ".Ack"
-				if len(*dsti.Data)>1 {
-					nm += "{" + strconv.Itoa(dsti.RdyCnt+1) + "}"
-				}
-				n.Tracef("<- %s\n", nm)
+	if !recvOK {
+		n.Errorf("receive not ok for i=%d case\n", i);
+		return false
+	}
+	if n.caseToEdgeDir[i].srcFlag {
+		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+		srci := n.caseToEdgeDir[i].edge
+		srci.Val = recv.Interface()
+		var asterisk string
+		if _,ok := srci.Val.(ackWrap); ok {
+			srci.Ack2 = srci.Val.(ackWrap).ack
+			srci.Val = srci.Val.(ackWrap).d
+			asterisk = fmt.Sprintf(" *(%p)", srci.Ack2)
+		}
+		srci.RdyCnt--
+		if (TraceLevel>=VV) {
+			if (srci.Val==nil) {
+				n.Tracef("<nil> <- %s.Data%s\n", srci.Name, asterisk)
+			} else {
+				n.Tracef("%s <- %s.Data%s\n", 
+					func() string {
+						if IsSlice(srci.Val) { return TraceSlice(srci.Val) }
+						return fmt.Sprintf("%T(%v)", srci.Val, srci.Val)}(), 
+					srci.Name,
+					asterisk)
 			}
 		}
+	} else {
+		dsti := n.caseToEdgeDir[i].edge
+		dsti.RdyCnt--
+		if (TraceLevel>=VV) {
+			nm := dsti.Name + ".Ack"
+			if len(*dsti.Data)>1 {
+				nm += "{" + strconv.Itoa(dsti.RdyCnt+1) + "}"
+			}
+			n.Tracef("<- %s(%p)\n", nm, dsti.Ack)
+		}
 	}
+	return recvOK
 }
 
 // Run is an event loop that runs forever for each Node.
@@ -338,7 +352,9 @@ func (n *Node) Run() {
 			StdoutLog.Printf(newFmt)
 			n.SendAll()
 		}
-		n.RecvOne()
+		if !n.RecvOne() { // bad receiving shutsdown go-routine
+			break
+		}
 	}
 }
 

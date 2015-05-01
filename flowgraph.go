@@ -47,7 +47,7 @@ var globalWorkCnt int64
 // RunAll calls Run for each Node.
 func RunAll(n []Node, timeout time.Duration) {
 	for i:=0; i<len(n); i++ {
-		var node = n[i]
+		var node *Node = &n[i]
 		if TraceLevel>=VVVV {
 			node.Tracef("\n")
 		}
@@ -55,6 +55,15 @@ func RunAll(n []Node, timeout time.Duration) {
 	}
 
 	if timeout>0 { time.Sleep(timeout) }
+
+	if false {
+		StdoutLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+		for i:=0; i<len(n); i++ {
+			n[i].traceValRdy(false)
+		}
+		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
+	}
+		
 	StdoutLog.Printf("\n")
 }
 
