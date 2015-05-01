@@ -15,16 +15,16 @@ func fftFire (n *Node) {
 	data,ok := x.Val.([]complex128)
 	if !ok {
 		x.Val = fmt.Errorf("type is not []complex128\n")
+		return
+	}
+	if b.Val.(bool) {
+		fft.InvFft(data)
 	} else {
-		if b.Val.(bool) {
-			fft.InvFft(data)
-		} else {
-			fft.Fft(data)
-		}
+		fft.Fft(data)
 	}
 }
 
-// FuncFft does an fft on a slice of complex128 (fft(data: a, inverse: b)).
+// FuncFft does an fft on a slice of complex128 (x=fft(data: a, inverse: b)).
 func FuncFft(a, b, x Edge) Node {
 
 	node := MakeNode("fft", []*Edge{&a, &b}, []*Edge{&x}, nil, fftFire)

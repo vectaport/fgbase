@@ -1,6 +1,7 @@
 package flowgraph
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -11,7 +12,6 @@ type edgeDir struct {
 	edge *Edge
 	srcFlag bool
 }
-	
 
 // Node of a flowgraph.
 type Node struct {
@@ -21,30 +21,26 @@ type Node struct {
 	Srcs []*Edge                    // upstream links
 	Dsts []*Edge                    // downstream links
 	RdyFunc NodeRdy                 // func to test Edge readiness
-	FireFunc NodeFire               // func to trigger Node execution
-	RunFunc NodeRun                 // func to repeatedly run Node execution
+	WorkFunc NodeWork               // func to do work of the Node
+	RunFunc NodeRun                 // func to repeatedly run Node
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
+	dataBackup []reflect.Value      // backup data channels
 	caseToEdgeDir map [int] edgeDir // map from selected case to associated Edge
 }
 
 // NodeRdy is the function signature for evaluating readiness of a Node to execute.
 type NodeRdy func(*Node) bool
 
-// NodeFire is the function signature for executing a Node.
+// NodeWork is the function signature for executing a Node.
 // Any error message should be written using Node.Errorf and
 // nil written to any output Edge.
-type NodeFire func(*Node)
+type NodeWork func(*Node)
 
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-// MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
-func MakeNode(
-	name string, 
-	srcs, dsts []*Edge, 
-	ready NodeRdy, 
-	fire NodeFire) Node {
+func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reuseChan bool) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i-1
@@ -53,7 +49,7 @@ func MakeNode(
 	n.Srcs = srcs
 	n.Dsts = dsts
 	n.RdyFunc = ready
-	n.FireFunc = fire
+	n.WorkFunc = work
 	n.caseToEdgeDir = make(map[int]edgeDir)
 	var cnt = 0
 	for i := range n.Srcs {
@@ -61,8 +57,13 @@ func MakeNode(
 			if n.Srcs[i].Val!=nil { return 0 }; return 1}()
 		if n.Srcs[i].Data != nil {
 			j := len(*n.Srcs[i].Data)
-			*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum))
+			if j==0 || !reuseChan {
+				*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum))
+			} else {
+				j = 0
+			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf((*n.Srcs[i].Data)[j])})
+			n.dataBackup = append(n.dataBackup, n.cases[cnt].Chan)  // backup copy
 			n.caseToEdgeDir[cnt] = edgeDir{n.Srcs[i], true}
 			cnt = cnt+1
 		}
@@ -70,6 +71,9 @@ func MakeNode(
 	for i := range n.Dsts {
 		n.Dsts[i].RdyCnt = func (b bool) int {if b { return 0 }; return len(*n.Dsts[i].Data) } (n.Dsts[i].Val==nil)
 		if n.Dsts[i].Ack!=nil {
+			if reuseChan {
+				n.Dsts[i].Ack = make(chan bool)
+			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{n.Dsts[i], false}
 			cnt = cnt+1
@@ -79,41 +83,64 @@ func MakeNode(
 	return n
 }
 
-func prefixTracel(n *Node) (format string, tracel []interface {}) {
-	var addNodeAddr = false
-	var varl [] interface {}
-	varl = append(varl, n.Name)
-	varl = append(varl, n.ID)
-	if (n.Cnt>=0) {
-		varl = append(varl, n.Cnt)
-	} else {
-		varl = append(varl, "*")
-	}
-	if (addNodeAddr) { varl = append(varl, n) }
-	var f string
-	if (TraceIndent) {
-		for i := int64(0);i<n.ID;i++ {
-			f += "\t"
-		}
-	}
-	if (addNodeAddr) { f += "%s(%d:%v:%p) " } else { f += "%s(%d:%v) " }
-	return f,varl
+// MakeNode2 returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
+// The Edge data channels get reused.
+func MakeNode2(
+	name string, 
+	srcs, dsts []*Edge, 
+	ready NodeRdy, 
+	work NodeWork) Node {
+	return makeNode(name, srcs, dsts, ready, work, true)
 }
 
-func addSliceToTracel(d Datum, format string, tracel []interface {}) (newfmt string, newtracel []interface {}) {
+// MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
+func MakeNode(
+	name string, 
+	srcs, dsts []*Edge, 
+	ready NodeRdy, 
+	work NodeWork) Node {
+	return makeNode(name, srcs, dsts, ready, work, false)
+}
+
+func prefixTracef(n *Node) (format string) {
+	var addNodeAddr = TraceLevel>=VVVV
+	var newFmt string
+	if (TraceIndent) {
+		for i := int64(0);i<n.ID;i++ {
+			newFmt += "\t"
+		}
+	}
+	newFmt += n.Name
+	newFmt += fmt.Sprintf("(%d", n.ID)
+	if (n.Cnt>=0) {
+		newFmt += fmt.Sprintf(":%d", n.Cnt)
+	} else {
+		newFmt += ":*"
+	}
+	if (addNodeAddr) { 
+		newFmt += fmt.Sprintf(":%p", n)
+	}
+	newFmt += ") "
+	return newFmt
+}
+
+// TraceSlice returns a ellipse shortened string representation of a 
+// slice when TraceLevel<VVVV.
+func TraceSlice(d Datum) string {
+	if false {
+		return fmt.Sprintf("%p[0:%d]", d, Len(d.(Interface2)))
+	}
 	m := 8
 	l := Len(d)
-	if l < m || TraceLevel==VVV { m = l }
-	tracel = append(tracel, d)
-	format += "%T(["
+	if l < m || TraceLevel==VVVV { m = l }
+	newFmt := fmt.Sprintf("%T([", d)
 	for i := 0; i<m; i++ {
-		if i!=0 {format += " "}
-		tracel = append(tracel, Index(d,i))
-		format += "%+v"
+		if i!=0 {newFmt += " "}
+		newFmt += fmt.Sprintf("%+v", Index(d,i))
 	}
-	if m<l && TraceLevel<VVV {format += " ..."}
-	format += "])"
-	return format,tracel
+	if m<l && TraceLevel<VVVV {newFmt += " ..."}
+	newFmt += "])"
+	return newFmt
 }
 
 // Tracef for debug trace printing.  Uses atomic log mechanism.
@@ -121,67 +148,65 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	if (TraceLevel<V) {
 		return
 	}
-	newfmt,tracel := prefixTracel(n)
-	newfmt += format
-	tracel = append(tracel, v...)
-	StdoutLog.Printf(newfmt, tracel...)
+	newFmt := prefixTracef(n)
+	newFmt += format
+	StdoutLog.Printf(newFmt, v...)
 }
 
 // Errorf for logging of error messages.  Uses atomic log mechanism.
 func (n *Node) Errorf(format string, v ...interface{}) {
 	_,nm,ln,_ := runtime.Caller(1)
-	newfmt,tracel := prefixTracel(n)
-	newfmt += format
-	tracel = append(tracel, v...)
-	newfmt += " -- %s:%d "
-	tracel = append(tracel, nm)
-	tracel = append(tracel, ln)
-	StderrLog.Printf(newfmt, tracel...)
+	newFmt := prefixTracef(n)
+	newFmt += format
+	newFmt += fmt.Sprintf(" -- %s:%d ", nm, ln)
+	StderrLog.Printf(newFmt, v...)
 }
 
-// TraceValRdy lists Node input values and output values or readiness.
-func (n *Node) TraceValRdy(valOnly bool) {
-
-	if (!valOnly && TraceLevel<VVV || TraceLevel==Q)  {return}
-	newfmt,tracel := prefixTracel(n)
-	if !valOnly { newfmt += "<<" }
+// traceValRdySrc lists Node input values
+func (n *Node) traceValRdySrc(valOnly bool) string {
+	newFmt := prefixTracef(n)
+	if !valOnly { newFmt += "<<" }
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
-		if (i!=0) { newfmt += "," }
-		tracel = append(tracel, srci.Name)
-		newfmt += "%s"
+		if (i!=0) { newFmt += "," }
+		newFmt += fmt.Sprintf("%s=", srci.Name)
 		if (srci.Rdy()) {
 			if IsSlice(srci.Val) {
-				newfmt,tracel = addSliceToTracel(srci.Val, newfmt, tracel)
+				newFmt +=TraceSlice(srci.Val)
 			} else {
 				if srci.Val==nil  {
-					newfmt += "=<nil>"
+					newFmt += "<nil>"
 				} else {
-					tracel = append(tracel, srci.Val)
-					tracel = append(tracel, srci.Val)
-					newfmt += "=%T(%v)"
+					newFmt += fmt.Sprintf("%T(%v)", srci.Val, srci.Val)
 				}
 			}
 		} else {
-			newfmt += "={}"
+			newFmt += "{}"
 		}
 	}
-	newfmt += ":"
+	newFmt += ":"
+	return newFmt
+}
+
+// traceValRdyDst lists Node output values or readiness.
+func (n *Node) traceValRdyDst(valOnly bool) string {
+	var newFmt string
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
-		if (i!=0) { newfmt += "," }
+		dstiv := dsti.Val
+		if _,ok := dstiv.(ackWrap); ok {
+			dstiv = dstiv.(ackWrap).d // remove wrapper for tracing
+		}
+		if (i!=0) { newFmt += "," }
 		if (valOnly) {
-			tracel = append(tracel, dsti.Name)
-			newfmt += "%s="
-			if IsSlice(dsti.Val) {
-				newfmt,tracel = addSliceToTracel(dsti.Val, newfmt, tracel)
+			newFmt += fmt.Sprintf("%s=", dsti.Name)
+			if IsSlice(dstiv) {
+				newFmt += TraceSlice(dstiv)
 			} else {
-				if (dsti.Val != nil) {
-					tracel = append(tracel, dsti.Val)
-					tracel = append(tracel, dsti.Val)
-					newfmt += "%T(%v)"
+				if (dstiv != nil) {
+					newFmt += fmt.Sprintf("%T(%v)", dstiv, dstiv)
 				} else {
-					newfmt += func () string { 
+					newFmt += func () string { 
 						if (dsti.NoOut) { 
 							return "{}" 
 						}
@@ -191,32 +216,37 @@ func (n *Node) TraceValRdy(valOnly bool) {
 			}
 		} else {
 			if true {
-				tracel = append(tracel, dsti.Name)
 				if dsti.RdyCnt==1 {
-					newfmt += "%s={}"
+					newFmt += fmt.Sprintf("%s={}", dsti.Name)
 				} else {
-					tracel = append(tracel, dsti.RdyCnt)
-					newfmt += "%s={%v}"
+					newFmt += fmt.Sprintf("%s={%v}", dsti.Name, dsti.RdyCnt)
 				}
 			} else {
-				tracel = append(tracel, dsti.Name)
-				tracel = append(tracel, dsti)
-				newfmt += "%s=%+v"
+				newFmt += fmt.Sprintf("%s=%+v", dsti.Name, dsti)
 			}
 		}
 	}
-	if !valOnly { newfmt += ">>" }
-	newfmt += "\n"
-	StdoutLog.Printf(newfmt, tracel...)
+	if !valOnly { newFmt += ">>" }
+	newFmt += "\n"
+	return newFmt
+}
+
+
+// traceValRdy lists Node input values and output values or readiness.
+func (n *Node) traceValRdy(valOnly bool) {
+
+	newFmt := n.traceValRdySrc(valOnly)
+	newFmt += n.traceValRdyDst(valOnly)
+	StdoutLog.Printf(newFmt)
 }
 
 // TraceVals lists input and output values for a Node.
-func (n *Node) TraceVals() { n.TraceValRdy(true) }
+func (n *Node) TraceVals() { if TraceLevel!=Q { n.traceValRdy(true) } }
 
-// IncrFireCnt increments execution count of Node.
-func (n *Node) IncrFireCnt() {
+// IncrWorkCnt increments execution count of Node.
+func (n *Node) IncrWorkCnt() {
 	if (GlobalStats) {
-		c := atomic.AddInt64(&globalFireCnt, 1)
+		c := atomic.AddInt64(&globalWorkCnt, 1)
 		n.Cnt = c-1
 	} else {
 		n.Cnt = n.Cnt+1
@@ -235,19 +265,25 @@ func (n *Node) RdyAll() bool {
 	} else {
 		if !n.RdyFunc(n) { return false }
 	}
-	n.IncrFireCnt();
+
+	n.IncrWorkCnt();
+
+	// restore data channels for next use
+	for i := range n.dataBackup {
+		n.cases[i].Chan = n.dataBackup[i]
+	}
+
 	return true
 }
 
-// Fire node using function pointer.
-func (n *Node) Fire() {
-	if (n.FireFunc!=nil) { n.FireFunc(n) }
+// Work executes Node using function pointer.
+func (n *Node) Work() {
+	if (n.WorkFunc!=nil) { n.WorkFunc(n) }
 }
 
 
 // SendAll writes all data and acks after new result is computed.
 func (n *Node) SendAll() {
-	n.TraceVals()
 	for i := range n.Srcs {
 		n.Srcs[i].SendAck(n)
 	}
@@ -257,33 +293,48 @@ func (n *Node) SendAll() {
 }
 
 // RecvOne reads one data or ack and decrements RdyCnt.
-func (n *Node) RecvOne() {
-	n.TraceValRdy(false)
+func (n *Node) RecvOne() (recvOK bool) {
+	if TraceLevel >= VVV {n.traceValRdy(false)}
 	i,recv,recvOK := reflect.Select(n.cases)
-	if (recvOK) {
-		if n.caseToEdgeDir[i].srcFlag {
-			srci := n.caseToEdgeDir[i].edge
-			srci.Val = recv.Interface()
-			srci.RdyCnt--
-			if (TraceLevel>=VV) {
-				if (srci.Val==nil) {
-					n.Tracef("<nil> <- %s.Data\n", srci.Name)
-				} else {
-					n.Tracef("%T(%v) <- %s.Data\n", srci.Val, srci.Val, srci.Name)
-				}
-			}
-		} else {
-			dsti := n.caseToEdgeDir[i].edge
-			dsti.RdyCnt--
-			if (TraceLevel>=VV) {
-				nm := dsti.Name + ".Ack"
-				if len(*dsti.Data)>1 {
-					nm += "{" + strconv.Itoa(dsti.RdyCnt+1) + "}"
-				}
-				n.Tracef("<- %s\n", nm)
+	if !recvOK {
+		n.Errorf("receive not ok for i=%d case\n", i);
+		return false
+	}
+	if n.caseToEdgeDir[i].srcFlag {
+		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+		srci := n.caseToEdgeDir[i].edge
+		srci.Val = recv.Interface()
+		var asterisk string
+		if _,ok := srci.Val.(ackWrap); ok {
+			srci.Ack2 = srci.Val.(ackWrap).ack
+			srci.Val = srci.Val.(ackWrap).d
+			asterisk = fmt.Sprintf(" *(%p)", srci.Ack2)
+		}
+		srci.RdyCnt--
+		if (TraceLevel>=VV) {
+			if (srci.Val==nil) {
+				n.Tracef("<nil> <- %s.Data%s\n", srci.Name, asterisk)
+			} else {
+				n.Tracef("%s <- %s.Data%s\n", 
+					func() string {
+						if IsSlice(srci.Val) { return TraceSlice(srci.Val) }
+						return fmt.Sprintf("%T(%v)", srci.Val, srci.Val)}(), 
+					srci.Name,
+					asterisk)
 			}
 		}
+	} else {
+		dsti := n.caseToEdgeDir[i].edge
+		dsti.RdyCnt--
+		if (TraceLevel>=VV) {
+			nm := dsti.Name + ".Ack"
+			if len(*dsti.Data)>1 {
+				nm += "{" + strconv.Itoa(dsti.RdyCnt+1) + "}"
+			}
+			n.Tracef("<- %s(%p)\n", nm, dsti.Ack)
+		}
 	}
+	return recvOK
 }
 
 // Run is an event loop that runs forever for each Node.
@@ -295,10 +346,15 @@ func (n *Node) Run() {
 
 	for {
 		if n.RdyAll() {
-			n.Fire()	
+			newFmt := n.traceValRdySrc(true)
+			n.Work()
+			newFmt += n.traceValRdyDst(true)
+			StdoutLog.Printf(newFmt)
 			n.SendAll()
 		}
-		n.RecvOne()
+		if !n.RecvOne() { // bad receiving shutsdown go-routine
+			break
+		}
 	}
 }
 
@@ -307,4 +363,3 @@ func MakeNodes(sz int) []Node {
 	n := make([]Node, sz)
 	return n
 }
-
