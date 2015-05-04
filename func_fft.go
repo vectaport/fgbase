@@ -24,8 +24,8 @@ func fftFire (n *Node) {
 	}
 }
 
-// FuncFft does an fft on a slice of complex128 (x=fft(data: a, inverse: b)).
-func FuncFft(a, b, x Edge) Node {
+// FuncFFT does an FFT on a slice of complex128 (x=fft(data: a, inverse: b)).
+func FuncFFT(a, b, x Edge) Node {
 
 	node := MakeNode("fft", []*Edge{&a, &b}, []*Edge{&x}, nil, fftFire)
 	return node

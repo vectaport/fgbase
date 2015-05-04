@@ -40,7 +40,7 @@ func divFire(n *Node) {
 		return
 	}
 	if ZeroTest(bTmp) {
-		n.Errorf("divide by zero attempted (%v/%v)", aTmp, bTmp)
+		n.Errorf("divide by zero attempted")
 		x.Val = nil
 		return
 	}

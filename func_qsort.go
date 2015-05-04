@@ -152,7 +152,7 @@ func qsortFire (n *Node) {
 
 	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Orig(), d.OrigSorted(), d.Sorted(), poolQsortSz, d.Depth(), d.ID(), d.Len())
 
-	if l <= 1024 || !freeNode(2) {
+	if l <= 4096 || !freeNode(2) {
 		n.Tracef("Original(%p) call sort.Sort\n", d.Orig())
 		sort.Sort(d)
 		x.Val=x.AckWrap(d)

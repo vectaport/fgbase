@@ -259,7 +259,10 @@ func (n *Node) RdyAll() bool {
 
 // Work executes Node using function pointer.
 func (n *Node) Work() {
+	newFmt := n.traceValRdySrc(true)
 	if (n.WorkFunc!=nil) { n.WorkFunc(n) }
+	newFmt += n.traceValRdyDst(true)
+	StdoutLog.Printf(newFmt)
 }
 
 
@@ -327,13 +330,10 @@ func (n *Node) Run() {
 
 	for {
 		if n.RdyAll() {
-			newFmt := n.traceValRdySrc(true)
 			n.Work()
-			newFmt += n.traceValRdyDst(true)
-			StdoutLog.Printf(newFmt)
 			n.SendAll()
 		}
-		if !n.RecvOne() { // bad receiving shutsdown go-routine
+		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
 		}
 	}

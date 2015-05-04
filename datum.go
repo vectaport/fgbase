@@ -72,15 +72,26 @@ func String(d Datum) string {
 		return StringStruct(d)
 	}
 	switch d.(type) {
-	case int8, uint8, int16, uint16, int32, uint32, int64, uint64,
-		int, uint, float32, float64, complex64, complex128, string: {
-			
-			return fmt.Sprintf("%v", d)
-		}
-	default: {
-		return fmt.Sprintf("%T(%v)", d)
+	case bool: 
+	case int8: 
+	case uint8: 
+	case int16: 
+	case uint16: 
+	case int32: 
+	case uint32: 
+	case int64: 
+	case uint64:
+	case int: 
+	case uint: 
+	case float32: 
+	case float64: 
+	case complex64: 
+	case complex128: 
+	case string: {
+		return fmt.Sprintf("%v", d)
 	}
 	}
+	return fmt.Sprintf("%T(%v)", d, d)
 }
 
 // StringSlice returns a ellipse shortened string representation of a 
