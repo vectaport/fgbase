@@ -6,12 +6,8 @@ import (
 	"runtime"
 	"strconv"
 	"sync/atomic"
+	"time"
 )
-
-type edgeDir struct {
-	edge *Edge
-	srcFlag bool
-}
 
 // Node of a flowgraph.
 type Node struct {
@@ -27,7 +23,19 @@ type Node struct {
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	dataBackup []reflect.Value      // backup data channels
 	caseToEdgeDir map [int] edgeDir // map from selected case to associated Edge
+	flag uintptr                    // flags for package internal use
 }
+
+type edgeDir struct {
+	edge *Edge
+	srcFlag bool
+}
+
+const (
+	flagPool = 1<<iota
+)
+
+var startTime time.Time
 
 // NodeRdy is the function signature for evaluating readiness of a Node to execute.
 type NodeRdy func(*Node) bool
@@ -53,29 +61,32 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 	n.caseToEdgeDir = make(map[int]edgeDir)
 	var cnt = 0
 	for i := range n.Srcs {
-		n.Srcs[i].RdyCnt = func () int {
-			if n.Srcs[i].Val!=nil { return 0 }; return 1}()
-		if n.Srcs[i].Data != nil {
-			j := len(*n.Srcs[i].Data)
+		srci := n.Srcs[i]
+		srci.RdyCnt = func () int {
+			if srci.Val!=nil { return 0 }; return 1}()
+		if srci.Data != nil {
+			j := len(*srci.Data)
 			if j==0 || !reuseChan {
-				*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum, 0))
+				var df = func() int {if n.flag&flagPool==flagPool {return 0} else {return 0}}
+				*srci.Data = append(*srci.Data, make(chan Datum, df()))
 			} else {
 				j = 0
 			}
-			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf((*n.Srcs[i].Data)[j])})
+			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf((*srci.Data)[j])})
 			n.dataBackup = append(n.dataBackup, n.cases[cnt].Chan)  // backup copy
-			n.caseToEdgeDir[cnt] = edgeDir{n.Srcs[i], true}
+			n.caseToEdgeDir[cnt] = edgeDir{srci, true}
 			cnt = cnt+1
 		}
 	}
 	for i := range n.Dsts {
-		n.Dsts[i].RdyCnt = func (b bool) int {if b { return 0 }; return len(*n.Dsts[i].Data) } (n.Dsts[i].Val==nil)
-		if n.Dsts[i].Ack!=nil {
+		dsti := n.Dsts[i]
+		dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
+		if dsti.Ack!=nil {
 			if reuseChan {
-				n.Dsts[i].Ack = make(chan bool, 0)
+				dsti.Ack = make(chan bool, 1)
 			}
-			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
-			n.caseToEdgeDir[cnt] = edgeDir{n.Dsts[i], false}
+			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(dsti.Ack)})
+			n.caseToEdgeDir[cnt] = edgeDir{dsti, false}
 			cnt = cnt+1
 		}
 	}
@@ -83,9 +94,9 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 	return n
 }
 
-// MakeNode2 returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
+// MakeNodePool returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
 // The Edge data channels get reused.
-func MakeNode2(
+func MakeNodePool(
 	name string, 
 	srcs, dsts []*Edge, 
 	ready NodeRdy, 
@@ -104,21 +115,25 @@ func MakeNode(
 
 func prefixTracef(n *Node) (format string) {
 	var addNodeAddr = TraceLevel>=VVVV
+	var timeFlg = true
 	var newFmt string
-	if (TraceIndent) {
+	if TraceIndent {
 		for i := int64(0);i<n.ID;i++ {
 			newFmt += "\t"
 		}
 	}
 	newFmt += n.Name
 	newFmt += fmt.Sprintf("(%d", n.ID)
-	if (n.Cnt>=0) {
-		newFmt += fmt.Sprintf(":%d", n.Cnt)
+	if n.Cnt>=0 {
+		newFmt += fmt.Sprintf("_%d", n.Cnt)
 	} else {
-		newFmt += ":*"
+		newFmt += "_*"
 	}
-	if (addNodeAddr) { 
+	if addNodeAddr { 
 		newFmt += fmt.Sprintf(":%p", n)
+	}
+	if timeFlg { 
+		newFmt += fmt.Sprintf(":%.4f", time.Since(startTime).Seconds())
 	}
 	newFmt += ") "
 	return newFmt
@@ -344,3 +359,28 @@ func MakeNodes(sz int) []Node {
 	n := make([]Node, sz)
 	return n
 }
+
+// RunAll calls Run for each Node.
+func RunAll(n []Node, timeout time.Duration) {
+	startTime = time.Now()
+	for i:=0; i<len(n); i++ {
+		var node *Node = &n[i]
+		if TraceLevel>=VVVV {
+			node.Tracef("\n")
+		}
+		go node.Run()
+	}
+
+	if timeout>0 { time.Sleep(timeout) }
+
+	if false {
+		StdoutLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+		for i:=0; i<len(n); i++ {
+			n[i].traceValRdy(false)
+		}
+		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
+	}
+		
+	StdoutLog.Printf("\n")
+}
+

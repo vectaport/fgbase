@@ -5,7 +5,6 @@ package flowgraph
 import (
 	"log"
 	"os"
-	"time"
 )
 
 // ack channel wrapper
@@ -43,29 +42,6 @@ var NodeID int64
 
 // Global count of number of Node executions.
 var globalWorkCnt int64
-
-// RunAll calls Run for each Node.
-func RunAll(n []Node, timeout time.Duration) {
-	for i:=0; i<len(n); i++ {
-		var node *Node = &n[i]
-		if TraceLevel>=VVVV {
-			node.Tracef("\n")
-		}
-		go node.Run()
-	}
-
-	if timeout>0 { time.Sleep(timeout) }
-
-	if false {
-		StdoutLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
-		for i:=0; i<len(n); i++ {
-			n[i].traceValRdy(false)
-		}
-		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
-	}
-		
-	StdoutLog.Printf("\n")
-}
 
 // MakeGraph returns a slice of Edge and a slice of Node.
 func MakeGraph(sze, szn int) ([]Edge,[]Node) {

@@ -30,7 +30,7 @@ func newEdge(name string, initVal Datum) Edge {
 	e.Val = initVal
 	dc := make([]chan Datum, 0)
 	e.Data = &dc
-	e.Ack = make(chan bool, 0)
+	e.Ack = make(chan bool, 1)
 	return e
 }
 

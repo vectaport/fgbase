@@ -139,20 +139,26 @@ func qsortFire (n *Node) {
 	d := a.Val.(Interface2)
 	l := d.Len()
 
-	var freeNode = func(num int) bool {
+	var poolSz int64
+	freeNode := func(num int) bool {
 		poolQsortMu.Lock()
 		defer poolQsortMu.Unlock()
 		if poolQsortSz>1 {
 			poolQsortSz -= int64(num)
 			n.Tracef("\tpool %s\n", func() string {var s string; for i:=int64(0); i<poolQsortSz; i++ { s += "*" }; return s}())
+			poolSz = poolQsortSz+int64(num)
 			return true
 		}
+		poolSz = poolQsortSz
 		return false
 	}
 
-	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Orig(), d.OrigSorted(), d.Sorted(), poolQsortSz, d.Depth(), d.ID(), d.Len())
+	snap := func() {
+		n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Orig(), d.OrigSorted(), d.Sorted(), poolSz, d.Depth(), d.ID(), d.Len())
+	}
 
 	if l <= 4096 || !freeNode(2) {
+		snap()
 		n.Tracef("Original(%p) call sort.Sort\n", d.Orig())
 		sort.Sort(d)
 		x.Val=x.AckWrap(d)
@@ -165,6 +171,7 @@ func qsortFire (n *Node) {
 		return
 	}
 
+	snap()
 	mlo,mhi := doPivot(d, 0, l)
 	c := 0
 	xData := x.Data
@@ -206,7 +213,7 @@ func FuncQsort(a, x Edge, poolSz int) []Node {
 	poolQsortSz = int64(poolSz)-1
 	for i:=0; i<poolSz; i++ {
 		aa, xx := a,x  // make a copy of the Edge's for each one
-		n[i] = MakeNode2("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortFire)
+		n[i] = MakeNodePool("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortFire)
 	}
 	return n
 
