@@ -109,10 +109,18 @@ var poolQsortMu = &sync.Mutex{}
 type Interface2 interface {
 	// sort.Interface is borrowed from the sort package.
 	sort.Interface
-	// Sorted tests if array is sorted.
+	// Sorted tests if slice is sorted.
 	Sorted() bool
+	// Sorted tests if original array is sorted.
+	OrigSorted() bool
 	// SubSlice returns a sub-slice.
 	SubSlice(n, m int) Datum
+	// Orig returns original slice
+	Orig() []int
+	// Depth returns the depth of a recursive sort
+	Depth() int64
+	// ID returns a unique ID for the object
+	ID() int64
 }
 
 func qsortFire (n *Node) {
@@ -128,8 +136,8 @@ func qsortFire (n *Node) {
 		return
 	}
 
-	l := Len(a.Val)
 	d := a.Val.(Interface2)
+	l := d.Len()
 
 	var freeNode = func(num int) bool {
 		poolQsortMu.Lock()
@@ -142,7 +150,10 @@ func qsortFire (n *Node) {
 		return false
 	}
 
+	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Orig(), d.OrigSorted(), d.Sorted(), poolQsortSz, d.Depth(), d.ID(), d.Len())
+
 	if l <= 1024 || !freeNode(2) {
+		n.Tracef("Original(%p) call sort.Sort\n", d.Orig())
 		sort.Sort(d)
 		x.Val=x.AckWrap(d)
 		x.SendData(n)
@@ -161,12 +172,14 @@ func qsortFire (n *Node) {
 	x.Data = a.Data // recurse
 	x.Name = x.Name+"("+a.Name+")"
 	if mlo>0 {
-		x.Val = x.AckWrap(a.Val.(Interface2).SubSlice(0, mlo))
+		n.Tracef("Original(%p) recurse left [0:%d]\n", d.Orig(), mlo)
+		x.Val = x.AckWrap(d.SubSlice(0, mlo))
 		x.SendData(n)
 		c++
 	}
 	if l-mhi>0 {
-		x.Val = x.AckWrap(a.Val.(Interface2).SubSlice(mhi, l))
+		n.Tracef("Original(%p) recurse right [%d:%d]\n", d.Orig(), mhi, l)
+		x.Val = x.AckWrap(d.SubSlice(mhi, l))
 		x.SendData(n)
 		c++
 	}

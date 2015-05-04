@@ -58,7 +58,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 		if n.Srcs[i].Data != nil {
 			j := len(*n.Srcs[i].Data)
 			if j==0 || !reuseChan {
-				*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum))
+				*n.Srcs[i].Data = append(*n.Srcs[i].Data, make(chan Datum, 0))
 			} else {
 				j = 0
 			}
@@ -72,7 +72,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 		n.Dsts[i].RdyCnt = func (b bool) int {if b { return 0 }; return len(*n.Dsts[i].Data) } (n.Dsts[i].Val==nil)
 		if n.Dsts[i].Ack!=nil {
 			if reuseChan {
-				n.Dsts[i].Ack = make(chan bool)
+				n.Dsts[i].Ack = make(chan bool, 0)
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(n.Dsts[i].Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{n.Dsts[i], false}
@@ -124,25 +124,6 @@ func prefixTracef(n *Node) (format string) {
 	return newFmt
 }
 
-// TraceSlice returns a ellipse shortened string representation of a 
-// slice when TraceLevel<VVVV.
-func TraceSlice(d Datum) string {
-	if false {
-		return fmt.Sprintf("%p[0:%d]", d, Len(d.(Interface2)))
-	}
-	m := 8
-	l := Len(d)
-	if l < m || TraceLevel==VVVV { m = l }
-	newFmt := fmt.Sprintf("%T([", d)
-	for i := 0; i<m; i++ {
-		if i!=0 {newFmt += " "}
-		newFmt += fmt.Sprintf("%+v", Index(d,i))
-	}
-	if m<l && TraceLevel<VVVV {newFmt += " ..."}
-	newFmt += "])"
-	return newFmt
-}
-
 // Tracef for debug trace printing.  Uses atomic log mechanism.
 func (n *Node) Tracef(format string, v ...interface{}) {
 	if (TraceLevel<V) {
@@ -172,19 +153,19 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 		newFmt += fmt.Sprintf("%s=", srci.Name)
 		if (srci.Rdy()) {
 			if IsSlice(srci.Val) {
-				newFmt +=TraceSlice(srci.Val)
+				newFmt +=StringSlice(srci.Val)
 			} else {
 				if srci.Val==nil  {
 					newFmt += "<nil>"
 				} else {
-					newFmt += fmt.Sprintf("%T(%v)", srci.Val, srci.Val)
+					newFmt += String(srci.Val)
 				}
 			}
 		} else {
 			newFmt += "{}"
 		}
 	}
-	newFmt += ":"
+	newFmt += ";"
 	return newFmt
 }
 
@@ -201,10 +182,10 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		if (valOnly) {
 			newFmt += fmt.Sprintf("%s=", dsti.Name)
 			if IsSlice(dstiv) {
-				newFmt += TraceSlice(dstiv)
+				newFmt += StringSlice(dstiv)
 			} else {
 				if (dstiv != nil) {
-					newFmt += fmt.Sprintf("%T(%v)", dstiv, dstiv)
+					newFmt += String(dstiv)
 				} else {
 					newFmt += func () string { 
 						if (dsti.NoOut) { 
@@ -308,7 +289,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 		if _,ok := srci.Val.(ackWrap); ok {
 			srci.Ack2 = srci.Val.(ackWrap).ack
 			srci.Val = srci.Val.(ackWrap).d
-			asterisk = fmt.Sprintf(" *(%p)", srci.Ack2)
+			asterisk = fmt.Sprintf(" *(Ack2=%p)", srci.Ack2)
 		}
 		srci.RdyCnt--
 		if (TraceLevel>=VV) {
@@ -317,7 +298,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 			} else {
 				n.Tracef("%s <- %s.Data%s\n", 
 					func() string {
-						if IsSlice(srci.Val) { return TraceSlice(srci.Val) }
+						if IsSlice(srci.Val) { return StringSlice(srci.Val) }
 						return fmt.Sprintf("%T(%v)", srci.Val, srci.Val)}(), 
 					srci.Name,
 					asterisk)

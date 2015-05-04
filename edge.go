@@ -30,7 +30,7 @@ func newEdge(name string, initVal Datum) Edge {
 	e.Val = initVal
 	dc := make([]chan Datum, 0)
 	e.Data = &dc
-	e.Ack = make(chan bool)
+	e.Ack = make(chan bool, 0)
 	return e
 }
 
@@ -80,7 +80,7 @@ func (e *Edge) SendData(n *Node) {
 				ev := e.Val
 				var asterisk string
 				if _,ok := ev.(ackWrap); ok {
-					asterisk += fmt.Sprintf(" *(%p)", ev.(ackWrap).ack)
+					asterisk += fmt.Sprintf(" *(Ack2=%p)", ev.(ackWrap).ack)
 					ev = ev.(ackWrap).d
 				}
 				if (ev==nil) {
@@ -88,7 +88,7 @@ func (e *Edge) SendData(n *Node) {
 				} else {
 					n.Tracef("%s <- %s%s\n", nm, 
 						func() string {
-							if IsSlice(ev) { return TraceSlice(ev) }
+							if IsSlice(ev) { return StringSlice(ev) }
 							return fmt.Sprintf("%T(%v)", ev, ev)}(),
 						asterisk)
 				}

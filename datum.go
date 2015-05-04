@@ -1,6 +1,7 @@
 package flowgraph
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -34,6 +35,11 @@ func IsSlice (d Datum) bool {
 	return reflect.ValueOf(d).Kind()==reflect.Slice
 }
 
+// IsStruct returns true if empty interface (Datum) is a slice.
+func IsStruct (d Datum) bool {
+	return reflect.ValueOf(d).Kind()==reflect.Struct
+}
+
 // Index returns the nth element of an empty interface (Datum) that is a slice.
 func Index(d Datum, i int) Datum {
 	return reflect.ValueOf(d).Index(i).Interface()
@@ -55,3 +61,69 @@ func CopySlice(d Datum) Datum {
 	reflect.Copy(reflect.ValueOf(r), reflect.ValueOf(d))
 	return r
 }
+
+// String returns a string representation of a Datum
+func String(d Datum) string {
+
+	if IsSlice(d) {
+		return StringSlice(d)
+	}
+	if IsStruct(d) {
+		return StringStruct(d)
+	}
+	switch d.(type) {
+	case int8, uint8, int16, uint16, int32, uint32, int64, uint64,
+		int, uint, float32, float64, complex64, complex128, string: {
+			
+			return fmt.Sprintf("%v", d)
+		}
+	default: {
+		return fmt.Sprintf("%T(%v)", d)
+	}
+	}
+}
+
+// StringSlice returns a ellipse shortened string representation of a 
+// slice when TraceLevel<VVVV.
+func StringSlice(d Datum) string {
+	if false {
+		return fmt.Sprintf("%p[0:%d]", d, Len(d.(Interface2)))
+	}
+	m := 8
+	l := Len(d)
+	if l < m || TraceLevel==VVVV { m = l }
+	s := fmt.Sprintf("%T([", d)
+	for i := 0; i<m; i++ {
+		if i!=0 {s += " "}
+		s += fmt.Sprintf("%s", String(Index(d,i)))
+	}
+	if m<l && TraceLevel<VVVV {s += " ..."}
+	s += "])"
+	return s
+}
+
+// StringStruct returns a string representation of a struct with an
+// ellipse shortened string representation of any slice when TraceLevel<VVVV.
+func StringStruct(d Datum) string {
+	dv := reflect.ValueOf(d)
+	l := dv.NumField()
+	s := fmt.Sprintf("%T({", d)
+	flg := false
+	for i := 0; i<l; i++ {
+		ft := dv.Type().Field(i)
+		if ft.Name[0]>='A' && ft.Name[0]<='Z' {
+			if flg { 
+				s += " " 
+			} else {
+				flg = true
+			}
+			s += ft.Name
+			s += ":"
+			s += String(dv.Field(i).Interface())
+		}
+	}
+	s += "})"
+	return s
+}
+
+
