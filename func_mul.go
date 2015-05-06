@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func mulFire2(a, b Datum) Datum {
+func mulWork2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)*b.(int8) }
@@ -26,7 +26,7 @@ func mulFire2(a, b Datum) Datum {
 }
 
 // Multiplication primitive
-func mulFire(n *Node) {
+func mulWork(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -35,17 +35,17 @@ func mulFire(n *Node) {
 	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for multiplication (%v*%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.LogError("incompatible types for multiplication (%v*%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
-		x.Val = mulFire2(aTmp, bTmp)
+		x.Val = mulWork2(aTmp, bTmp)
 	}
 }
 
 // FuncMul multiplies values and returns the product (x = a * b).
 func FuncMul(a, b, x Edge) Node {
 
-	node := MakeNode("mul", []*Edge{&a, &b}, []*Edge{&x}, nil, mulFire)
+	node := MakeNode("mul", []*Edge{&a, &b}, []*Edge{&x}, nil, mulWork)
 	return node
 }
 

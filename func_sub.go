@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func subFire2(a, b Datum) Datum {
+func subWork2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)-b.(int8) }
@@ -25,7 +25,7 @@ func subFire2(a, b Datum) Datum {
 	}
 }
 
-func subFire(n *Node) {
+func subWork(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -33,17 +33,17 @@ func subFire(n *Node) {
 	atmp,btmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for subtraction (%v-%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.LogError("incompatible types for subtraction (%v-%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
-		x.Val = subFire2(atmp, btmp)
+		x.Val = subWork2(atmp, btmp)
 	}
 }
 
 // FuncSub subtracts values and returns the difference (x = a - b).
 func FuncSub(a, b, x Edge) Node {
 
-	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, subFire)
+	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, subWork)
 	return node
 }
 

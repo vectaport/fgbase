@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func rshFire2(a, b Datum) Datum {
+func rshWork2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case uint8: { return a.(uint8)>>b.(uint8) }
@@ -17,7 +17,7 @@ func rshFire2(a, b Datum) Datum {
 }
 
 // Right shift primitive
-func rshFire(n *Node) {
+func rshWork(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -26,17 +26,17 @@ func rshFire(n *Node) {
 	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for right shift (%v>>%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.LogError("incompatible types for right shift (%v>>%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
-		x.Val = rshFire2(aTmp, bTmp)
+		x.Val = rshWork2(aTmp, bTmp)
 	}
 }
 
 // FuncRsh right shifts a value(x = a >> b).
 func FuncRsh(a, b, x Edge) Node {
 
-	node := MakeNode("rsh", []*Edge{&a, &b}, []*Edge{&x}, nil, rshFire)
+	node := MakeNode("rsh", []*Edge{&a, &b}, []*Edge{&x}, nil, rshWork)
 	return node
 }
 

@@ -41,7 +41,7 @@ var startTime time.Time
 type NodeRdy func(*Node) bool
 
 // NodeWork is the function signature for executing a Node.
-// Any error message should be written using Node.Errorf and
+// Any error message should be written using Node.LogError and
 // nil written to any output Edge.
 type NodeWork func(*Node)
 
@@ -59,6 +59,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 	n.RdyFunc = ready
 	n.WorkFunc = work
 	n.caseToEdgeDir = make(map[int]edgeDir)
+	if reuseChan { n.flag = n.flag | flagPool }
 	var cnt = 0
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
@@ -67,7 +68,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 		if srci.Data != nil {
 			j := len(*srci.Data)
 			if j==0 || !reuseChan {
-				var df = func() int {if n.flag&flagPool==flagPool {return 0} else {return 0}}
+				var df = func() int {if n.flag&flagPool==flagPool {return 1} else {return 0}}
 				*srci.Data = append(*srci.Data, make(chan Datum, df()))
 			} else {
 				j = 0
@@ -149,8 +150,8 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	StdoutLog.Printf(newFmt, v...)
 }
 
-// Errorf for logging of error messages.  Uses atomic log mechanism.
-func (n *Node) Errorf(format string, v ...interface{}) {
+// LogError for logging of error messages.  Uses atomic log mechanism.
+func (n *Node) LogError(format string, v ...interface{}) {
 	_,nm,ln,_ := runtime.Caller(1)
 	newFmt := prefixTracef(n)
 	newFmt += format
@@ -196,19 +197,15 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		if (i!=0) { newFmt += "," }
 		if (valOnly) {
 			newFmt += fmt.Sprintf("%s=", dsti.Name)
-			if IsSlice(dstiv) {
-				newFmt += StringSlice(dstiv)
+			if (dstiv != nil) {
+				newFmt += String(dstiv)
 			} else {
-				if (dstiv != nil) {
-					newFmt += String(dstiv)
-				} else {
-					newFmt += func () string { 
-						if (dsti.NoOut) { 
-							return "{}" 
-						}
-						return "<nil>" 
-					} ()
-				}
+				newFmt += func () string { 
+					if (dsti.NoOut) { 
+						return "{}" 
+					}
+					return "<nil>" 
+				} ()
 			}
 		} else {
 			if true {
@@ -296,7 +293,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if TraceLevel >= VVV {n.traceValRdy(false)}
 	i,recv,recvOK := reflect.Select(n.cases)
 	if !recvOK {
-		n.Errorf("receive not ok for i=%d case\n", i);
+		n.LogError("receive from select not ok for i=%d case", i);
 		return false
 	}
 	if n.caseToEdgeDir[i].srcFlag {

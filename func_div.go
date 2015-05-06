@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func divFire2(a, b Datum) Datum {
+func divWork2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)/b.(int8) }
@@ -26,7 +26,7 @@ func divFire2(a, b Datum) Datum {
 }
 
 // Division primitive
-func divFire(n *Node) {
+func divWork(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -35,23 +35,23 @@ func divFire(n *Node) {
 	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for division (%v/%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.LogError("incompatible types for division (%v/%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 		return
 	}
 	if ZeroTest(bTmp) {
-		n.Errorf("divide by zero attempted")
+		n.LogError("divide by zero attempted")
 		x.Val = nil
 		return
 	}
 	
-	x.Val = divFire2(aTmp, bTmp)
+	x.Val = divWork2(aTmp, bTmp)
 }
 
 // FuncDiv divides values and returns the quotient (x = a / b).
 func FuncDiv(a, b, x Edge) Node {
 
-	node := MakeNode("div", []*Edge{&a, &b}, []*Edge{&x}, nil, divFire)
+	node := MakeNode("div", []*Edge{&a, &b}, []*Edge{&x}, nil, divWork)
 	return node
 }
 

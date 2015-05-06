@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func lshFire2(a, b Datum) Datum {
+func lshWork2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case uint8: { return a.(uint8)<<b.(uint8) }
@@ -17,7 +17,7 @@ func lshFire2(a, b Datum) Datum {
 }
 
 // Left shift primitive
-func lshFire(n *Node) {
+func lshWork(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -26,17 +26,17 @@ func lshFire(n *Node) {
 	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for left shift (%v<<%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.LogError("incompatible types for left shift (%v<<%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
-		x.Val = lshFire2(aTmp, bTmp)
+		x.Val = lshWork2(aTmp, bTmp)
 	}
 }
 
 // FuncLsh left shifts a value(x = a << b).
 func FuncLsh(a, b, x Edge) Node {
 
-	node := MakeNode("lsh", []*Edge{&a, &b}, []*Edge{&x}, nil, lshFire)
+	node := MakeNode("lsh", []*Edge{&a, &b}, []*Edge{&x}, nil, lshWork)
 	return node
 }
 

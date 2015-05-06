@@ -6,6 +6,10 @@ import (
 	"sync/atomic"
 )
 
+type DoubleDatum struct {
+	a,b Datum
+}
+
 var poolQsortSz int64
 var poolQsortMu = &sync.Mutex{}
 
@@ -26,7 +30,7 @@ type Interface2 interface {
 	ID() int64
 }
 
-func qsortFire (n *Node) {
+func qsortWork (n *Node) {
 
 	a := n.Srcs[0]
 	steerAck := a.Ack2 != nil
@@ -35,7 +39,7 @@ func qsortFire (n *Node) {
 	x := n.Dsts[0]
 	a.NoOut = true
 	if _,ok := a.Val.(Interface2); !ok {
-		n.Errorf("not of type Interface2 (%T)\n", a.Val)
+		n.LogError("not of type Interface2 (%T)\n", a.Val)
 		return
 	}
 
@@ -76,6 +80,7 @@ func qsortFire (n *Node) {
 
 	snap()
 	mlo,mhi := doPivot(d, 0, l)
+	var lo,hi Datum
 	c := 0
 	xData := x.Data
 	xName := x.Name
@@ -83,18 +88,23 @@ func qsortFire (n *Node) {
 	x.Name = x.Name+"("+a.Name+")"
 	if mlo>0 {
 		n.Tracef("Original(%p) recurse left [0:%d]\n", d.Orig(), mlo)
-		x.Val = x.AckWrap(d.SubSlice(0, mlo))
+		lo = x.AckWrap(d.SubSlice(0, mlo))
+		x.Val = lo
 		x.SendData(n)
 		c++
 	}
 	if l-mhi>0 {
 		n.Tracef("Original(%p) recurse right [%d:%d]\n", d.Orig(), mhi, l)
-		x.Val = x.AckWrap(d.SubSlice(mhi, l))
+		hi = x.AckWrap(d.SubSlice(mhi, l))
+		x.Val = hi
 		x.SendData(n)
 		c++
 	}
 	x.Data = xData
 	x.Name = xName
+
+	x.Val = DoubleDatum{lo, hi}
+	x.NoOut = true
 	
 	if steerAck {
 		atomic.AddInt64(&poolQsortSz, 1)
@@ -116,7 +126,7 @@ func FuncQsort(a, x Edge, poolSz int) []Node {
 	poolQsortSz = int64(poolSz)-1
 	for i:=0; i<poolSz; i++ {
 		aa, xx := a,x  // make a copy of the Edge's for each one
-		n[i] = MakeNodePool("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortFire)
+		n[i] = MakeNodePool("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortWork)
 	}
 	return n
 

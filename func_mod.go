@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func modFire2(a, b Datum) Datum {
+func modWork2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)%b.(int8) }
@@ -21,7 +21,7 @@ func modFire2(a, b Datum) Datum {
 	}
 }
 
-func modFire(n *Node) {
+func modWork(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -29,17 +29,17 @@ func modFire(n *Node) {
 	atmp,btmp,same := Promote(n, a.Val, b.Val)
 
 	if(!same) {
-		n.Errorf("incompatible types for modulo (%v%%%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
+		n.LogError("incompatible types for modulo (%v%%%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
-		x.Val = modFire2(atmp, btmp)
+		x.Val = modWork2(atmp, btmp)
 	}
 }
 
 // FuncMod is the module operator (x = a % b).
 func FuncMod(a, b, x Edge) Node {
 
-	node := MakeNode("mod", []*Edge{&a, &b}, []*Edge{&x}, nil, modFire)
+	node := MakeNode("mod", []*Edge{&a, &b}, []*Edge{&x}, nil, modWork)
 	return node
 }
 

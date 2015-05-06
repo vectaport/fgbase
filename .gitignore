@@ -16,3 +16,7 @@ flowgraph.go.save
 .#select.go
 
 .#func_add.go
+
+c.out
+
+coverage.out

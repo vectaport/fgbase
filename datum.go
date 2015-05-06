@@ -64,31 +64,25 @@ func CopySlice(d Datum) Datum {
 
 // String returns a string representation of a Datum
 func String(d Datum) string {
-
+       
 	if IsSlice(d) {
 		return StringSlice(d)
+	}
+        if dd,ok := d.(DoubleDatum); ok {
+		return String(dd.a)+"|"+String(dd.b)
+	}
+	if dd,ok := d.(ackWrap); ok {
+		return String(dd.d)
 	}
 	if IsStruct(d) {
 		return StringStruct(d)
 	}
 	switch d.(type) {
-	case bool: 
-	case int8: 
-	case uint8: 
-	case int16: 
-	case uint16: 
-	case int32: 
-	case uint32: 
-	case int64: 
-	case uint64:
-	case int: 
-	case uint: 
-	case float32: 
-	case float64: 
-	case complex64: 
-	case complex128: 
-	case string: {
+	case bool, int8, uint8, int16,uint16, int32, uint32, int64, uint64, int, uint, float32, float64, complex64, complex128: {
 		return fmt.Sprintf("%v", d)
+	}
+	case string: {
+		return fmt.Sprintf("%q", d)
 	}
 	}
 	return fmt.Sprintf("%T(%v)", d, d)
