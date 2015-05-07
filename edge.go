@@ -116,7 +116,7 @@ func (e *Edge) SendAck(n *Node) {
 				e.Ack2 = nil
 			} else {
 				if (TraceLevel>=VV) {
-					n.Tracef("%s.Ack(%p) <-\n", e.Name, e.Ack)
+					n.Tracef("%s.Ack <-\n", e.Name)
 				}
 				e.Ack <- true
 			}

@@ -115,7 +115,6 @@ func MakeNode(
 }
 
 func prefixTracef(n *Node) (format string) {
-	var addNodeAddr = TraceLevel>=VVVV
 	var newFmt string
 	if TraceIndent {
 		for i := int64(0);i<n.ID;i++ {
@@ -124,22 +123,23 @@ func prefixTracef(n *Node) (format string) {
 	}
 	newFmt += n.Name
 	newFmt += fmt.Sprintf("(%d", n.ID)
-	if TraceTimeStamp==N_FcS {
-		newFmt += "_"
-	} else {
-		newFmt += ":"
+
+	if TraceFireCnt {
+		if n.Cnt>=0 {
+			newFmt += fmt.Sprintf(":%d", n.Cnt)
+		} else {
+			newFmt += ":*"
+		}
 	}
-	if n.Cnt>=0 {
-		newFmt += fmt.Sprintf("%d", n.Cnt)
-	} else {
-		newFmt += "*"
-	}
-	if addNodeAddr { 
-		newFmt += fmt.Sprintf(":%p", n)
-	}
-	if TraceTimeStamp==N_FcS { 
+
+	if TraceSeconds {
 		newFmt += fmt.Sprintf(":%.4f", time.Since(startTime).Seconds())
 	}
+
+	if TracePointer || TraceLevel >= VVVV {
+		newFmt += fmt.Sprintf(":%p", n)
+	}
+
 	newFmt += ") "
 	return newFmt
 }
@@ -213,11 +213,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			}
 		} else {
 			if true {
-				if dsti.RdyCnt==1 {
-					newFmt += fmt.Sprintf("%s={}", dsti.Name)
-				} else {
-					newFmt += fmt.Sprintf("%s={%v}", dsti.Name, dsti.RdyCnt)
-				}
+				newFmt += fmt.Sprintf("%s={%v}", dsti.Name, dsti.RdyCnt)
 			} else {
 				newFmt += fmt.Sprintf("%s=%+v", dsti.Name, dsti)
 			}
@@ -346,6 +342,7 @@ func (n *Node) Run() {
 
 	for {
 		if n.RdyAll() {
+			if TraceLevel >= VVV {n.traceValRdy(false)}
 			n.Fire()
 			n.SendAll()
 		}

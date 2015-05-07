@@ -78,8 +78,14 @@ func String(d Datum) string {
 		return StringStruct(d)
 	}
 	switch d.(type) {
-	case bool, int8, uint8, int16,uint16, int32, uint32, int64, uint64, int, uint, float32, float64, complex64, complex128: {
+	case bool, int8, uint8, int16,uint16, int32, uint32, int64, uint64, int, uint: {
 		return fmt.Sprintf("%v", d)
+	}
+	case float32, float64: {
+		return fmt.Sprintf("%.4g", d)
+	}
+	case complex64, complex128: {
+		return fmt.Sprintf("%.4g", d)
 	}
 	case string: {
 		return fmt.Sprintf("%q", d)
@@ -91,13 +97,13 @@ func String(d Datum) string {
 // StringSlice returns a ellipse shortened string representation of a 
 // slice when TraceLevel<VVVV.
 func StringSlice(d Datum) string {
-	if false {
-		return fmt.Sprintf("%p[0:%d]", d, Len(d.(Interface2)))
-	}
 	m := 8
 	l := Len(d)
 	if l < m || TraceLevel==VVVV { m = l }
-	s := fmt.Sprintf("%T([", d)
+	dv := reflect.ValueOf(d)
+	dt := reflect.TypeOf(d)
+	dts := dt.String()
+	s := fmt.Sprintf("[:%d]%s([", dv.Len(), dts[2:len(dts)])
 	for i := 0; i<m; i++ {
 		if i!=0 {s += " "}
 		s += fmt.Sprintf("%s", String(Index(d,i)))
