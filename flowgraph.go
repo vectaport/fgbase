@@ -25,7 +25,7 @@ var GlobalStats = false
 // Trace level constants.
 const (
 	Q = iota  // quiet
-	V         // trace Node firing
+	V         // trace Node execution
 	VV        // trace channel IO
 	VVV       // trace state before select
 	VVVV      // full-length array dumps
@@ -41,7 +41,7 @@ var TraceIndent = false
 var NodeID int64
 
 // Global count of number of Node executions.
-var globalWorkCnt int64
+var globalFireCnt int64
 
 // MakeGraph returns a slice of Edge and a slice of Node.
 func MakeGraph(sze, szn int) ([]Edge,[]Node) {

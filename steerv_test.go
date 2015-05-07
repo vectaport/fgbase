@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func tbiSteervWork(n *Node) {
+func tbiSteervFire(n *Node) {
 	x := n.Dsts[0]
 	x.Val = x.Aux
 	if (x.Aux.(int)<=1) {
@@ -16,7 +16,7 @@ func tbiSteervWork(n *Node) {
 }
 
 func tbiSteerv(x Edge) Node {
-	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiSteervWork)
+	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiSteervFire)
 	return node
 }
 

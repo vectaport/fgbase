@@ -11,7 +11,7 @@ type irw struct {
 	RW *bufio.ReadWriter
 } 
 
-func dstWork (n *Node) {	 
+func dstFire (n *Node) {	 
 	a := n.Srcs[0] 		 
 	s := a.Aux.(*irw)
 	rw := s.RW
@@ -44,7 +44,7 @@ func dstWork (n *Node) {
 // FuncDst writes data and waits for an acknowledging '\n'.
 func FuncDst(a Edge, rw io.ReadWriter) Node {
 	
-	node := MakeNode("dst", []*Edge{&a}, nil, nil, dstWork)
+	node := MakeNode("dst", []*Edge{&a}, nil, nil, dstFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
 	a.Aux = &irw{RW: bufio.NewReadWriter(reader, writer)}

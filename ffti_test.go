@@ -9,7 +9,7 @@ import (
 
 const infitesimal=1.e-15
 
-func tbiFFTIWork(n *Node) {
+func tbiFFTIFire(n *Node) {
 	x := n.Dsts[0]
 	const sz = 128
 	var vec = make([]complex128, sz, sz)
@@ -26,11 +26,11 @@ func tbiFFTIWork(n *Node) {
 }
 
 func tbiFFTI(x Edge) Node {
-	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiFFTIWork)
+	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiFFTIFire)
 	return node
 }
 
-func tboFFTIWork(n *Node) {
+func tboFFTIFire(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	av := a.Val.([]complex128)
@@ -51,7 +51,7 @@ func tboFFTIWork(n *Node) {
 }
 
 func tboFFTI(a, b Edge) Node {
-	node:=MakeNode("tbo", []*Edge{&a, &b}, nil, nil, tboFFTIWork)
+	node:=MakeNode("tbo", []*Edge{&a, &b}, nil, nil, tboFFTIFire)
 	return node
 }
 

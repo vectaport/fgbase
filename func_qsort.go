@@ -30,7 +30,7 @@ type Interface2 interface {
 	ID() int64
 }
 
-func qsortWork (n *Node) {
+func qsortFire (n *Node) {
 
 	a := n.Srcs[0]
 	steerAck := a.Ack2 != nil
@@ -126,7 +126,7 @@ func FuncQsort(a, x Edge, poolSz int) []Node {
 	poolQsortSz = int64(poolSz)-1
 	for i:=0; i<poolSz; i++ {
 		aa, xx := a,x  // make a copy of the Edge's for each one
-		n[i] = MakeNodePool("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortWork)
+		n[i] = MakeNodePool("qsort", []*Edge{&aa}, []*Edge{&xx}, nil, qsortFire)
 	}
 	return n
 

@@ -5,7 +5,7 @@ import (
 	"io"
 )      			
 
-func readWork (n *Node) {	 
+func readFire (n *Node) {	 
 	x := n.Dsts[0] 		 
 	r := x.Aux.(*bufio.Reader)
 	var err error
@@ -25,7 +25,7 @@ func readWork (n *Node) {
 // FuncRead reads a data value from a Reader
 func FuncRead(x Edge, r io.Reader) Node {
 
-	node := MakeNode("read", nil, []*Edge{&x}, nil, readWork)
+	node := MakeNode("read", nil, []*Edge{&x}, nil, readFire)
 	x.Aux = bufio.NewReader(r)
 	return node
 	

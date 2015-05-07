@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func addWork2(a, b Datum) Datum {
+func addFire2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)+b.(int8) }
@@ -27,7 +27,7 @@ func addWork2(a, b Datum) Datum {
 }
 
 // Addition primitive
-func addWork(n *Node) {
+func addFire(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -39,14 +39,14 @@ func addWork(n *Node) {
 		n.LogError("incompatible types for addition (%v+%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
-		x.Val = addWork2(atmp, btmp)
+		x.Val = addFire2(atmp, btmp)
 	}
 }
 
 // FuncAdd adds values and returns the sum (x = a + b).
 func FuncAdd(a, b, x Edge) Node {
 
-	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, addWork)
+	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, addFire)
 	return node
 }
 

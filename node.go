@@ -17,7 +17,7 @@ type Node struct {
 	Srcs []*Edge                    // upstream links
 	Dsts []*Edge                    // downstream links
 	RdyFunc NodeRdy                 // func to test Edge readiness
-	WorkFunc NodeWork               // func to do work of the Node
+	FireFunc NodeFire               // func to fire off the Node
 	RunFunc NodeRun                 // func to repeatedly run Node
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
@@ -40,15 +40,15 @@ var startTime time.Time
 // NodeRdy is the function signature for evaluating readiness of a Node to execute.
 type NodeRdy func(*Node) bool
 
-// NodeWork is the function signature for executing a Node.
+// NodeFire is the function signature for executing a Node.
 // Any error message should be written using Node.LogError and
 // nil written to any output Edge.
-type NodeWork func(*Node)
+type NodeFire func(*Node)
 
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reuseChan bool) Node {
+func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reuseChan bool) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i-1
@@ -57,7 +57,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, work NodeWork, reu
 	n.Srcs = srcs
 	n.Dsts = dsts
 	n.RdyFunc = ready
-	n.WorkFunc = work
+	n.FireFunc = fire
 	n.caseToEdgeDir = make(map[int]edgeDir)
 	if reuseChan { n.flag = n.flag | flagPool }
 	var cnt = 0
@@ -101,8 +101,8 @@ func MakeNodePool(
 	name string, 
 	srcs, dsts []*Edge, 
 	ready NodeRdy, 
-	work NodeWork) Node {
-	return makeNode(name, srcs, dsts, ready, work, true)
+	fire NodeFire) Node {
+	return makeNode(name, srcs, dsts, ready, fire, true)
 }
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
@@ -110,8 +110,8 @@ func MakeNode(
 	name string, 
 	srcs, dsts []*Edge, 
 	ready NodeRdy, 
-	work NodeWork) Node {
-	return makeNode(name, srcs, dsts, ready, work, false)
+	fire NodeFire) Node {
+	return makeNode(name, srcs, dsts, ready, fire, false)
 }
 
 func prefixTracef(n *Node) (format string) {
@@ -236,10 +236,10 @@ func (n *Node) traceValRdy(valOnly bool) {
 // TraceVals lists input and output values for a Node.
 func (n *Node) TraceVals() { if TraceLevel!=Q { n.traceValRdy(true) } }
 
-// IncrWorkCnt increments execution count of Node.
-func (n *Node) IncrWorkCnt() {
+// IncrFireCnt increments execution count of Node.
+func (n *Node) IncrFireCnt() {
 	if (GlobalStats) {
-		c := atomic.AddInt64(&globalWorkCnt, 1)
+		c := atomic.AddInt64(&globalFireCnt, 1)
 		n.Cnt = c-1
 	} else {
 		n.Cnt = n.Cnt+1
@@ -259,7 +259,7 @@ func (n *Node) RdyAll() bool {
 		if !n.RdyFunc(n) { return false }
 	}
 
-	n.IncrWorkCnt();
+	n.IncrFireCnt();
 
 	// restore data channels for next use
 	for i := range n.dataBackup {
@@ -269,10 +269,10 @@ func (n *Node) RdyAll() bool {
 	return true
 }
 
-// Work executes Node using function pointer.
-func (n *Node) Work() {
+// Fire executes Node using function pointer.
+func (n *Node) Fire() {
 	newFmt := n.traceValRdySrc(true)
-	if (n.WorkFunc!=nil) { n.WorkFunc(n) }
+	if (n.FireFunc!=nil) { n.FireFunc(n) }
 	newFmt += n.traceValRdyDst(true)
 	StdoutLog.Printf(newFmt)
 }
@@ -342,7 +342,7 @@ func (n *Node) Run() {
 
 	for {
 		if n.RdyAll() {
-			n.Work()
+			n.Fire()
 			n.SendAll()
 		}
 		if !n.RecvOne() { // bad receiving shuts down go-routine

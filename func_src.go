@@ -5,7 +5,7 @@ import (
 	"io"
 )      			
 
-func srcWork (n *Node) {	 
+func srcFire (n *Node) {	 
 	x := n.Dsts[0] 		 
 	rw := x.Aux.(*bufio.ReadWriter)
 	var err error
@@ -37,7 +37,7 @@ func srcWork (n *Node) {
 // FuncSrc reads a data value and writes a '\n' acknowledgement.
 func FuncSrc(x Edge, rw io.ReadWriter) Node {
 
-	node := MakeNode("src", nil, []*Edge{&x}, nil, srcWork)
+	node := MakeNode("src", nil, []*Edge{&x}, nil, srcFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
 	x.Aux = bufio.NewReadWriter(reader, writer)

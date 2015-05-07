@@ -17,7 +17,7 @@ func steervRdy (n *Node) bool {
 	return false
 }
 
-func steervWork (n *Node) {
+func steervFire (n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -34,7 +34,7 @@ func steervWork (n *Node) {
 // FuncSteerv steers the second value by the first (if a==0 { x = b } else { y = b }).
 func FuncSteerv(a, b, x, y Edge) Node {
 
-	node := MakeNode("steerv", []*Edge{&a, &b}, []*Edge{&x, &y}, steervRdy, steervWork)
+	node := MakeNode("steerv", []*Edge{&a, &b}, []*Edge{&x, &y}, steervRdy, steervFire)
 	return node
 
 }

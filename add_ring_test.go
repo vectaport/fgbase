@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func tbiAddRingWork(n *Node) {
+func tbiAddRingFire(n *Node) {
 	x := n.Dsts[0]
 	y := n.Dsts[1]
 	x.Val = x.Aux
@@ -15,20 +15,20 @@ func tbiAddRingWork(n *Node) {
 }
 
 func tbiAddRing(a, x, y Edge) Node {
-	node := MakeNode("tbi", []*Edge{&a}, []*Edge{&x, &y}, nil, tbiAddRingWork)
+	node := MakeNode("tbi", []*Edge{&a}, []*Edge{&x, &y}, nil, tbiAddRingFire)
 	x.Aux = 1
 	y.Aux = 1
 	return node
 }
 
-func tboAddRingWork(n *Node) {
+func tboAddRingFire(n *Node) {
 	x := n.Dsts[0]
 	x.Val = true
 }
 
 func tboAddRing(a, x Edge) Node {
 
-	node := MakeNode("tbo", []*Edge{&a}, []*Edge{&x}, nil, tboAddRingWork)
+	node := MakeNode("tbo", []*Edge{&a}, []*Edge{&x}, nil, tboAddRingFire)
 	return node
 
 }

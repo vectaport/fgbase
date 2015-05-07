@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func divWork2(a, b Datum) Datum {
+func divFire2(a, b Datum) Datum {
 	
 	switch a.(type) {
         case int8: { return a.(int8)/b.(int8) }
@@ -26,7 +26,7 @@ func divWork2(a, b Datum) Datum {
 }
 
 // Division primitive
-func divWork(n *Node) {
+func divFire(n *Node) {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -45,13 +45,13 @@ func divWork(n *Node) {
 		return
 	}
 	
-	x.Val = divWork2(aTmp, bTmp)
+	x.Val = divFire2(aTmp, bTmp)
 }
 
 // FuncDiv divides values and returns the quotient (x = a / b).
 func FuncDiv(a, b, x Edge) Node {
 
-	node := MakeNode("div", []*Edge{&a, &b}, []*Edge{&x}, nil, divWork)
+	node := MakeNode("div", []*Edge{&a, &b}, []*Edge{&x}, nil, divFire)
 	return node
 }
 

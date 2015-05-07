@@ -6,7 +6,7 @@ import (
 	"io"
 )      			
 
-func writeWork (n *Node) {	 
+func writeFire (n *Node) {	 
 	a := n.Srcs[0] 		 
 	w := a.Aux.(*bufio.Writer)
 	var err error
@@ -26,7 +26,7 @@ func writeWork (n *Node) {
 // FuncWrite writes a data value from a Writer
 func FuncWrite(a Edge, w io.Writer) Node {
 
-	node := MakeNode("write", []*Edge{&a}, nil, nil, writeWork)
+	node := MakeNode("write", []*Edge{&a}, nil, nil, writeFire)
 	a.Aux = bufio.NewWriter(w)
 	return node
 	

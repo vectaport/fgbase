@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-func rdyWork(n *Node) {
+func rdyFire(n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	x.Val = a.Val
@@ -12,6 +12,6 @@ func rdyWork(n *Node) {
 // FuncRdy waits for two values before passing on the first (b; x = a).
 func FuncRdy(a, b, x Edge) Node {
 
-	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdyWork)
+	node := MakeNode("rdy", []*Edge{&a, &b}, []*Edge{&x}, nil, rdyFire)
 	return node
 }

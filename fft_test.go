@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-func tbiFFTWork(n *Node) {
+func tbiFFTFire(n *Node) {
 	x := n.Dsts[0]
 	x.Val = make([]complex128, 32, 32)
 }
 
 func tbiFFT(x Edge) Node {
-	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiFFTWork)
+	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiFFTFire)
 	return node
 }
 
