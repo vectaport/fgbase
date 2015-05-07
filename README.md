@@ -23,4 +23,6 @@ The flowgraph package can be used to render flowgraphs drawn and simulated in [g
 
 Wiki Topics:
 
-* [Flowgraph Coordination](http://github.com/vectaport/flowgraph/wiki/Flowgraph%20Coordination)
+* [Flowgraph Coordination](http://github.com/vectaport/flowgraph/wiki/Flowgraph%20Coordination) -- how flowgraphs coordinate flow.
+* [Flowgraph Extension](http://github.com/vectaport/flowgraph/wiki/Flowgraph%20Extension) -- how to extend flowgraphs across the net.
+* [Conditional Iteration](http://github.com/vectaport/flowgraph/wiki/Conditional%20Iteration) -- the flowgraph looping construct.
