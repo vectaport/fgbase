@@ -116,7 +116,6 @@ func MakeNode(
 
 func prefixTracef(n *Node) (format string) {
 	var addNodeAddr = TraceLevel>=VVVV
-	var timeFlg = true
 	var newFmt string
 	if TraceIndent {
 		for i := int64(0);i<n.ID;i++ {
@@ -125,15 +124,20 @@ func prefixTracef(n *Node) (format string) {
 	}
 	newFmt += n.Name
 	newFmt += fmt.Sprintf("(%d", n.ID)
-	if n.Cnt>=0 {
-		newFmt += fmt.Sprintf("_%d", n.Cnt)
+	if TraceTimeStamp==N_FcS {
+		newFmt += "_"
 	} else {
-		newFmt += "_*"
+		newFmt += ":"
+	}
+	if n.Cnt>=0 {
+		newFmt += fmt.Sprintf("%d", n.Cnt)
+	} else {
+		newFmt += "*"
 	}
 	if addNodeAddr { 
 		newFmt += fmt.Sprintf(":%p", n)
 	}
-	if timeFlg { 
+	if TraceTimeStamp==N_FcS { 
 		newFmt += fmt.Sprintf(":%.4f", time.Since(startTime).Seconds())
 	}
 	newFmt += ") "

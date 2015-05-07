@@ -37,6 +37,15 @@ var TraceLevel = Q
 // Indent trace by Node id tabs.
 var TraceIndent = false
 
+// Trace timestamp format
+const (
+	NcF = iota  // nodeid:firecnt
+	N_FcS       // nodeid_firecnt:secs
+)
+
+// Enable tracing, writes to StdoutLog if TraceLevel>Q.
+var TraceTimeStamp = NcF
+
 // Unique Node id.
 var NodeID int64
 
