@@ -13,7 +13,7 @@ type DoubleDatum struct {
 var poolQsortSz int64
 var poolQsortMu = &sync.Mutex{}
 
-type Interface2 interface {
+type SortInterface interface {
 	// sort.Interface is borrowed from the sort package.
 	sort.Interface
 	// Sorted tests if slice is sorted.
@@ -38,12 +38,12 @@ func qsortFire (n *Node) {
 
 	x := n.Dsts[0]
 	a.NoOut = true
-	if _,ok := a.Val.(Interface2); !ok {
-		n.LogError("not of type Interface2 (%T)\n", a.Val)
+	if _,ok := a.Val.(SortInterface); !ok {
+		n.LogError("not of type SortInterface (%T)\n", a.Val)
 		return
 	}
 
-	d := a.Val.(Interface2)
+	d := a.Val.(SortInterface)
 	l := d.Len()
 
 	var poolSz int64
