@@ -84,7 +84,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reu
 		dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
 		if dsti.Ack!=nil {
 			if reuseChan {
-				dsti.Ack = make(chan bool, 1)
+				dsti.Ack = make(chan Nada, 1)
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(dsti.Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{dsti, false}

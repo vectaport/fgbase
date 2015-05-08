@@ -5,20 +5,22 @@ import (
 	"strconv"
 )
 
+type Nada struct {}
+
 // Edge of a flowgraph.
 type Edge struct {
 
 	// values shared by upstream and downstream Node
 	Name string        // for trace
 	Data *[]chan Datum // slice of data channels
-	Ack chan bool      // request (or acknowledge) channel
+	Ack chan Nada      // request (or acknowledge) channel
 
 	// values unique to upstream and downstream Node
 	Val Datum          // generic empty interface
 	RdyCnt int         // readiness of I/O
 	NoOut bool         // set true to inhibit one output, data or ack
 	Aux Datum          // auxiliary empty interface to hold state
-	Ack2 chan bool     // alternate channel for ack steering
+	Ack2 chan Nada     // alternate channel for ack steering
 
 }
 
@@ -30,7 +32,7 @@ func newEdge(name string, initVal Datum) Edge {
 	e.Val = initVal
 	dc := make([]chan Datum, 0)
 	e.Data = &dc
-	e.Ack = make(chan bool, 1)
+	e.Ack = make(chan Nada, 1)
 	return e
 }
 
@@ -108,17 +110,18 @@ func (e *Edge) SendData(n *Node) {
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.NoOut) {
+			var nada Nada
 			if e.Ack2 != nil {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack2(%p) <-\n", e.Name, e.Ack2)
 				}
-				e.Ack2 <- true
+				e.Ack2 <- nada
 				e.Ack2 = nil
 			} else {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack <-\n", e.Name)
 				}
-				e.Ack <- true
+				e.Ack <- nada
 			}
 			e.RdyCnt = 1
 		} else {

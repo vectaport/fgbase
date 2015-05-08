@@ -7,12 +7,6 @@ import (
 	"os"
 )
 
-// ack channel wrapper
-type ackWrap struct {
-	ack chan bool
-	d Datum
-}
-
 // Log for tracing flowgraph execution.
 var StdoutLog = log.New(os.Stdout, "", 0)
 
@@ -47,6 +41,12 @@ var NodeID int64
 
 // Global count of number of Node executions.
 var globalFireCnt int64
+
+// ack channel wrapper
+type ackWrap struct {
+	ack chan Nada
+	d Datum
+}
 
 // MakeGraph returns a slice of Edge and a slice of Node.
 func MakeGraph(sze, szn int) ([]Edge,[]Node) {
