@@ -48,7 +48,7 @@ type NodeFire func(*Node)
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reuseChan bool) Node {
+func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, pool bool) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i-1
@@ -59,7 +59,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reu
 	n.RdyFunc = ready
 	n.FireFunc = fire
 	n.caseToEdgeDir = make(map[int]edgeDir)
-	if reuseChan { n.flag = n.flag | flagPool }
+	if pool { n.flag = n.flag | flagPool }
 	var cnt = 0
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
@@ -67,8 +67,8 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reu
 			if srci.Val!=nil { return 0 }; return 1}()
 		if srci.Data != nil {
 			j := len(*srci.Data)
-			if j==0 || !reuseChan {
-				var df = func() int {if n.flag&flagPool==flagPool {return 0} else {return 1}}
+			if j==0 || !pool {
+				var df = func() int {if pool {return 0} else {return 1}}
 				*srci.Data = append(*srci.Data, make(chan Datum, df()))
 			} else {
 				j = 0
@@ -83,7 +83,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reu
 		dsti := n.Dsts[i]
 		dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
 		if dsti.Ack!=nil {
-			if reuseChan {
+			if pool {
 				dsti.Ack = make(chan Nada, 1)
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(dsti.Ack)})
@@ -96,13 +96,22 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reu
 }
 
 // MakeNodePool returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
-// The Edge data channels get reused.
+// Both source channels and the destination data channel get shared.  The destination ack channel is unique.
 func MakeNodePool(
 	name string, 
 	srcs, dsts []*Edge, 
 	ready NodeRdy, 
 	fire NodeFire) Node {
-	return makeNode(name, srcs, dsts, ready, fire, true)
+	var srcsCopy,dstsCopy []*Edge
+	for i:=0; i<len(srcs); i++ {
+		s := *srcs[i]
+		srcsCopy = append(srcsCopy, &s)
+	}
+	for i:=0; i<len(dsts); i++ {
+		d := *dsts[i]
+		dstsCopy = append(dstsCopy, &d)
+	}
+	return makeNode(name, srcsCopy, dstsCopy, ready, fire, true)
 }
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
@@ -366,7 +375,7 @@ func RunAll(n []Node, timeout time.Duration) {
 
 	if timeout>0 { time.Sleep(timeout) }
 
-	if false {
+	if true {
 		StdoutLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
 		for i:=0; i<len(n); i++ {
 			n[i].traceValRdy(false)

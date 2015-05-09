@@ -37,7 +37,7 @@ type RecursiveSort interface {
 
 func (n *Node) deltaPool(delta int) {
 	poolSz := atomic.AddInt64(&poolQsortSz, int64(delta))
-	n.Tracef("\tpool %s\n", func() string {var s string; for i:=int64(0); i<poolSz; i++ { s += "*" }; return s}())
+	n.Tracef("\tpool(%d) \t%s\n", delta, func() string {var s string; for i:=int64(0); i<poolSz; i++ { s += "*" }; return s}())
 }
 
 func (n *Node) freeNode (num int) bool {
@@ -48,7 +48,7 @@ func (n *Node) freeNode (num int) bool {
 	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), poolQsortSz, d.Depth(), d.ID(), d.Len())
 
 	var f bool
-	if poolQsortSz>int64(num) {
+	if poolQsortSz>int64(num) {  // always leave one in the pool
 		n.deltaPool(-num)
 		f = true
 	} else {
@@ -61,10 +61,15 @@ func qsortFire (n *Node) {
 
 	a := n.Srcs[0]
 	steerAck := a.Ack2 != nil
-	a.SendAck(n) // write early to let flow go on
+	defer func() {
+		if steerAck {
+			n.deltaPool(1)
+		}
+	}()
+	// a.SendAck(n) // write early to let flow go on
+	// a.NoOut = true
 
 	x := n.Dsts[0]
-	a.NoOut = true
 	if _,ok := a.Val.(RecursiveSort); !ok {
 		n.LogError("not of type RecursiveSort (%T)\n", a.Val)
 		return
@@ -78,11 +83,9 @@ func qsortFire (n *Node) {
 		x.Val=x.AckWrap(d)
 		x.SendData(n)
 		x.NoOut = true
-		if steerAck {
-			n.deltaPool(1)
-		}
 		return
 	}
+
 
 	mlo,mhi := doPivot(d, 0, l)
 	var lo,hi Datum
@@ -111,12 +114,9 @@ func qsortFire (n *Node) {
 	x.Val = DoubleDatum{lo, hi}
 	x.NoOut = true
 	
-	if steerAck {
-		n.deltaPool(1)
-	}
 	x.RdyCnt = c
 	x.NoOut = true
-
+	
 }
 
 // FuncQsort recursively implements a quicksort with goroutines 
@@ -124,14 +124,10 @@ func qsortFire (n *Node) {
 func FuncQsort(a, x Edge, poolSz int) []Node {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
-	// and reserve one for the front end input into this dynamically 
-	// extruded flowgraph.
 	n := MakeNodes(poolSz)
-	poolQsortSz = int64(poolSz)-1
-
+	poolQsortSz = int64(poolSz)
 	for i:=0; i<poolSz; i++ {
-		aa, xx := a,x  // make a copy of the Edge's for each one
-		n[i] = MakeNodePool("qsort", []*Edge{&aa}, []*Edge{&xx}, 
+		n[i] = MakeNodePool("qsort", []*Edge{&a}, []*Edge{&x}, 
 			nil, qsortFire)
 	}
 	return n
