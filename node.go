@@ -68,7 +68,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, reu
 		if srci.Data != nil {
 			j := len(*srci.Data)
 			if j==0 || !reuseChan {
-				var df = func() int {if n.flag&flagPool==flagPool {return 1} else {return 0}}
+				var df = func() int {if n.flag&flagPool==flagPool {return 0} else {return 1}}
 				*srci.Data = append(*srci.Data, make(chan Datum, df()))
 			} else {
 				j = 0
@@ -311,12 +311,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 			if (srci.Val==nil) {
 				n.Tracef("<nil> <- %s.Data%s\n", srci.Name, asterisk)
 			} else {
-				n.Tracef("%s <- %s.Data%s\n", 
-					func() string {
-						if IsSlice(srci.Val) { return StringSlice(srci.Val) }
-						return fmt.Sprintf("%T(%v)", srci.Val, srci.Val)}(), 
-					srci.Name,
-					asterisk)
+				n.Tracef("%s <- %s.Data%s\n", String(srci.Val), srci.Name, asterisk)
 			}
 		}
 	} else {

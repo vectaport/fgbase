@@ -95,11 +95,11 @@ func tboQsort(a Edge) Node {
 	node := MakeNode("tbo", []*Edge{&a}, nil, nil, 
 		func(n *Node) {
 			switch v := a.Val.(type) {
-			case SortInterface: {
+			case RecursiveSort: {
 				n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d\n", v.Orig(), v.OrigSorted(), v.Sorted(), v.Depth(), v.ID(), v.Len())
 			}
 			default: {
-				n.Tracef("not of type SortInterface\n")
+				n.Tracef("not of type RecursiveSort\n")
 			}
 			}})
 	return node

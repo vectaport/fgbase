@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func tbi(x Edge) Node {
+func tbiArbit(x Edge) Node {
 
 
 	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, 
@@ -20,7 +20,7 @@ func tbi(x Edge) Node {
 	
 }
 
-func tbo(a Edge) Node {
+func tboArbit(a Edge) Node {
 	
 	node:=MakeNode("tbo", []*Edge{&a}, nil, nil, 
 		func (n *Node) {
@@ -39,10 +39,10 @@ func TestArbit(t *testing.T) {
 	e[0].Aux = 0
 	e[1].Aux = 1000
 
-	n[0] = tbi(e[0])
-	n[1] = tbi(e[1])
+	n[0] = tbiArbit(e[0])
+	n[1] = tbiArbit(e[1])
 	n[2] = FuncArbit(e[0], e[1], e[2])
-	n[3] = tbo(e[2])
+	n[3] = tboArbit(e[2])
 
 	RunAll(n, time.Second)
 

@@ -88,11 +88,7 @@ func (e *Edge) SendData(n *Node) {
 				if (ev==nil) {
 					n.Tracef("%s <- <nil>%s\n", nm, asterisk)
 				} else {
-					n.Tracef("%s <- %s%s\n", nm, 
-						func() string {
-							if IsSlice(ev) { return StringSlice(ev) }
-							return fmt.Sprintf("%T(%v)", ev, ev)}(),
-						asterisk)
+					n.Tracef("%s <- %s%s\n", nm, String(ev), asterisk)
 				}
 			}
 			for i := range *e.Data {
