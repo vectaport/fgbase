@@ -35,9 +35,9 @@ type RecursiveSort interface {
 	ID() int64
 }
 
-func (n *Node) deltaPool(delta int) {
-	poolSz := atomic.AddInt64(&poolQsortSz, int64(delta))
-	n.Tracef("\tpool(%d) \t%s\n", delta, func() string {var s string; for i:=int64(0); i<poolSz; i++ { s += "*" }; return s}())
+func (n *Node) reducePool(reduce int) {
+	poolSz := atomic.AddInt64(&poolQsortSz, -int64(reduce))
+	n.Tracef("\tpool(%d) \t%s\n", reduce, func() string {var s string; for i:=int64(0); i<poolSz; i++ { s += "*" }; return s}())
 }
 
 func (n *Node) freeNode (num int) bool {
@@ -48,8 +48,8 @@ func (n *Node) freeNode (num int) bool {
 	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), poolQsortSz, d.Depth(), d.ID(), d.Len())
 
 	var f bool
-	if poolQsortSz>int64(num) {  // always leave one in the pool
-		n.deltaPool(-num)
+	if poolQsortSz>=int64(num) {
+		n.reducePool(num)
 		f = true
 	} else {
 		f = false
@@ -58,16 +58,20 @@ func (n *Node) freeNode (num int) bool {
 }
 
 func qsortFire (n *Node) {
-
+	// If you can reserve one for the next upstream use ack early
 	a := n.Srcs[0]
-	steerAck := a.Ack2 != nil
+	u := n.freeNode(1)
+	if u {
+		a.SendAck(n)
+		a.NoOut = true
+	}
+
+	// conditionally return Node to the pool
 	defer func() {
-		if steerAck {
-			n.deltaPool(1)
+		if u { 
+			n.reducePool(-1)
 		}
 	}()
-	// a.SendAck(n) // write early to let flow go on
-	// a.NoOut = true
 
 	x := n.Dsts[0]
 	if _,ok := a.Val.(RecursiveSort); !ok {
@@ -121,11 +125,11 @@ func qsortFire (n *Node) {
 
 // FuncQsort recursively implements a quicksort with goroutines 
 // (x=qsort(a)).
-func FuncQsort(a, x Edge, poolSz int) []Node {
+func FuncQsort(a, x Edge, poolSz, poolEntries int ) []Node {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
 	n := MakeNodes(poolSz)
-	poolQsortSz = int64(poolSz)
+	poolQsortSz = int64(poolSz)-int64(poolEntries)
 	for i:=0; i<poolSz; i++ {
 		n[i] = MakeNodePool("qsort", []*Edge{&a}, []*Edge{&x}, 
 			nil, qsortFire)
