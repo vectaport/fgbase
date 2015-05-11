@@ -99,19 +99,17 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 // Both source channels and the destination data channel get shared.  The destination ack channel is unique.
 func MakeNodePool(
 	name string, 
-	srcs, dsts []*Edge, 
+	srcs, dsts []Edge, 
 	ready NodeRdy, 
 	fire NodeFire) Node {
-	var srcsCopy,dstsCopy []*Edge
+	var srcsp,dstsp []*Edge
 	for i:=0; i<len(srcs); i++ {
-		s := *srcs[i]
-		srcsCopy = append(srcsCopy, &s)
+		srcsp = append(srcsp, &srcs[i])
 	}
 	for i:=0; i<len(dsts); i++ {
-		d := *dsts[i]
-		dstsCopy = append(dstsCopy, &d)
+		dstsp = append(dstsp, &dsts[i])
 	}
-	return makeNode(name, srcsCopy, dstsCopy, ready, fire, true)
+	return makeNode(name, srcsp, dstsp, ready, fire, true)
 }
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
@@ -204,8 +202,8 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
 		dstiv := dsti.Val
-		if _,ok := dstiv.(ackWrap); ok {
-			dstiv = dstiv.(ackWrap).d // remove wrapper for tracing
+		if _,ok := dstiv.(nodeWrap); ok {
+			dstiv = dstiv.(nodeWrap).datum // remove wrapper for tracing
 		}
 		if (i!=0) { newFmt += "," }
 		if (valOnly) {
@@ -240,6 +238,14 @@ func (n *Node) traceValRdy(valOnly bool) {
 	newFmt := n.traceValRdySrc(valOnly)
 	newFmt += n.traceValRdyDst(valOnly)
 	StdoutLog.Printf(newFmt)
+}
+
+// traceValRdyErr lists Node input values and output readiness to stderr.
+func (n *Node) traceValRdyErr() {
+
+	newFmt := n.traceValRdySrc(false)
+	newFmt += n.traceValRdyDst(false)
+	StderrLog.Printf(newFmt)
 }
 
 // TraceVals lists input and output values for a Node.
@@ -310,9 +316,9 @@ func (n *Node) RecvOne() (recvOK bool) {
 		srci := n.caseToEdgeDir[i].edge
 		srci.Val = recv.Interface()
 		var asterisk string
-		if _,ok := srci.Val.(ackWrap); ok {
-			srci.Ack2 = srci.Val.(ackWrap).ack
-			srci.Val = srci.Val.(ackWrap).d
+		if _,ok := srci.Val.(nodeWrap); ok {
+			srci.Ack2 = srci.Val.(nodeWrap).node.Dsts[0].Ack
+			srci.Val = srci.Val.(nodeWrap).datum
 			asterisk = fmt.Sprintf(" *(Ack2=%p)", srci.Ack2)
 		}
 		srci.RdyCnt--
@@ -375,14 +381,21 @@ func RunAll(n []Node, timeout time.Duration) {
 
 	if timeout>0 { time.Sleep(timeout) }
 
-	if true {
-		StdoutLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+	if PostDump {
+		StderrLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
 		for i:=0; i<len(n); i++ {
-			n[i].traceValRdy(false)
+			n[i].traceValRdyErr()
 		}
-		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
+		StderrLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
 	}
 		
 	StdoutLog.Printf("\n")
 }
 
+
+
+// NodeWrap bundles a Node pointer and a Datum to pass information about an
+// upstream node downstream.
+func (n *Node) NodeWrap(d Datum) Datum {
+	return nodeWrap{n, d}
+}

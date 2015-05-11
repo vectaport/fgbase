@@ -36,6 +36,9 @@ var TraceFireCnt = true
 var TraceSeconds = false
 var TracePointer = false
 
+// PostDump dump all the Node's state at the end of RunAll
+var PostDump = false
+
 // Unique Node id.
 var NodeID int64
 
@@ -45,7 +48,13 @@ var globalFireCnt int64
 // ack channel wrapper
 type ackWrap struct {
 	ack chan Nada
-	d Datum
+	datum Datum
+}
+
+// node channel wrapper
+type nodeWrap struct {
+	node *Node
+	datum Datum
 }
 
 // MakeGraph returns a slice of Edge and a slice of Node.

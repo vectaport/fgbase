@@ -10,8 +10,8 @@ type DoubleDatum struct {
 	a,b Datum
 }
 
-var poolQsortSz int64
-var poolQsortMu = &sync.Mutex{}
+var PoolQsortSz int64
+var PoolQsortMu = &sync.Mutex{}
 
 type RecursiveSort interface {
 	sort.Interface
@@ -35,20 +35,30 @@ type RecursiveSort interface {
 	ID() int64
 }
 
+func (n *Node) increasePool(increase int) {
+	n.reducePool(-increase)
+}
+
+
 func (n *Node) reducePool(reduce int) {
-	poolSz := atomic.AddInt64(&poolQsortSz, -int64(reduce))
-	n.Tracef("\tpool(%d) \t%s\n", reduce, func() string {var s string; for i:=int64(0); i<poolSz; i++ { s += "*" }; return s}())
+	poolSz := atomic.AddInt64(&PoolQsortSz, -int64(reduce))
+	delta,c := int64(1),"*"
+	if poolSz > 128 {
+		delta = 10
+		c = "X"
+	}
+	n.Tracef("\tpool \t%s\n", func() string {var s string; for i:=int64(0); i<poolSz; i +=delta { s += c }; return s}())
 }
 
 func (n *Node) freeNode (num int) bool {
-	poolQsortMu.Lock()
-	defer poolQsortMu.Unlock()
+	PoolQsortMu.Lock()
+	defer PoolQsortMu.Unlock()
 	
 	d := n.Srcs[0].Val.(RecursiveSort)
-	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, poolsz=%d, depth=%d, id=%d, len=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), poolQsortSz, d.Depth(), d.ID(), d.Len())
+	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), PoolQsortSz )
 
 	var f bool
-	if poolQsortSz>=int64(num) {
+	if PoolQsortSz>=int64(num) {
 		n.reducePool(num)
 		f = true
 	} else {
@@ -58,38 +68,41 @@ func (n *Node) freeNode (num int) bool {
 }
 
 func qsortFire (n *Node) {
-	// If you can reserve one for the next upstream use ack early
+	// If you can reserve a pool Node for the next upstream use then ack early.
 	a := n.Srcs[0]
-	u := n.freeNode(1)
-	if u {
+	x := n.Dsts[0]
+	recursed := a.Ack2 != nil
+	ackEarly := n.freeNode(1)
+	if ackEarly { 
 		a.SendAck(n)
 		a.NoOut = true
 	}
 
-	// conditionally return Node to the pool
+	// Return the right number of nodes to the pool.
 	defer func() {
-		if u { 
-			n.reducePool(-1)
-		}
+		m := 0
+		if ackEarly { m++  }
+		if recursed { m++ }
+		if m>0 { n.increasePool(m) }
 	}()
 
-	x := n.Dsts[0]
-	if _,ok := a.Val.(RecursiveSort); !ok {
+	d,ok := a.Val.(RecursiveSort)
+	if !ok {
 		n.LogError("not of type RecursiveSort (%T)\n", a.Val)
 		return
 	}
 
-	d := a.Val.(RecursiveSort)
+	if d.Depth()==0 { n.Tracef("BEGIN for id=%d, depth=0, len=%d\n", d.ID(), d.Len()) }
+
 	l := d.Len()
 
 	if l <= 4096 || !n.freeNode(2) {
 		sort.Sort(d)
-		x.Val=x.AckWrap(d)
+		x.Val=n.NodeWrap(d)
 		x.SendData(n)
 		x.NoOut = true
 		return
 	}
-
 
 	mlo,mhi := doPivot(d, 0, l)
 	var lo,hi Datum
@@ -99,18 +112,23 @@ func qsortFire (n *Node) {
 	x.Data = a.Data // recurse
 	x.Name = x.Name+"("+a.Name+")"
 	if mlo>0 {
-		n.Tracef("Original(%p) recurse left [0:%d]\n", d.Original(), mlo)
-		lo = x.AckWrap(d.SubSlice(0, mlo))
+		n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
+		d2 := d.SubSlice(0, mlo)
+		lo = n.NodeWrap(d2)
 		x.Val = lo
 		x.SendData(n)
 		c++
+	} else {
+		n.increasePool(1)
 	}
 	if l-mhi>0 {
-		n.Tracef("Original(%p) recurse right [%d:%d]\n", d.Original(), mhi, l)
-		hi = x.AckWrap(d.SubSlice(mhi, l))
+		n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
+		hi = n.NodeWrap(d.SubSlice(mhi, l))
 		x.Val = hi
 		x.SendData(n)
 		c++
+	} else {
+		n.increasePool(1)
 	}
 	x.Data = xData
 	x.Name = xName
@@ -129,9 +147,9 @@ func FuncQsort(a, x Edge, poolSz, poolEntries int ) []Node {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
 	n := MakeNodes(poolSz)
-	poolQsortSz = int64(poolSz)-int64(poolEntries)
+	PoolQsortSz = int64(poolSz)-int64(poolEntries)
 	for i:=0; i<poolSz; i++ {
-		n[i] = MakeNodePool("qsort", []*Edge{&a}, []*Edge{&x}, 
+		n[i] = MakeNodePool("qsort", []Edge{a}, []Edge{x}, 
 			nil, qsortFire)
 	}
 	return n

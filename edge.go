@@ -81,16 +81,21 @@ func (e *Edge) SendData(n *Node) {
 				}
 				ev := e.Val
 				var asterisk string
-				if _,ok := ev.(ackWrap); ok {
-					asterisk += fmt.Sprintf(" *(Ack2=%p)", ev.(ackWrap).ack)
-					ev = ev.(ackWrap).d
+				
+				// remove from wrapper if in one
+				if _,ok := ev.(nodeWrap); ok {
+					n2 := ev.(nodeWrap).node
+					ev = ev.(nodeWrap).datum
+					asterisk += fmt.Sprintf(" *(Ack2=%p)", n2.Srcs[0].Ack)
 				}
+
 				if (ev==nil) {
 					n.Tracef("%s <- <nil>%s\n", nm, asterisk)
 				} else {
 					n.Tracef("%s <- %s%s\n", nm, String(ev), asterisk)
 				}
 			}
+
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
 			}

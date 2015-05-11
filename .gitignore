@@ -20,3 +20,5 @@ flowgraph.go.save
 c.out
 
 coverage.out
+
+.#datum.go

@@ -71,8 +71,8 @@ func String(d Datum) string {
         if dd,ok := d.(DoubleDatum); ok {
 		return String(dd.a)+"|"+String(dd.b)
 	}
-	if dd,ok := d.(ackWrap); ok {
-		return String(dd.d)
+	if dd,ok := d.(nodeWrap); ok {
+		return String(dd.datum)
 	}
 	if IsStruct(d) {
 		return StringStruct(d)
