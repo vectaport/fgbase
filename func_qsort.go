@@ -71,7 +71,7 @@ func qsortFire (n *Node) {
 	// If you can reserve a pool Node for the next upstream use then ack early.
 	a := n.Srcs[0]
 	x := n.Dsts[0]
-	recursed := a.Ack2 != nil
+	recursed := n.flag&flagRecursed==flagRecursed
 	ackEarly := n.freeNode(1)
 	if ackEarly { 
 		a.SendAck(n)

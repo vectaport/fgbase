@@ -32,7 +32,8 @@ type edgeDir struct {
 }
 
 const (
-	flagPool = 1<<iota
+	flagPool = uintptr(1<<iota)
+	flagRecursed
 )
 
 var startTime time.Time
@@ -317,9 +318,16 @@ func (n *Node) RecvOne() (recvOK bool) {
 		srci.Val = recv.Interface()
 		var asterisk string
 		if _,ok := srci.Val.(nodeWrap); ok {
-			srci.Ack2 = srci.Val.(nodeWrap).node.Dsts[0].Ack
+			n2 := srci.Val.(nodeWrap).node
+			srci.Ack2 = n2.Dsts[0].Ack
 			srci.Val = srci.Val.(nodeWrap).datum
 			asterisk = fmt.Sprintf(" *(Ack2=%p)", srci.Ack2)
+			if &n2.FireFunc == &n.FireFunc { 
+				n.flag |=flagRecursed 
+			} else {
+				bitr := ^flagRecursed
+				n.flag =(n.flag & ^bitr)
+			}
 		}
 		srci.RdyCnt--
 		if (TraceLevel>=VV) {
