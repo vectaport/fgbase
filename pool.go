@@ -45,7 +45,7 @@ func (p *Pool) Decrease(decr int32) int32 {
 
 
 // MakePool returns a Pool of Nodes that share both
-// both data channels and the source ack channel.
+// data channels and the source ack channel.
 func MakePool(
 	size, reserve int32, 
 	name string, 

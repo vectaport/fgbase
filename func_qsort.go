@@ -2,16 +2,13 @@ package flowgraph
 
 import (
 	"sort"
-	"sync"
-	"sync/atomic"
 )
 
 type DoubleDatum struct {
 	a,b Datum
 }
 
-var PoolQsortSz int64
-var PoolQsortMu = &sync.Mutex{}
+var PoolQsort Pool
 
 type RecursiveSort interface {
 	sort.Interface
@@ -35,20 +32,42 @@ type RecursiveSort interface {
 	ID() int64
 }
 
+func (n *Node) tracePool() {
+	if TraceLevel>=V {
+		p := PoolQsort
+		delta,c := int32(1),"*"
+		if p.size > 128 {
+			delta = 10
+			c = "X"
+		}
+		n.Tracef("\tpool \t%s\n", func() string {var s string; for i:=int32(0); i<p.size; i +=delta { s += c }; return s}())
+	}
+}
+
+func (n *Node) increasePool(increase int32) {
+	p := PoolQsort
+	p.free = p.Increase(increase)
+	n.tracePool()
 }
 
 
+func (n *Node) decreasePool(decrease int32) {
+	p := PoolQsort
+	p.free = p.Decrease(decrease)
+	n.tracePool()
 }
 
-func (n *Node) freeNode (num int) bool {
-	PoolQsortMu.Lock()
-	defer PoolQsortMu.Unlock()
+func (n *Node) freeNode (num int32) bool {
+	p := PoolQsort
+	p.Mutex().Lock()
+	defer p.Mutex().Unlock()
 	
 	d := n.Srcs[0].Val.(RecursiveSort)
-	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), PoolQsortSz )
+	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), p.size )
 
 	var f bool
-	if PoolQsortSz>=int64(num) {
+	if p.free>=int32(num) {
+		n.decreasePool(num)
 		f = true
 	} else {
 		f = false
@@ -69,7 +88,7 @@ func qsortFire (n *Node) {
 
 	// Return the right number of nodes to the pool.
 	defer func() {
-		m := 0
+		m := int32(0)
 		if ackEarly { m++  }
 		if recursed { m++ }
 		if m>0 { n.increasePool(m) }
@@ -104,6 +123,7 @@ func qsortFire (n *Node) {
 		n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
 		d2 := d.SubSlice(0, mlo)
 		lo = n.NodeWrap(d2)
+		n.Tracef("Ack for left callback %p\n", n.Dsts[0].Ack)
 		x.Val = lo
 		x.SendData(n)
 		c++
@@ -113,6 +133,7 @@ func qsortFire (n *Node) {
 	if l-mhi>0 {
 		n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
 		hi = n.NodeWrap(d.SubSlice(mhi, l))
+		n.Tracef("Ack for right callback %p\n", n.Dsts[0].Ack)
 		x.Val = hi
 		x.SendData(n)
 		c++
@@ -132,7 +153,10 @@ func qsortFire (n *Node) {
 
 // FuncQsort recursively implements a quicksort with goroutines 
 // (x=qsort(a)).
+func FuncQsort(a, x Edge, poolSz, poolReserve int32 ) *Pool {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
+	PoolQsort = MakePool(poolSz, poolReserve, "qsort", []Edge{a}, []Edge{x}, nil, qsortFire)
+	return &PoolQsort
 
 }
