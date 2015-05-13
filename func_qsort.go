@@ -35,19 +35,9 @@ type RecursiveSort interface {
 	ID() int64
 }
 
-func (n *Node) increasePool(increase int) {
-	n.reducePool(-increase)
 }
 
 
-func (n *Node) reducePool(reduce int) {
-	poolSz := atomic.AddInt64(&PoolQsortSz, -int64(reduce))
-	delta,c := int64(1),"*"
-	if poolSz > 128 {
-		delta = 10
-		c = "X"
-	}
-	n.Tracef("\tpool \t%s\n", func() string {var s string; for i:=int64(0); i<poolSz; i +=delta { s += c }; return s}())
 }
 
 func (n *Node) freeNode (num int) bool {
@@ -59,7 +49,6 @@ func (n *Node) freeNode (num int) bool {
 
 	var f bool
 	if PoolQsortSz>=int64(num) {
-		n.reducePool(num)
 		f = true
 	} else {
 		f = false
@@ -143,15 +132,7 @@ func qsortFire (n *Node) {
 
 // FuncQsort recursively implements a quicksort with goroutines 
 // (x=qsort(a)).
-func FuncQsort(a, x Edge, poolSz, poolEntries int ) []Node {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
-	n := MakeNodes(poolSz)
-	PoolQsortSz = int64(poolSz)-int64(poolEntries)
-	for i:=0; i<poolSz; i++ {
-		n[i] = MakeNodePool("qsort", []Edge{a}, []Edge{x}, 
-			nil, qsortFire)
-	}
-	return n
 
 }

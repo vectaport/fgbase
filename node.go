@@ -321,7 +321,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 			n2 := srci.Val.(nodeWrap).node
 			srci.Ack2 = n2.Dsts[0].Ack
 			srci.Val = srci.Val.(nodeWrap).datum
-			asterisk = fmt.Sprintf(" *(Ack2=%p)", srci.Ack2)
+			if TraceLevel>=VV { asterisk = fmt.Sprintf(" *(Ack2=%p)", srci.Ack2) }
 			if &n2.FireFunc == &n.FireFunc { 
 				n.flag |=flagRecursed 
 			} else {
@@ -371,7 +371,7 @@ func (n *Node) Run() {
 }
 
 // MakeNodes returns a slice of Node.
-func MakeNodes(sz int) []Node {
+func MakeNodes(sz int32) []Node {
 	n := make([]Node, sz)
 	return n
 }

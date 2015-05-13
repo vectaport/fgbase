@@ -22,3 +22,5 @@ c.out
 coverage.out
 
 .#datum.go
+
+doit
