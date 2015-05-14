@@ -36,7 +36,7 @@ var TraceFireCnt = true
 var TraceSeconds = false
 var TracePointer = false
 
-// PostDump dump all the Node's state at the end of RunAll
+// PostDump dumps all the Node's state at the end of RunAll
 var PostDump = false
 
 // Unique Node id.
