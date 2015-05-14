@@ -371,7 +371,7 @@ func (n *Node) Run() {
 }
 
 // MakeNodes returns a slice of Node.
-func MakeNodes(sz int32) []Node {
+func MakeNodes(sz int) []Node {
 	n := make([]Node, sz)
 	return n
 }
@@ -400,10 +400,14 @@ func RunAll(n []Node, timeout time.Duration) {
 	StdoutLog.Printf("\n")
 }
 
-
-
 // NodeWrap bundles a Node pointer and a Datum to pass information about an
 // upstream node downstream.
 func (n *Node) NodeWrap(d Datum) Datum {
 	return nodeWrap{n, d}
 }
+
+// Recursed returns true if a Pool Node of identical type is upstream of this Node.
+func (n *Node) Recursed() bool { return n.flag&flagRecursed==flagRecursed }
+
+// IsPool returns true if Node is part of a Pool.
+func (n *Node) IsPool() bool { return n.flag&flagPool==flagPool }

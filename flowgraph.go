@@ -58,6 +58,6 @@ type nodeWrap struct {
 }
 
 // MakeGraph returns a slice of Edge and a slice of Node.
-func MakeGraph(sze, szn int32) ([]Edge,[]Node) {
+func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 	return MakeEdges(sze),MakeNodes(szn)
 }

@@ -132,9 +132,9 @@ func (e *Edge) SendAck(n *Node) {
 }
 
 // MakeEdges returns a slice of Edge.
-func MakeEdges(sz int32) []Edge {
+func MakeEdges(sz int) []Edge {
 	e := make([]Edge, sz)
-	for i:=int32(0); i<sz; i++ {
+	for i:=0; i<sz; i++ {
 		nm := "e" + strconv.Itoa(int(i))
 		e[i] = MakeEdge(nm, nil)
 	}

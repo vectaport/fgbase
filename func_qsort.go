@@ -32,55 +32,17 @@ type RecursiveSort interface {
 	ID() int64
 }
 
-func (n *Node) tracePool() {
-	if TraceLevel>=V {
-		p := PoolQsort
-		delta,c := int32(1),"*"
-		if p.size > 128 {
-			delta = 10
-			c = "X"
-		}
-		n.Tracef("\tpool \t%s\n", func() string {var s string; for i:=int32(0); i<p.size; i +=delta { s += c }; return s}())
-	}
-}
-
-func (n *Node) increasePool(increase int32) {
-	p := PoolQsort
-	p.free = p.Increase(increase)
-	n.tracePool()
-}
-
-
-func (n *Node) decreasePool(decrease int32) {
-	p := PoolQsort
-	p.free = p.Decrease(decrease)
-	n.tracePool()
-}
-
-func (n *Node) freeNode (num int32) bool {
-	p := PoolQsort
-	p.Mutex().Lock()
-	defer p.Mutex().Unlock()
-	
-	d := n.Srcs[0].Val.(RecursiveSort)
-	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), p.size )
-
-	var f bool
-	if p.free>=int32(num) {
-		n.decreasePool(num)
-		f = true
-	} else {
-		f = false
-	}
-	return f
-}
-
 func qsortFire (n *Node) {
-	// If you can reserve a pool Node for the next upstream use then ack early.
+
 	a := n.Srcs[0]
 	x := n.Dsts[0]
-	recursed := n.flag&flagRecursed==flagRecursed
-	ackEarly := n.freeNode(1)
+
+	p := &PoolQsort
+
+	recursed := n.Recursed()
+
+	// If you can reserve a Pool Node for the next upstream use then ack early.
+	ackEarly := p.Alloc(n, 1)
 	if ackEarly { 
 		a.SendAck(n)
 		a.NoOut = true
@@ -88,10 +50,10 @@ func qsortFire (n *Node) {
 
 	// Return the right number of nodes to the pool.
 	defer func() {
-		m := int32(0)
+		m := 0
 		if ackEarly { m++  }
 		if recursed { m++ }
-		if m>0 { n.increasePool(m) }
+		if m!=0 { p.Free(n, m) }
 	}()
 
 	d,ok := a.Val.(RecursiveSort)
@@ -101,10 +63,11 @@ func qsortFire (n *Node) {
 	}
 
 	if d.Depth()==0 { n.Tracef("BEGIN for id=%d, depth=0, len=%d\n", d.ID(), d.Len()) }
+	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), p.size )
 
 	l := d.Len()
 
-	if l <= 4096 || !n.freeNode(2) {
+	if l <= 4096 || !p.Alloc(n, 2) {
 		sort.Sort(d)
 		x.Val=n.NodeWrap(d)
 		x.SendData(n)
@@ -128,7 +91,7 @@ func qsortFire (n *Node) {
 		x.SendData(n)
 		c++
 	} else {
-		n.increasePool(1)
+		p.Free(n, 1)
 	}
 	if l-mhi>0 {
 		n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
@@ -138,7 +101,7 @@ func qsortFire (n *Node) {
 		x.SendData(n)
 		c++
 	} else {
-		n.increasePool(1)
+		p.Free(n, 1)
 	}
 	x.Data = xData
 	x.Name = xName
@@ -153,7 +116,7 @@ func qsortFire (n *Node) {
 
 // FuncQsort recursively implements a quicksort with goroutines 
 // (x=qsort(a)).
-func FuncQsort(a, x Edge, poolSz, poolReserve int32 ) *Pool {
+func FuncQsort(a, x Edge, poolSz, poolReserve int ) *Pool {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
 	PoolQsort = MakePool(poolSz, poolReserve, "qsort", []Edge{a}, []Edge{x}, nil, qsortFire)

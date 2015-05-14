@@ -3,7 +3,6 @@ package flowgraph
 import (
 	"math/rand"
 	"runtime"
-	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -66,7 +65,8 @@ func (a bushel) ID() int64 {
 
 func tbiRand(pow2 uint) RecursiveSort {
 	var s bushel
-	s.bushelID = atomic.AddInt64(&bushelCnt, 1)-1
+	s.bushelID = bushelCnt
+	bushelCnt += 1
 	n := rand.Intn(1<<pow2)+1
 	l := rand.Intn(n)
 	for i:=0; i<l; i++ {
@@ -101,18 +101,15 @@ func tbo(a Edge) Node {
 
 func TestQsort(t *testing.T) {
 
-	poolSz := int32(64)
+	poolSz := 64
 	numCore := runtime.NumCPU()-1
 	sec := 1
 	pow2 := uint(20)
-	post := false
 	runtime.GOMAXPROCS(numCore)
-	PostDump = post
 
 	TraceLevel = V
-	TraceSeconds = true
 
-	e,n := MakeGraph(2, int32(poolSz+2))
+	e,n := MakeGraph(2, poolSz+2)
 
 	n[0] = tbi(e[0], pow2)
 	n[1] = tbo(e[1])
