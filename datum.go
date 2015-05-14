@@ -73,7 +73,7 @@ func String(d Datum) string {
 		return String(dd.a)+"|"+String(dd.b)
 	}
 	if dd,ok := d.(nodeWrap); ok {
-b		return String(dd.datum)
+		return String(dd.datum)
 	}
 	if IsStruct(d) {
 		return StringStruct(d)

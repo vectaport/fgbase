@@ -106,7 +106,7 @@ func qsortFire (n *Node) {
 	x.Data = xData
 	x.Name = xName
 
-	x.Val = DoubleDatum{lo, hi}
+	x.Val = DoubleDatum{lo, hi} // for tracing as lo|hi. 
 	x.NoOut = true
 	
 	x.RdyCnt = c
