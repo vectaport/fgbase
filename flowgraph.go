@@ -31,9 +31,13 @@ var TraceLevel = Q
 // Indent trace by Node id tabs.
 var TraceIndent = false
 
-// Trace timestamp format
+// Trace number of node executions.
 var TraceFireCnt = true
+
+// Trace elapsed seconds.
 var TraceSeconds = false
+
+// Trace Node pointer.
 var TracePointer = false
 
 // PostDump dumps all the Node's state at the end of RunAll
