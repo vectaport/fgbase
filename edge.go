@@ -140,9 +140,3 @@ func MakeEdges(sz int) []Edge {
 	}
 	return e
 }
-
-
-// AckWrap bundles an ack channel and a Datum to pass acks downstream.
-func (e *Edge) AckWrap(d Datum) Datum {
-	return ackWrap{e.Ack, d}
-}
