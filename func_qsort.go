@@ -36,19 +36,19 @@ func qsortFire (n *Node) {
 
 	a := n.Srcs[0]
 	x := n.Dsts[0]
-
 	p := &PoolQsort
 
-	recursed := n.Recursed()
-
-	// If you can reserve a Pool Node for the next upstream use then ack early.
+	// Ack early if Node available for upstream use.
 	ackEarly := p.Alloc(n, 1)
 	if ackEarly { 
 		a.SendAck(n)
 		a.NoOut = true
 	}
 
-	// Return the right number of nodes to the pool.
+	// If upstream is a Node from PoolQsort.
+	recursed := n.Recursed()
+
+	// Return the right number of Node's to the Pool.
 	defer func() {
 		m := 0
 		if ackEarly { m++  }
@@ -62,8 +62,11 @@ func qsortFire (n *Node) {
 		return
 	}
 
-	if d.Depth()==0 { n.Tracef("BEGIN for id=%d, depth=0, len=%d\n", d.ID(), d.Len()) }
-	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), p.size )
+	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", 
+		d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), p.size )
+	if d.Depth()==0 { 
+		n.Tracef("BEGIN for id=%d, depth=0, len=%d\n", d.ID(), d.Len()) 
+	}
 
 	l := d.Len()
 
@@ -76,40 +79,31 @@ func qsortFire (n *Node) {
 	}
 
 	mlo,mhi := doPivot(d, 0, l)
+
+ 	// Make a substitute output Edge to point back to the Pool.
+	xBack := x.PoolEdge(a)
+
 	var lo,hi Datum
-	c := 0
-	xData := x.Data
-	xName := x.Name
-	x.Data = a.Data // recurse
-	x.Name = x.Name+"("+a.Name+")"
 	if mlo>0 {
 		n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
-		d2 := d.SubSlice(0, mlo)
-		lo = n.NodeWrap(d2)
-		n.Tracef("Ack for left callback %p\n", n.Dsts[0].Ack)
-		x.Val = lo
-		x.SendData(n)
-		c++
+		lo = n.NodeWrap(d.SubSlice(0, mlo))
+		xBack.Val = lo
+		xBack.SendData(n)
+		x.RdyCnt++
 	} else {
 		p.Free(n, 1)
 	}
 	if l-mhi>0 {
 		n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
 		hi = n.NodeWrap(d.SubSlice(mhi, l))
-		n.Tracef("Ack for right callback %p\n", n.Dsts[0].Ack)
-		x.Val = hi
-		x.SendData(n)
-		c++
+		xBack.Val = hi
+		xBack.SendData(n)
+		x.RdyCnt++
 	} else {
 		p.Free(n, 1)
 	}
-	x.Data = xData
-	x.Name = xName
 
 	x.Val = DoubleDatum{lo, hi} // for tracing as lo|hi. 
-	x.NoOut = true
-	
-	x.RdyCnt = c
 	x.NoOut = true
 	
 }

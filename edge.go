@@ -107,7 +107,7 @@ func (e *Edge) SendData(n *Node) {
 	}
 }
 
-// SendAck writes true to the Ack channel
+// SendAck writes Nada to the Ack channel
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.NoOut) {
@@ -140,3 +140,12 @@ func MakeEdges(sz int) []Edge {
 	}
 	return e
 }
+
+// PoolEdge returns an output Edge that is directed back into the Pool.
+func (dst *Edge) PoolEdge(src *Edge) Edge {
+	e := *dst
+	e.Data = src.Data
+	e.Name = dst.Name+"("+src.Name+")"
+	return e
+}
+	
