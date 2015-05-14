@@ -62,7 +62,8 @@ func CopySlice(d Datum) Datum {
 	return r
 }
 
-// String returns a string representation of a Datum
+// String returns a string representation of a Datum with 
+// ellipse shortened slices when TraceLevel<VVVV.
 func String(d Datum) string {
        
 	if IsSlice(d) {
@@ -72,7 +73,7 @@ func String(d Datum) string {
 		return String(dd.a)+"|"+String(dd.b)
 	}
 	if dd,ok := d.(nodeWrap); ok {
-		return String(dd.datum)
+b		return String(dd.datum)
 	}
 	if IsStruct(d) {
 		return StringStruct(d)
