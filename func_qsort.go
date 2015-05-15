@@ -84,7 +84,7 @@ func qsortFire (n *Node) {
 	xBack := x.PoolEdge(a)
 
 	var lo,hi Datum
-	if mlo>0 {
+	if mlo>1 {
 		n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
 		lo = n.NodeWrap(d.SubSlice(0, mlo))
 		xBack.Val = lo
@@ -93,7 +93,7 @@ func qsortFire (n *Node) {
 	} else {
 		p.Free(n, 1)
 	}
-	if l-mhi>0 {
+	if l-mhi>1 {
 		n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
 		hi = n.NodeWrap(d.SubSlice(mhi, l))
 		xBack.Val = hi

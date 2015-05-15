@@ -63,7 +63,7 @@ func (a bushel) ID() int64 {
 	return a.bushelID
 }
 
-func tbiRand(pow2 uint) RecursiveSort {
+func tbiQsortRand(pow2 uint) RecursiveSort {
 	var s bushel
 	s.bushelID = bushelCnt
 	bushelCnt += 1
@@ -76,14 +76,14 @@ func tbiRand(pow2 uint) RecursiveSort {
 	return s
 }
 
-func tbi(x Edge, pow2 uint) Node {
+func tbiQsort(x Edge, pow2 uint) Node {
 
 	node := MakeNode("tbi", nil, []*Edge{&x}, nil,
-		func(n *Node) { x.Val = tbiRand(pow2) })
+		func(n *Node) { x.Val = tbiQsortRand(pow2) })
 	return node
 }
 
-func tbo(a Edge) Node {
+func tboQsort(a Edge) Node {
 
 	node := MakeNode("tbo", []*Edge{&a}, nil, nil, 
 		func(n *Node) {
@@ -111,8 +111,8 @@ func TestQsort(t *testing.T) {
 
 	e,n := MakeGraph(2, poolSz+2)
 
-	n[0] = tbi(e[0], pow2)
-	n[1] = tbo(e[1])
+	n[0] = tbiQsort(e[0], pow2)
+	n[1] = tboQsort(e[1])
 
 	p := FuncQsort(e[0], e[1], poolSz, 1)
 	copy(n[2:poolSz+2], p.Nodes())
