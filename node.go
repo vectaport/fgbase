@@ -406,7 +406,7 @@ func RunAll(n []Node, timeout time.Duration) {
 }
 
 // NodeWrap bundles a Node pointer and a Datum to pass information about an
-// upstream node downstream.
+// upstream node downstream.  Used for acking back in a Pool.
 func (n *Node) NodeWrap(d Datum) Datum {
 	return nodeWrap{n, d}
 }
