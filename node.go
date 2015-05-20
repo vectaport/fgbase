@@ -38,7 +38,7 @@ const (
 
 var startTime time.Time
 
-// NodeRdy is the function signature for evaluating readiness of a Node to execute.
+// NodeRdy is the function signature for evaluating readiness of a Node to fire.
 type NodeRdy func(*Node) bool
 
 // NodeFire is the function signature for executing a Node.
@@ -96,8 +96,9 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 	return n
 }
 
-// MakeNodePool returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
-// Both source channels and the destination data channel get shared.  The destination ack channel is unique.
+// MakeNodePool returns a new Node with copies of source and destination Edge's.
+// Both source channels and the destination data channel get shared.  
+// The destination ack channel is unique.
 func MakeNodePool(
 	name string, 
 	srcs, dsts []Edge, 
