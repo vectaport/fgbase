@@ -287,10 +287,13 @@ func (n *Node) RdyAll() bool {
 
 // Fire executes Node using function pointer.
 func (n *Node) Fire() {
-	newFmt := n.traceValRdySrc(true)
+	var newFmt string
+	if TraceLevel>Q { newFmt = n.traceValRdySrc(true) }
 	if (n.FireFunc!=nil) { n.FireFunc(n) }
-	newFmt += n.traceValRdyDst(true)
-	StdoutLog.Printf(newFmt)
+	if TraceLevel>Q { 
+		newFmt += n.traceValRdyDst(true)
+		StdoutLog.Printf(newFmt)
+	}
 }
 
 
@@ -378,6 +381,7 @@ func MakeNodes(sz int) []Node {
 
 // RunAll calls Run for each Node.
 func RunAll(n []Node, timeout time.Duration) {
+		
 	startTime = time.Now()
 	for i:=0; i<len(n); i++ {
 		var node *Node = &n[i]
@@ -387,7 +391,10 @@ func RunAll(n []Node, timeout time.Duration) {
 		go node.Run()
 	}
 
-	if timeout>0 { time.Sleep(timeout) }
+	if timeout>0 { 
+		time.Sleep(timeout) 
+		defer StdoutLog.Printf("\n")
+	}
 
 	if PostDump {
 		StderrLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
@@ -396,8 +403,6 @@ func RunAll(n []Node, timeout time.Duration) {
 		}
 		StderrLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
 	}
-		
-	StdoutLog.Printf("\n")
 }
 
 // NodeWrap bundles a Node pointer and a Datum to pass information about an

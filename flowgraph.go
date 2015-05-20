@@ -25,6 +25,15 @@ const (
 	VVVV      // full-length array dumps
 )
 
+// TraceLevels maps from string to enum.
+var TraceLevels = map[string]int {
+	"Q": Q,
+	"V": V,
+	"VV": VV,
+	"VVV": VVV,
+	"VVVV": VVVV,
+}
+
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
 
@@ -48,12 +57,6 @@ var NodeID int64
 
 // Global count of number of Node executions.
 var globalFireCnt int64
-
-// ack channel wrapper
-type ackWrap struct {
-	ack chan Nada
-	datum Datum
-}
 
 // node channel wrapper
 type nodeWrap struct {

@@ -92,7 +92,7 @@ func String(d Datum) string {
 		return fmt.Sprintf("%q", d)
 	}
 	}
-	return fmt.Sprintf("%T(%v)", d, d)
+	return fmt.Sprintf("%T(%+v)", d, d)
 }
 
 // StringSlice returns a ellipse shortened string representation of a 
