@@ -3,6 +3,7 @@ package flowgraph
 import (
 	"math/rand"
 	"runtime"
+	"sort"
 	"testing"
 	"time"
 )
@@ -89,8 +90,10 @@ func tboQsort(a Edge) Node {
 		func(n *Node) {
 			switch v := a.Val.(type) {
 			case RecursiveSort: {
-				if v.OriginalSorted() { n.Tracef("END for id=%d, depth=%d, len=%d\n", v.ID(), v.Depth(), v.Len()) }
-				n.Tracef("Original(%p) sorted %t, Slice sorted %t, depth=%d, id=%d, len=%d, poolsz=%d, ratio = %d\n", v.Original(), v.OriginalSorted(), v.SliceSorted(), v.Depth(), v.ID(), len(v.Original()), PoolQsort.Size(), len(v.Original())/(1+int(v.Depth())))
+				if sort.IntsAreSorted(v.Original()) { n.Tracef("END for id=%d, depth=%d, len=%d\n", v.ID(), v.Depth(), v.Len()) }
+				n.Tracef("Original(%p) sorted %t, Slice sorted %t, depth=%d, id=%d, len=%d, poolsz=%d, ratio = %d\n", v.Original(), 
+					sort.IntsAreSorted(v.Original()), sort.IntsAreSorted(v.Slice()), v.Depth(), v.ID(), len(v.Original()), 
+					PoolQsort.Size(), len(v.Original())/(1+int(v.Depth())))
 			}
 			default: {
 				n.Tracef("not of type RecursiveSort\n")
