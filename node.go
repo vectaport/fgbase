@@ -411,7 +411,7 @@ func (n *Node) NodeWrap(d Datum) Datum {
 	return nodeWrap{n, d}
 }
 
-// Recursed returns true if a Pool Node of identical type is upstream of this Node.
+// Recursed returns true if a Node from the same Pool is upstream of this Node.
 func (n *Node) Recursed() bool { return n.flag&flagRecursed==flagRecursed }
 
 // IsPool returns true if Node is part of a Pool.
