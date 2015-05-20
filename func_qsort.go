@@ -28,7 +28,7 @@ type RecursiveSort interface {
 
 	// Depth returns the depth of a recursive sort
 	Depth() int64
-	// ID returns a unique ID for the object
+	// ID returns a unique ID for the original slice.
 	ID() int64
 }
 
