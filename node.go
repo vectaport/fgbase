@@ -252,8 +252,8 @@ func (n *Node) traceValRdyErr() {
 // TraceVals lists input and output values for a Node.
 func (n *Node) TraceVals() { if TraceLevel!=Q { n.traceValRdy(true) } }
 
-// IncrFireCnt increments execution count of Node.
-func (n *Node) IncrFireCnt() {
+// incrFireCnt increments execution count of Node.
+func (n *Node) incrFireCnt() {
 	if (GlobalStats) {
 		c := atomic.AddInt64(&globalFireCnt, 1)
 		n.Cnt = c-1
@@ -275,7 +275,7 @@ func (n *Node) RdyAll() bool {
 		if !n.RdyFunc(n) { return false }
 	}
 
-	n.IncrFireCnt();
+	n.incrFireCnt();
 
 	// restore data channels for next use
 	for i := range n.dataBackup {
