@@ -69,8 +69,13 @@ func String(d Datum) string {
 	if IsSlice(d) {
 		return StringSlice(d)
 	}
-        if dd,ok := d.(DoubleDatum); ok {
-		return String(dd.a)+"|"+String(dd.b)
+        if dd,ok := d.([]Datum); ok {
+		var s string
+		for i := range dd {
+			if i!= 0 { s+="|" }
+			s += String(dd[i])
+		}
+		return s
 	}
 	if dd,ok := d.(nodeWrap); ok {
 		return String(dd.datum)

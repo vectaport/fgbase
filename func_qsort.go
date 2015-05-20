@@ -4,10 +4,6 @@ import (
 	"sort"
 )
 
-type DoubleDatum struct {
-	a,b Datum
-}
-
 var PoolQsort Pool
 
 type RecursiveSort interface {
@@ -98,7 +94,7 @@ func qsortFire (n *Node) {
 		p.Free(n, 1)
 	}
 
-	x.Val = DoubleDatum{lo, hi} // for tracing as lo|hi. 
+	x.Val = []Datum{lo, hi} // for tracing as lo|hi. 
 	x.NoOut = true
 	
 }
