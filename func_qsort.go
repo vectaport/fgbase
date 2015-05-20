@@ -18,13 +18,8 @@ type RecursiveSort interface {
 
 	// Slice returns current slice.
 	Slice() []int
-	// SliceSorted tests if current slice is sorted.
-	SliceSorted() bool
-
 	// Original returns original slice
 	Original() []int
-	// OriginalSorted tests if original slice is sorted.
-	OriginalSorted() bool
 
 	// Depth returns the depth of a recursive sort
 	Depth() int64
@@ -63,7 +58,7 @@ func qsortFire (n *Node) {
 	}
 
 	n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n", 
-		d.Original(), d.OriginalSorted(), d.SliceSorted(), d.Depth(), d.ID(), d.Len(), p.size )
+		d.Original(), sort.IntsAreSorted(d.Original()), sort.IntsAreSorted(d.Slice()), d.Depth(), d.ID(), d.Len(), p.size )
 	if d.Depth()==0 { 
 		n.Tracef("BEGIN for id=%d, depth=0, len=%d\n", d.ID(), d.Len()) 
 	}
