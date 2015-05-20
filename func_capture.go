@@ -20,6 +20,7 @@ func captureFire (n *Node) {
 
 }
 
+// FuncCapture captures an opencv image.
 func FuncCapture(x Edge) Node {
 	node := MakeNode("capture", nil, []*Edge{&x}, nil, captureFire)
 

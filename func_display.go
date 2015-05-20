@@ -32,6 +32,7 @@ func displayFire (n *Node) {
 
 }
 
+// FuncDisplay displays an opecv image.
 func FuncDisplay(a Edge, quitChan chan Nada) Node {
 	node := MakeNode("display", []*Edge{&a}, nil, nil, displayFire)
 	a.Aux = displayStruct{opencv.NewWindow("display"), quitChan}

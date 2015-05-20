@@ -43,6 +43,7 @@ func smoothFire (n *Node) {
 
 }
 
+// FuncSmooth smoothes an opencv image.
 func FuncSmooth(a, x Edge) Node {
 	node := MakeNode("smooth", []*Edge{&a}, []*Edge{&x}, nil, smoothFire)
 	return node
