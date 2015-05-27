@@ -14,7 +14,7 @@ func FuncHttp(x Edge, addr string, quitChan chan Nada) Node {
 		func(w http.ResponseWriter, req *http.Request) {
 			fmt.Fprintf(w, ".")
 			x := node.Dsts[0]
-			x.Val = req
+			x.Val = req.URL
 			node.FireThenWait()
 		})
 	node.RunFunc = func (n *Node) { 
