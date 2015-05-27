@@ -69,7 +69,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 		if srci.Data != nil {
 			j := len(*srci.Data)
 			if j==0 || !pool {
-				var df = func() int {if pool {return 0} else {return 1}}
+				var df = func() int {if pool {return 0} else {return ChannelSize}}
 				*srci.Data = append(*srci.Data, make(chan Datum, df()))
 			} else {
 				j = 0
@@ -85,7 +85,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 		dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
 		if dsti.Ack!=nil {
 			if pool {
-				dsti.Ack = make(chan Nada, 1)
+				dsti.Ack = make(chan Nada, ChannelSize)
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(dsti.Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{dsti, false}
@@ -123,6 +123,10 @@ func MakeNode(
 	return makeNode(name, srcs, dsts, ready, fire, false)
 }
 
+func TimeSinceStart() float64 {
+	return time.Since(startTime).Seconds()
+}
+
 func prefixTracef(n *Node) (format string) {
 	var newFmt string
 	if TraceIndent {
@@ -142,7 +146,7 @@ func prefixTracef(n *Node) (format string) {
 	}
 
 	if TraceSeconds {
-		newFmt += fmt.Sprintf(":%.4f", time.Since(startTime).Seconds())
+		newFmt += fmt.Sprintf(":%.4f", TimeSinceStart())
 	}
 
 	if TracePointer || TraceLevel >= VVVV {
@@ -257,32 +261,50 @@ func (n *Node) TraceVals() { if TraceLevel!=Q { n.traceValRdy(true) } }
 func (n *Node) incrFireCnt() {
 	if (GlobalStats) {
 		c := atomic.AddInt64(&globalFireCnt, 1)
-		n.Cnt = c-1
-	} else {
-		n.Cnt = n.Cnt+1
-	}
-}
+		 n.Cnt = c-1
+	 } else {
+		 n.Cnt = n.Cnt+1
+	 }
+ }
 
 // RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
-			if !n.Srcs[i].Rdy() { return false }
+			if !n.Srcs[i].Rdy() {
+				if  !n.Srcs[i].SrcReadRdy() { 
+					return false 
+				} else {
+					n.Srcs[i].Val = <- (*n.Srcs[i].Data)[0]
+					n.Srcs[i].RdyCnt = 0
+				}
+			}
 		}
 		for i := range n.Dsts {
-			if !n.Dsts[i].Rdy() { return false }
+			if !n.Dsts[i].Rdy() {
+				if !n.Dsts[i].DstReadRdy() { 
+					if !n.Dsts[i].DstWriteRdy() { return false }
+				}  else {
+					for len(n.Dsts[i].Ack)>0 {
+						<- n.Dsts[i].Ack
+						n.Dsts[i].RdyCnt--
+					}
+					if n.Dsts[i].RdyCnt>0 { return false }
+
+				}
+			}
 		}
 	} else {
 		if !n.RdyFunc(n) { return false }
 	}
-
+	
 	n.incrFireCnt();
-
+	
 	// restore data channels for next use
 	for i := range n.dataBackup {
 		n.cases[i].Chan = n.dataBackup[i]
 	}
-
+	
 	return true
 }
 
@@ -363,7 +385,7 @@ func (n *Node) Run() {
 	}
 
 	for {
-		if n.RdyAll() {
+		for n.RdyAll() {
 			if TraceLevel >= VVV {n.traceValRdy(false)}
 			n.Fire()
 			n.SendAll()
@@ -373,6 +395,20 @@ func (n *Node) Run() {
 		}
 	}
 }
+
+// FireThenWait fires off a ready Node then waits until it is ready again.
+func (n *Node) FireThenWait() {
+
+	if TraceLevel >= VVV {n.traceValRdy(false)}
+	n.Fire()
+	n.SendAll()
+
+	for {
+		if n.RdyAll() { break }
+		if !n.RecvOne() { break }
+	}
+}
+
 
 // MakeNodes returns a slice of Node.
 func MakeNodes(sz int) []Node {

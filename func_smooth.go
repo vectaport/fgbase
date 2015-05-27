@@ -14,7 +14,7 @@ func smoothFire (n *Node) {
 	if a.Val != nil {
 		img0 := a.Val.(*opencv.IplImage)
 		defer img0.Release()
-		
+
 		img1 := img0.Clone()
 		opencv.Smooth(img0, img1, opencv.CV_BLUR, 3, 3, 0, 0)
 

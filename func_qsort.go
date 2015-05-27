@@ -61,7 +61,7 @@ func qsortFire (n *Node) {
 
 	l := d.Len()
 
-	if l <= 4096 || !p.Alloc(n, 2) {
+	if l <= ChannelSize || !p.Alloc(n, 2) {
 		sort.Sort(d)
 		x.Val=n.NodeWrap(d)
 		x.SendData(n)

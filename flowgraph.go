@@ -64,6 +64,9 @@ type nodeWrap struct {
 	datum Datum
 }
 
+// ChannelSize is the buffer size for every channel.
+var ChannelSize = 1024
+
 // MakeGraph returns a slice of Edge and a slice of Node.
 func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 	return MakeEdges(sze),MakeNodes(szn)

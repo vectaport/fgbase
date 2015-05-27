@@ -26,19 +26,19 @@ type Edge struct {
 
 // Return new Edge to connect one upstream Node to one or more downstream Node's.
 // Initialize optional data value to start flow.
-func newEdge(name string, initVal Datum) Edge {
+func makeEdge(name string, initVal Datum) Edge {
 	var e Edge
 	e.Name = name
 	e.Val = initVal
 	dc := make([]chan Datum, 0)
 	e.Data = &dc
-	e.Ack = make(chan Nada, 1)
+	e.Ack = make(chan Nada, ChannelSize)
 	return e
 }
 
 // MakeEdge initializes optional data value to start flow.
 func MakeEdge(name string, initVal Datum) Edge {
-	return newEdge(name, initVal)
+	return makeEdge(name, initVal)
 }
 
 // Const sets up an Edge to provide a constant value.
@@ -65,9 +65,32 @@ func (e *Edge) IsSink() bool {
 	return e.Data == nil && e.Val == nil
 }
 
-// Rdy tests if RdyCnt has return to zero.
+// Rdy tests if RdyCnt has returned to zero.
 func (e *Edge) Rdy() bool {
 	return e.RdyCnt==0
+}
+
+// SrcReadRdy tests if a source edge is ready for a data read.
+func (e *Edge) SrcReadRdy() bool {
+	return len((*e.Data)[0])>0
+}
+
+// SrcWriteRdy tests if a source edge is ready for an ack write.
+func (e *Edge) SrcWriteRdy() bool {
+	return len(e.Ack)<cap(e.Ack)
+}
+
+// DstReadRdy tests if a destination edge is ready for an ack read.
+func (e *Edge) DstReadRdy() bool {
+	return len(e.Ack)>0
+}
+
+// DstWriteRdy tests if a destination edge is ready for a data write.
+func (e *Edge) DstWriteRdy() bool {
+	for _,c := range *e.Data {
+		if cap(c)==len(c) { return false }
+	}
+	return true
 }
 
 // SendData writes to the Data channel
@@ -98,8 +121,9 @@ func (e *Edge) SendData(n *Node) {
 
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
+				// n.Tracef("wrote data cap=%d, len=%d\n", cap((*e.Data)[i]), len((*e.Data)[i]))
 			}
-			e.RdyCnt = len(*e.Data)
+			e.RdyCnt += len(*e.Data)
 			e.Val = nil
 		} else {
 			e.NoOut = false
@@ -123,8 +147,10 @@ func (e *Edge) SendAck(n *Node) {
 					n.Tracef("%s.Ack <-\n", e.Name)
 				}
 				e.Ack <- nada
+				// n.Tracef("wrote ack cap=%d, len=%d\n", cap(e.Ack), len(e.Ack))
 			}
 			e.RdyCnt = 1
+			
 		} else {
 			e.NoOut = false
 		}
