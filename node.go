@@ -400,12 +400,14 @@ func (n *Node) Run() {
 func (n *Node) FireThenWait() {
 
 	if TraceLevel >= VVV {n.traceValRdy(false)}
-	n.Fire()
-	n.SendAll()
+	for n.RdyAll() {
+		n.Fire()
+		n.SendAll()
+	}
 
 	for {
-		if n.RdyAll() { break }
 		if !n.RecvOne() { break }
+		if n.RdyAll() { break }
 	}
 }
 
