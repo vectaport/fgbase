@@ -36,7 +36,7 @@ const (
 	flagRecursed
 )
 
-var startTime time.Time
+var StartTime time.Time
 
 // NodeRdy is the function signature for evaluating readiness of a Node to fire.
 type NodeRdy func(*Node) bool
@@ -124,7 +124,7 @@ func MakeNode(
 }
 
 func TimeSinceStart() float64 {
-	return time.Since(startTime).Seconds()
+	return time.Since(StartTime).Seconds()
 }
 
 func prefixTracef(n *Node) (format string) {
@@ -400,15 +400,17 @@ func (n *Node) Run() {
 func (n *Node) FireThenWait() {
 
 	if TraceLevel >= VVV {n.traceValRdy(false)}
-	for n.RdyAll() {
+	if n.RdyAll() {
 		n.Fire()
 		n.SendAll()
 	}
 
+/*
 	for {
 		if !n.RecvOne() { break }
 		if n.RdyAll() { break }
 	}
+*/
 }
 
 
@@ -421,7 +423,7 @@ func MakeNodes(sz int) []Node {
 // RunAll calls Run for each Node.
 func RunAll(n []Node, timeout time.Duration) {
 		
-	startTime = time.Now()
+	StartTime = time.Now()
 	for i:=0; i<len(n); i++ {
 		var node *Node = &n[i]
 		if TraceLevel>=VVVV {

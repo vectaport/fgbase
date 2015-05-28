@@ -8,14 +8,18 @@ import (
 // FuncHttp creates an http server and passes requests downstream.
 func FuncHttp(x Edge, addr string, quitChan chan Nada) Node {
 
-	node := MakeNode("server", nil, []*Edge{&x}, nil, nil)
+	node := MakeNode("http", nil, []*Edge{&x}, nil, nil)
 
 	http.HandleFunc("/count/", 
 		func(w http.ResponseWriter, req *http.Request) {
 			fmt.Fprintf(w, ".")
 			x := node.Dsts[0]
-			x.Val = req
-			node.FireThenWait()
+			x.Val = req.URL
+			if TraceLevel >= VVV {node.traceValRdy(false)}
+			if node.RdyAll() {
+				x.SendData(&node)
+			}
+			
 		})
 	node.RunFunc = func (n *Node) { 
 		n.LogError("%v", http.ListenAndServe(addr, nil))
