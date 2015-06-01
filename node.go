@@ -377,13 +377,8 @@ func (n *Node) RecvOne() (recvOK bool) {
 	return recvOK
 }
 
-// Run is an event loop that runs forever for each Node.
-func (n *Node) Run() {
-	if n.RunFunc != nil {
-		n.RunFunc(n)
-		return
-	}
-
+// DefaultRunFunc is the default run func.
+func (n *Node) DefaultRunFunc () {
 	for {
 		for n.RdyAll() {
 			if TraceLevel >= VVV {n.traceValRdy(false)}
@@ -394,6 +389,16 @@ func (n *Node) Run() {
 			break
 		}
 	}
+}
+
+// Run is an event loop that runs forever for each Node.
+func (n *Node) Run() {
+	if n.RunFunc != nil {
+		n.RunFunc(n)
+		return
+	}
+
+	n.DefaultRunFunc()
 }
 
 // FireThenWait fires off a ready Node then waits until it is ready again.
