@@ -7,11 +7,11 @@ func arbitFire (n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
-	if(a.Rdy() && !b.Rdy() || a.Rdy() && !a.Aux.(bool)) {
+	if(a.SrcRdy(n) && !b.SrcRdy(n) || a.SrcRdy(n) && !a.Aux.(bool)) {
 		a.Aux = true // aLast = true
 		x.Val = a.Val
 		b.NoOut = true
-	} else if (b.Rdy()) {
+	} else if (b.SrcRdy(n)) {
 		a.Aux = false // aLast = false
 		x.Val = b.Val
 		a.NoOut = true
@@ -19,7 +19,7 @@ func arbitFire (n *Node) {
 }
 
 func arbitRdy (n *Node) bool {
-	return (n.Srcs[0].Rdy() || n.Srcs[1].Rdy()) && n.Dsts[0].Rdy()
+	return (n.Srcs[0].SrcRdy(n) || n.Srcs[1].SrcRdy(n)) && n.Dsts[0].DstRdy(n)
 }
 
 // FuncArbit arbitrates between two values (select { case a: x = a case b: x = b }).

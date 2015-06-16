@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
-	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -22,7 +21,8 @@ type Node struct {
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	dataBackup []reflect.Value      // backup data channels
-	caseToEdgeDir map [int] edgeDir // map from selected case to associated Edge
+	caseToEdgeDir map [int] edgeDir // map from index of selected case to associated Edge
+	edgeToCase map [*Edge] int      // map from *Edge to index of select case
 	flag uintptr                    // flags for package internal use
 }
 
@@ -60,6 +60,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 	n.RdyFunc = ready
 	n.FireFunc = fire
 	n.caseToEdgeDir = make(map[int]edgeDir)
+	n.edgeToCase = make(map[*Edge]int)
 	if pool { n.flag = n.flag | flagPool }
 	var cnt = 0
 	for i := range n.Srcs {
@@ -77,6 +78,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf((*srci.Data)[j])})
 			n.dataBackup = append(n.dataBackup, n.cases[cnt].Chan)  // backup copy
 			n.caseToEdgeDir[cnt] = edgeDir{srci, true}
+			n.edgeToCase[srci] = cnt
 			cnt = cnt+1
 		}
 	}
@@ -89,6 +91,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(dsti.Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{dsti, false}
+			n.edgeToCase[dsti] = cnt
 			cnt = cnt+1
 		}
 	}
@@ -145,15 +148,16 @@ func prefixTracef(n *Node) (format string) {
 		}
 	}
 
-	if TraceSeconds {
+	if TraceSeconds  || TraceLevel >= VVVV {
 		newFmt += fmt.Sprintf(":%.4f", TimeSinceStart())
 	}
 
-	if TracePointer || TraceLevel >= VVVV {
+	if TracePointer{
 		newFmt += fmt.Sprintf(":%p", n)
 	}
 
 	newFmt += ") "
+
 	return newFmt
 }
 
@@ -271,34 +275,19 @@ func (n *Node) incrFireCnt() {
 func (n *Node) RdyAll() bool {
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
-			if !n.Srcs[i].Rdy() {
-				if  !n.Srcs[i].SrcReadRdy() { 
-					return false 
-				} else {
-					n.Srcs[i].Val = <- (*n.Srcs[i].Data)[0]
-					n.Srcs[i].RdyCnt = 0
-				}
+			
+			if !n.Srcs[i].SrcRdy(n) {
+				return false
 			}
 		}
 		for i := range n.Dsts {
-			if !n.Dsts[i].Rdy() {
-				if !n.Dsts[i].DstReadRdy() { 
-					if !n.Dsts[i].DstWriteRdy() { return false }
-				}  else {
-					for len(n.Dsts[i].Ack)>0 {
-						<- n.Dsts[i].Ack
-						n.Dsts[i].RdyCnt--
-					}
-					if n.Dsts[i].RdyCnt>0 { return false }
-
-				}
+			if !n.Dsts[i].DstRdy(n) {
+				return false
 			}
 		}
 	} else {
 		if !n.RdyFunc(n) { return false }
 	}
-	
-	n.incrFireCnt();
 	
 	// restore data channels for next use
 	for i := range n.dataBackup {
@@ -310,6 +299,7 @@ func (n *Node) RdyAll() bool {
 
 // Fire executes Node using function pointer.
 func (n *Node) Fire() {
+	n.incrFireCnt();
 	var newFmt string
 	if TraceLevel>Q { newFmt = n.traceValRdySrc(true) }
 	if (n.FireFunc!=nil) { n.FireFunc(n) }
@@ -339,40 +329,13 @@ func (n *Node) RecvOne() (recvOK bool) {
 		return false
 	}
 	if n.caseToEdgeDir[i].srcFlag {
-		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
 		srci := n.caseToEdgeDir[i].edge
 		srci.Val = recv.Interface()
-		var asterisk string
-		if _,ok := srci.Val.(nodeWrap); ok {
-			n2 := srci.Val.(nodeWrap).node
-			srci.Ack2 = n2.Dsts[0].Ack
-			srci.Val = srci.Val.(nodeWrap).datum
-			if TraceLevel>=VV { asterisk = fmt.Sprintf(" *(Ack2=%p)", srci.Ack2) }
-			if &n2.FireFunc == &n.FireFunc { 
-				n.flag |=flagRecursed 
-			} else {
-				bitr := ^flagRecursed
-				n.flag =(n.flag & ^bitr)
-			}
-		}
-		srci.RdyCnt--
-		if (TraceLevel>=VV) {
-			if (srci.Val==nil) {
-				n.Tracef("<nil> <- %s.Data%s\n", srci.Name, asterisk)
-			} else {
-				n.Tracef("%s <- %s.Data%s\n", String(srci.Val), srci.Name, asterisk)
-			}
-		}
+		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+		srci.srcReadHandle(n, true)
 	} else {
 		dsti := n.caseToEdgeDir[i].edge
-		dsti.RdyCnt--
-		if (TraceLevel>=VV) {
-			nm := dsti.Name + ".Ack"
-			if len(*dsti.Data)>1 {
-				nm += "{" + strconv.Itoa(dsti.RdyCnt+1) + "}"
-			}
-			n.Tracef("<- %s(%p)\n", nm, dsti.Ack)
-		}
+		dsti.dstReadHandle(n, true)
 	}
 	return recvOK
 }
@@ -410,12 +373,6 @@ func (n *Node) FireThenWait() {
 		n.SendAll()
 	}
 
-/*
-	for {
-		if !n.RecvOne() { break }
-		if n.RdyAll() { break }
-	}
-*/
 }
 
 
@@ -442,12 +399,11 @@ func RunAll(n []Node, timeout time.Duration) {
 		defer StdoutLog.Printf("\n")
 	}
 
-	if PostDump {
-		StderrLog.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+	if TraceLevel>=VVVV {
+		StdoutLog.Printf("<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>\n")
 		for i:=0; i<len(n); i++ {
-			n[i].traceValRdyErr()
+			n[i].traceValRdy(false)
 		}
-		StderrLog.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
 	}
 }
 

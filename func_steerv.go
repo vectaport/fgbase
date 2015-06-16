@@ -8,11 +8,11 @@ func steervRdy (n *Node) bool {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	if a.Rdy()&&b.Rdy() {
+	if a.SrcRdy(n)&&b.SrcRdy(n) {
 		if ZeroTest(a.Val) {
-			return x.Rdy()
+			return x.DstRdy(n)
 		}
-		return y.Rdy()
+		return y.DstRdy(n)
 	}
 	return false
 }

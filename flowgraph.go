@@ -49,9 +49,6 @@ var TraceSeconds = false
 // Trace Node pointer.
 var TracePointer = false
 
-// PostDump dumps all the Node's state at the end of RunAll
-var PostDump = false
-
 // Unique Node id.
 var NodeID int64
 

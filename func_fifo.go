@@ -8,13 +8,13 @@ func fifoRdy(n *Node) bool {
 	// ready when channel isn't full and there is input
 	a := n.Srcs[0]
 	fifo := a.Aux.(chan Datum)
-	if a.Rdy() && cap(fifo)>len(fifo) {
+	if a.SrcRdy(n) && cap(fifo)>len(fifo) {
 		return true
 	} 
 
 	// ready when channel isn't empty and output has been requested.
 	x := n.Dsts[0]
-	return x.Rdy() && len(fifo)>0
+	return x.DstRdy(n) && len(fifo)>0
 	
 }
 
@@ -27,14 +27,14 @@ func fifoFire(n *Node) {
 	lenBefore := len(fifo)
 
 	// if input is ready, write to fifo
-	if a.Rdy() && cap(fifo)>len(fifo) {
+	if a.SrcRdy(n) && cap(fifo)>len(fifo) {
 		fifo <- a.Val
 	} else {
 		a.NoOut = true
 	}
 
 	// if output is ready read from fifo and set up for write to output
-	if x.Rdy() && len(fifo)>0 { 
+	if x.DstRdy(n) && len(fifo)>0 { 
 		x.Val = <- fifo
 	} else {
 		x.NoOut = true

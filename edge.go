@@ -2,6 +2,7 @@ package flowgraph
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -70,27 +71,124 @@ func (e *Edge) Rdy() bool {
 	return e.RdyCnt==0
 }
 
-// SrcReadRdy tests if a source edge is ready for a data read.
-func (e *Edge) SrcReadRdy() bool {
-	return len((*e.Data)[0])>0
+// srcReadRdy tests if a source Edge is ready for a data read.
+func (e *Edge) srcReadRdy(n *Node) bool {
+	i := n.edgeToCase[e]
+	return n.cases[i].Chan.Len()>0
 }
 
-// SrcWriteRdy tests if a source edge is ready for an ack write.
-func (e *Edge) SrcWriteRdy() bool {
+// srcReadHandle handles a source Edge data read.
+func (e *Edge) srcReadHandle (n *Node, selectFlag bool) {
+	var wrapFlag = false
+	if _,ok := e.Val.(nodeWrap); ok {
+		n2 := e.Val.(nodeWrap).node
+		e.Ack2 = n2.Dsts[0].Ack
+		e.Val = e.Val.(nodeWrap).datum
+		wrapFlag = true
+		if &n2.FireFunc == &n.FireFunc { 
+			n.flag |=flagRecursed 
+		} else {
+			bitr := ^flagRecursed
+			n.flag =(n.flag & ^bitr)
+		}
+	}
+	e.RdyCnt--
+	if (TraceLevel>=VV) {
+		var selectStr string
+		if selectFlag {
+			selectStr = " (s)"
+		} else {
+			selectStr = " (!s)"
+		}
+		var asterisk string
+		if wrapFlag && TraceLevel>=VV { asterisk = fmt.Sprintf(" *(Ack2=%p)", e.Ack2)}
+		asterisk += selectStr
+		if (e.Val==nil) {
+			n.Tracef("<nil> <- %s.Data%s%ss\n", e.Name, asterisk)
+		} else {
+			n.Tracef("%s <- %s.Data%s\n", String(e.Val), e.Name, asterisk)
+		}
+	}
+}
+
+// srcWriteRdy tests if a source Edge is ready for an ack write.
+func (e *Edge) srcWriteRdy() bool {
 	return len(e.Ack)<cap(e.Ack)
 }
 
-// DstReadRdy tests if a destination edge is ready for an ack read.
-func (e *Edge) DstReadRdy() bool {
+// SrcRdy tests if a source Edge is ready.
+func (e *Edge) SrcRdy(n *Node) bool {
+	if !e.Rdy() {
+		if !e.srcReadRdy(n) { 
+			return false 
+		}
+
+		i := n.edgeToCase[e]
+		if n.cases[i].Chan!=reflect.ValueOf(nil) {
+
+			c := n.cases[i].Chan
+			var ok bool
+			v,ok := c.Recv()
+			if !ok {
+				panic("Unexpected error in reading channel\n")
+			}
+			e.Val = v.Interface()
+			n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+			e.srcReadHandle(n, false)
+		}
+
+	}
+	return true
+}
+
+// dstReadRdy tests if a destination Edge is ready for an ack read.
+func (e *Edge) dstReadRdy() bool {
 	return len(e.Ack)>0
 }
 
-// DstWriteRdy tests if a destination edge is ready for a data write.
-func (e *Edge) DstWriteRdy() bool {
+// dstReadHandle handles a destination Edge ack read.
+func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
+	
+	e.RdyCnt--
+	if (TraceLevel>=VV) {
+		var selectStr string
+		if selectFlag {
+			selectStr = " (s)"
+		} else {
+			selectStr = " (!s)"
+		}
+		nm := e.Name + ".Ack"
+		if len(*e.Data)>1 {
+			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
+		}
+		n.Tracef("<- %s(%p)%s\n", nm, e.Ack, selectStr)
+	}
+}
+
+// dstWriteRdy tests if a destination Edge is ready for a data write.
+func (e *Edge) dstWriteRdy() bool {
 	for _,c := range *e.Data {
 		if cap(c)==len(c) { return false }
 	}
 	return true
+}
+
+// DstRdy tests if a destination Edge is ready.
+func (e *Edge) DstRdy(n *Node) bool {
+	if !e.Rdy() {
+		if !e.dstReadRdy() { 
+			f := e.dstWriteRdy()
+			return f
+			
+		}
+
+		for len(e.Ack)>0 {
+			<- e.Ack
+			e.dstReadHandle(n, false)
+		}
+	}
+			
+	return e.Rdy()
 }
 
 // SendData writes to the Data channel
@@ -121,7 +219,6 @@ func (e *Edge) SendData(n *Node) {
 
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
-				// n.Tracef("wrote data cap=%d, len=%d\n", cap((*e.Data)[i]), len((*e.Data)[i]))
 			}
 			e.RdyCnt += len(*e.Data)
 			e.Val = nil
@@ -147,7 +244,6 @@ func (e *Edge) SendAck(n *Node) {
 					n.Tracef("%s.Ack <-\n", e.Name)
 				}
 				e.Ack <- nada
-				// n.Tracef("wrote ack cap=%d, len=%d\n", cap(e.Ack), len(e.Ack))
 			}
 			e.RdyCnt = 1
 			

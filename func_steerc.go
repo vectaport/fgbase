@@ -22,11 +22,11 @@ func steercRdy (n *Node) bool {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	if a.Rdy() {
+	if a.SrcRdy(n) {
 		if ZeroTest(a.Val) {
-			return x.Rdy()
+			return x.DstRdy(n)
 		}
-		return y.Rdy()
+		return y.DstRdy(n)
 	}
 	return false
 }
