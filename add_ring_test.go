@@ -22,8 +22,8 @@ func tbiAddRing(a, x, y Edge) Node {
 }
 
 func tboAddRingFire(n *Node) {
-	x := n.Dsts[0]
-	x.Val = true
+//	x := n.Dsts[0]
+//	x.Val = true
 }
 
 func tboAddRing(a, x Edge) Node {

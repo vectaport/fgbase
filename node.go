@@ -22,7 +22,7 @@ type Node struct {
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	dataBackup []reflect.Value      // backup data channels
 	caseToEdgeDir map [int] edgeDir // map from index of selected case to associated Edge
-	edgeToCase map [*Edge] int      // map from *Edge to index of select case
+	edgeToCase map [*Edge] int      // map from *Edge to index of associated select case
 	flag uintptr                    // flags for package internal use
 }
 

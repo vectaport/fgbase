@@ -1,7 +1,9 @@
 package flowgraph
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"reflect"
 	"strconv"
 )
@@ -64,6 +66,80 @@ func (e *Edge) Sink() {
 // IsSink returns true if Edge is a value sink.
 func (e *Edge) IsSink() bool { 
 	return e.Data == nil && e.Val == nil
+}
+
+// Src sets up an Edge as a remote value source.
+func (e *Edge) Src(n *Node, rw io.ReadWriter) {
+	reader := bufio.NewReader(rw)
+	j := n.edgeToCase[e]
+	c := n.cases[j].Chan
+	go func() {
+		for {
+			v, err := reader.ReadString('\n')
+			if err != nil {
+				n.LogError("%v", err)
+				close((*e.Data)[j])
+				(*e.Data)[j] = nil
+				return
+			}
+			c.Send(reflect.ValueOf(v))
+		}
+	} ()
+
+
+	writer := bufio.NewWriter(rw)
+	go func() {
+		for {
+			<- e.Ack
+			_, err := writer.WriteString("\n")
+			if err != nil {
+				n.LogError("%v", err)
+				close(e.Ack)
+				e.Ack = nil
+				return
+			}
+			writer.Flush()
+		}
+	} ()
+
+}
+
+// Dst sets up an Edge as a remote value destination.
+func (e *Edge) Dst(n *Node, rw io.ReadWriter) {
+
+	reader := bufio.NewReader(rw)
+	go func() {
+		var nada Nada
+		for {
+			_, err := reader.ReadString('\n')
+			if err != nil {
+				n.LogError("%v", err)
+				close(e.Ack)
+				e.Ack = nil
+				return
+			}
+			e.Ack <- nada
+		}
+	} ()
+
+
+	writer := bufio.NewWriter(rw)
+	j := len(*e.Data)
+	*e.Data = append(*e.Data, make(chan Datum, ChannelSize))
+	go func() {
+		for {
+			v := <- (*e.Data)[j]
+			_, err := writer.WriteString(fmt.Sprintf("%v\n", v))
+			if err != nil {
+				StderrLog.Printf("%v", err)
+				close((*e.Data)[j])
+				(*e.Data)[j] = nil
+				return
+			}
+			writer.Flush()
+		}
+	} ()
+
 }
 
 // Rdy tests if RdyCnt has returned to zero.
@@ -178,6 +254,9 @@ func (e *Edge) DstRdy(n *Node) bool {
 	if !e.Rdy() {
 		if !e.dstReadRdy() { 
 			f := e.dstWriteRdy()
+			if !f {
+				// e.flush()
+			}
 			return f
 			
 		}
