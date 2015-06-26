@@ -1,16 +1,17 @@
-package flowgraph
+package imagelab
 
 import (
 	"github.com/lazywei/go-opencv/opencv"
+	"github.com/vectaport/flowgraph"
 )
 
 type displayStruct struct {
 	window *opencv.Window
-	quitChan chan Nada
+	quitChan chan flowgraph.Nada
 }
 
 	
-func displayFire (n *Node) {
+func displayFire (n *flowgraph.Node) {
 
 
 	a := n.Srcs[0]
@@ -23,7 +24,7 @@ func displayFire (n *Node) {
 	if a.Aux.(displayStruct).quitChan != nil {
 		key := opencv.WaitKey(0)
 		if key == 27 {
-			var nada Nada
+			var nada flowgraph.Nada
 			a.Aux.(displayStruct).quitChan <- nada
 		}
 	} else {
@@ -33,8 +34,8 @@ func displayFire (n *Node) {
 }
 
 // FuncDisplay displays an opencv image.
-func FuncDisplay(a Edge, quitChan chan Nada) Node {
-	node := MakeNode("display", []*Edge{&a}, nil, nil, displayFire)
+func FuncDisplay(a flowgraph.Edge, quitChan chan flowgraph.Nada) flowgraph.Node {
+	node := flowgraph.MakeNode("display", []*flowgraph.Edge{&a}, nil, nil, displayFire)
 	a.Aux = displayStruct{opencv.NewWindow("display"), quitChan}
 	return node
 }

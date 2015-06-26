@@ -1,11 +1,11 @@
-package flowgraph
+package imagelab
 
 import (
 	"github.com/lazywei/go-opencv/opencv"
-	// "github.com/chai2010/opencv"
+	"github.com/vectaport/flowgraph"
 )
 
-func captureFire (n *Node) {
+func captureFire (n *flowgraph.Node) {
 
 	x := n.Dsts[0]
 	cap := x.Aux.(*opencv.Capture)
@@ -21,8 +21,8 @@ func captureFire (n *Node) {
 }
 
 // FuncCapture captures an opencv image.
-func FuncCapture(x Edge) Node {
-	node := MakeNode("capture", nil, []*Edge{&x}, nil, captureFire)
+func FuncCapture(x flowgraph.Edge) flowgraph.Node {
+	node := flowgraph.MakeNode("capture", nil, []*flowgraph.Edge{&x}, nil, captureFire)
 
 	x.Aux = opencv.NewCameraCapture(0)
 	if x.Aux == nil {
