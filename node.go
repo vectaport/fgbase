@@ -275,7 +275,6 @@ func (n *Node) incrFireCnt() {
 func (n *Node) RdyAll() bool {
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
-			
 			if !n.Srcs[i].SrcRdy(n) {
 				return false
 			}

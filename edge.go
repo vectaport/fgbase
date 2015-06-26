@@ -2,10 +2,12 @@ package flowgraph
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
-	"io"
+	"net"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 type Nada struct {}
@@ -69,17 +71,29 @@ func (e *Edge) IsSink() bool {
 }
 
 // Src sets up an Edge as a remote value source.
-func (e *Edge) Src(n *Node, rw io.ReadWriter) {
-	reader := bufio.NewReader(rw)
+func (e *Edge) Src(n *Node, portString string) {
+
+	ln, err := net.Listen("tcp", portString)
+	if err != nil {
+		StderrLog.Printf("%v\n", err)
+		return
+	}
+	conn, err := ln.Accept()
+	if err != nil {
+		StderrLog.Printf("%v\n", err)
+		return
+	}
+
+	reader := bufio.NewReader(conn)
 	j := n.edgeToCase[e]
 	c := n.cases[j].Chan
 	go func() {
 		for {
 			v, err := reader.ReadString('\n')
 			if err != nil {
-				n.LogError("%v", err)
-				close((*e.Data)[j])
-				(*e.Data)[j] = nil
+				if err != errors.New("EOF") {
+					n.LogError("read error: %v", err)
+				}
 				return
 			}
 			c.Send(reflect.ValueOf(v))
@@ -87,35 +101,46 @@ func (e *Edge) Src(n *Node, rw io.ReadWriter) {
 	} ()
 
 
-	writer := bufio.NewWriter(rw)
+	writer := bufio.NewWriter(conn)
 	go func() {
+		bufCnt := 0
 		for {
 			<- e.Ack
+			bufCnt++
 			_, err := writer.WriteString("\n")
 			if err != nil {
-				n.LogError("%v", err)
+				n.LogError("write error: %v", err)
 				close(e.Ack)
 				e.Ack = nil
 				return
 			}
-			writer.Flush()
+			if bufCnt==ChannelSize {
+				writer.Flush()
+				bufCnt = 0
+			}
 		}
 	} ()
 
 }
 
 // Dst sets up an Edge as a remote value destination.
-func (e *Edge) Dst(n *Node, rw io.ReadWriter) {
+func (e *Edge) Dst(n *Node, portString string) {
 
-	reader := bufio.NewReader(rw)
+	conn, err := net.Dial("tcp", portString)
+	if err != nil {
+		StderrLog.Printf("%v\n", err)
+		return
+	}
+
+	reader := bufio.NewReader(conn)
 	go func() {
 		var nada Nada
 		for {
 			_, err := reader.ReadString('\n')
 			if err != nil {
-				n.LogError("%v", err)
-				close(e.Ack)
-				e.Ack = nil
+				if err != errors.New("EOF") {
+					n.LogError("read error: %v", err)
+				}
 				return
 			}
 			e.Ack <- nada
@@ -123,20 +148,27 @@ func (e *Edge) Dst(n *Node, rw io.ReadWriter) {
 	} ()
 
 
-	writer := bufio.NewWriter(rw)
+	writer := bufio.NewWriter(conn)
 	j := len(*e.Data)
 	*e.Data = append(*e.Data, make(chan Datum, ChannelSize))
+	ej := (*e.Data)[j]
 	go func() {
+		bufCnt := 0
 		for {
-			v := <- (*e.Data)[j]
+			v := <- ej
+			time.Sleep(10000)
+			bufCnt++
 			_, err := writer.WriteString(fmt.Sprintf("%v\n", v))
 			if err != nil {
-				StderrLog.Printf("%v", err)
-				close((*e.Data)[j])
-				(*e.Data)[j] = nil
+				n.LogError("write error:  %v", err)
+				close(ej)
+				ej = nil
 				return
 			}
-			writer.Flush()
+			if bufCnt==ChannelSize {
+				writer.Flush()
+				bufCnt = 0
+			}
 		}
 	} ()
 
@@ -244,7 +276,9 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _,c := range *e.Data {
-		if cap(c)==len(c) { return false }
+		if cap(c)==len(c) { 
+			return false 
+		}
 	}
 	return true
 }
@@ -258,13 +292,14 @@ func (e *Edge) DstRdy(n *Node) bool {
 				// e.flush()
 			}
 			return f
-			
 		}
 
 		for len(e.Ack)>0 {
 			<- e.Ack
 			e.dstReadHandle(n, false)
 		}
+
+		if e.dstWriteRdy() { return true }
 	}
 			
 	return e.Rdy()
