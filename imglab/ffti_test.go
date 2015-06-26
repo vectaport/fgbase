@@ -1,4 +1,4 @@
-package imagelab
+package imglab
 
 import (
 	"math"

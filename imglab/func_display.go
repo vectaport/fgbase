@@ -1,4 +1,4 @@
-package imagelab
+package imglab
 
 import (
 	"github.com/lazywei/go-opencv/opencv"
