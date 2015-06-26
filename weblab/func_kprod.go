@@ -1,12 +1,13 @@
-package flowgraph
+package weblab
 
 import (
 	"fmt" 
 
 	"github.com/shopify/sarama"
+	"github.com/vectaport/flowgraph"
 )
 
-func kprodFire (n *Node) {
+func kprodFire (n *flowgraph.Node) {
 
 	a := n.Srcs[0]
 	producer := a.Aux.(sarama.AsyncProducer)
@@ -15,8 +16,8 @@ func kprodFire (n *Node) {
 }
 
 // FuncKprod wraps a Kafka producer.
-func FuncKprod(a Edge) Node {
-	node := MakeNode("kprod", []*Edge{&a}, nil, nil, kprodFire)
+func FuncKprod(a flowgraph.Edge) flowgraph.Node {
+	node := flowgraph.MakeNode("kprod", []*flowgraph.Edge{&a}, nil, nil, kprodFire)
 
 	producer, err := sarama.NewAsyncProducer([]string{"localhost:9092"}, nil)
 	if err != nil {
@@ -25,7 +26,7 @@ func FuncKprod(a Edge) Node {
 
 	a.Aux = producer
 
-	node.RunFunc = func (n *Node) {
+	node.RunFunc = func (n *flowgraph.Node) {
 		defer func() {
 			producer.AsyncClose()
 		}()

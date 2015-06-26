@@ -1,10 +1,11 @@
-package flowgraph
+package weblab
 
 import (
 	"github.com/shopify/sarama"
+	"github.com/vectaport/flowgraph"
 )
 
-func kconsFire (n *Node) {
+func kconsFire (n *flowgraph.Node) {
 
 	x := n.Dsts[0]
 	partitionConsumer := x.Aux.(sarama.PartitionConsumer)
@@ -13,8 +14,8 @@ func kconsFire (n *Node) {
 }
 
 // FuncKcons wraps a Kafka consumer.
-func FuncKcons(x Edge, topic string) Node {
-	node := MakeNode("kcons", nil, []*Edge{&x}, nil, kconsFire)
+func FuncKcons(x flowgraph.Edge, topic string) flowgraph.Node {
+	node := flowgraph.MakeNode("kcons", nil, []*flowgraph.Edge{&x}, nil, kconsFire)
 
 	consumer, err := sarama.NewConsumer([]string{"localhost:9092"}, sarama.NewConfig())
 	if err != nil {
@@ -23,10 +24,10 @@ func FuncKcons(x Edge, topic string) Node {
 
 	partitionConsumer, err := consumer.ConsumePartition(topic, 0, sarama.OffsetOldest)
 	if err != nil {
-		StderrLog.Printf("%v\n", err)
+		node.Tracef("%v\n", err)
 	}
 
-	node.RunFunc = func (n *Node) {
+	node.RunFunc = func (n *flowgraph.Node) {
 		defer func() {
 			partitionConsumer.AsyncClose()
 			if err := consumer.Close(); err != nil {

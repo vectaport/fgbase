@@ -1,15 +1,17 @@
-package flowgraph
+package imagelab
 
 import (
 	"math"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/vectaport/flowgraph"
 )
 
 const infitesimal=1.e-15
 
-func tbiFFTIFire(n *Node) {
+func tbiFFTIFire(n *flowgraph.Node) {
 	x := n.Dsts[0]
 	const sz = 128
 	var vec = make([]complex128, sz, sz)
@@ -25,12 +27,12 @@ func tbiFFTIFire(n *Node) {
 	x.Val = vec
 }
 
-func tbiFFTI(x Edge) Node {
-	node:=MakeNode("tbi", nil, []*Edge{&x}, nil, tbiFFTIFire)
+func tbiFFTI(x flowgraph.Edge) flowgraph.Node {
+	node:=flowgraph.MakeNode("tbi", nil, []*flowgraph.Edge{&x}, nil, tbiFFTIFire)
 	return node
 }
 
-func tboFFTIFire(n *Node) {
+func tboFFTIFire(n *flowgraph.Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	av := a.Val.([]complex128)
@@ -50,33 +52,33 @@ func tboFFTIFire(n *Node) {
 	n.Tracef("!SAME:  different sizes\n")
 }
 
-func tboFFTI(a, b Edge) Node {
-	node:=MakeNode("tbo", []*Edge{&a, &b}, nil, nil, tboFFTIFire)
+func tboFFTI(a, b flowgraph.Edge) flowgraph.Node {
+	node:=flowgraph.MakeNode("tbo", []*flowgraph.Edge{&a, &b}, nil, nil, tboFFTIFire)
 	return node
 }
 
 func TestFFTI(t *testing.T) {
 
-	TraceLevel = V
+	flowgraph.TraceLevel = flowgraph.V
 	
-	e,n := MakeGraph(9,7)
+	e,n := flowgraph.MakeGraph(9,7)
 
 	e[7].Const(false)
 	e[8].Const(true)
 
 	n[0] = tbiFFTI(e[0])
 
-	n[1] = FuncFork(e[0], e[1], e[2])
+	n[1] = flowgraph.FuncFork(e[0], e[1], e[2])
 
 	n[2] = FuncFFT(e[1], e[7], e[3])
-	n[3] = FuncPass(e[2], e[4])
+	n[3] = flowgraph.FuncPass(e[2], e[4])
 
 	n[4] = FuncFFT(e[3], e[8], e[5])
-	n[5] = FuncPass(e[4], e[6])
+	n[5] = flowgraph.FuncPass(e[4], e[6])
 
 	n[6] = tboFFTI(e[5], e[6])
 
-	RunAll(n, time.Second)
+	flowgraph.RunAll(n, time.Second)
 
 }
 

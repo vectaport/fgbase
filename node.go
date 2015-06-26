@@ -241,6 +241,12 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 	return newFmt
 }
 
+// TraceValRdy lists Node input values and output readiness when TraceLevel >= VVV.
+func (n *Node) TraceValRdy() {
+	if TraceLevel >= VVV {
+		n.traceValRdy(false)
+	}
+}
 
 // traceValRdy lists Node input values and output values or readiness.
 func (n *Node) traceValRdy(valOnly bool) {
