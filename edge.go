@@ -182,7 +182,7 @@ func (e *Edge) Rdy() bool {
 // srcReadRdy tests if a source Edge is ready for a data read.
 func (e *Edge) srcReadRdy(n *Node) bool {
 	i := n.edgeToCase[e]
-	return n.cases[i].Chan.Len()>0
+	return n.cases[i].Chan.IsValid() && n.cases[i].Chan.Len()>0
 }
 
 // srcReadHandle handles a source Edge data read.
