@@ -8,7 +8,6 @@ type Pool struct {
 	nodes []Node  
 	size int
 	free int      
-	reserved int
 	mu sync.Mutex
 }
 
@@ -21,9 +20,6 @@ func (p *Pool) NumFree() int { return p.free }
 // Size is the total size of the Pool of Node's.
 func (p *Pool) Size() int { return p.size }
 
-// Reserved is the number of Node's in the Pool kept in reserve for inputs.
-func (p *Pool) Reserved() int { return p.reserved }
-
 // Mutex returns the mutex for this Pool.
 func (p *Pool) Mutex() *sync.Mutex { return &p.mu }
 
@@ -32,7 +28,7 @@ func (p *Pool) Free(n *Node, incr int) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.free+incr < p.size-p.reserved {
+	if p.free+incr < p.size {
 		p.free += incr
 		p.Trace(n)
 		return true
@@ -72,7 +68,7 @@ func (p *Pool) Trace(n *Node) {
 // MakePool returns a Pool of Nodes that share both
 // data channels and the source ack channel.
 func MakePool(
-	size, reserved int, 
+	size int, 
 	name string, 
 	srcs, dsts []Edge,
 	ready NodeRdy, 
@@ -81,13 +77,12 @@ func MakePool(
 	var p Pool
 	p.size = size
 	p.nodes = MakeNodes(size)
-	p.free = size-reserved
-	p.reserved = reserved
+	p.free = size
 	for i:=0; i<size; i++ {
 		var srcs2, dsts2 []Edge
 		for j := 0; j<len(srcs); j++ { srcs2 = append(srcs2, srcs[j]) }
 		for j := 0; j<len(dsts); j++ { dsts2 = append(dsts2, dsts[j]) }
-		p.nodes[i] = MakeNodePool("qsort", srcs2, dsts2, nil, qsortFire)
+		p.nodes[i] = makeNodeForPool(name, srcs2, dsts2, ready, fire)
 	}
 	return p
 

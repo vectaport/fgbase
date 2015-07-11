@@ -99,10 +99,10 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 	return n
 }
 
-// MakeNodePool returns a new Node with copies of source and destination Edge's.
+// makeNodeForPool returns a new Node with copies of source and destination Edge's.
 // Both source channels and the destination data channel get shared.  
 // The destination ack channel is unique.
-func MakeNodePool(
+func makeNodeForPool(
 	name string, 
 	srcs, dsts []Edge, 
 	ready NodeRdy, 
@@ -195,7 +195,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				if srci.Val==nil  {
 					newFmt += "<nil>"
 				} else {
-					newFmt += String(srci.Val)
+					newFmt += fmt.Sprintf("%T(%s)", srci.Val, String(srci.Val))
 				}
 			}
 		} else {
@@ -219,7 +219,13 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		if (valOnly) {
 			newFmt += fmt.Sprintf("%s=", dsti.Name)
 			if (dstiv != nil) {
-				newFmt += String(dstiv)
+				s := String(dstiv)
+				if !IsSlice(dstiv) {
+					newFmt += fmt.Sprintf("%T(%s)", dstiv, s)
+				} else {
+					newFmt += s
+				}
+
 			} else {
 				newFmt += func () string { 
 					if (dsti.NoOut) { 
@@ -279,6 +285,7 @@ func (n *Node) incrFireCnt() {
 
 // RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
+	
 	if (n.RdyFunc == nil) {
 		for i := range n.Srcs {
 			if !n.Srcs[i].SrcRdy(n) {
@@ -291,7 +298,9 @@ func (n *Node) RdyAll() bool {
 			}
 		}
 	} else {
-		if !n.RdyFunc(n) { return false }
+		if !n.RdyFunc(n) { 
+			return false 
+		}
 	}
 	
 	// restore data channels for next use
@@ -307,7 +316,13 @@ func (n *Node) Fire() {
 	n.incrFireCnt();
 	var newFmt string
 	if TraceLevel>Q { newFmt = n.traceValRdySrc(true) }
-	if (n.FireFunc!=nil) { n.FireFunc(n) }
+	if (n.FireFunc!=nil) { 
+		n.FireFunc(n) 
+	} else {
+		for _,e := range n.Srcs {
+			e.Val = nil
+		}
+	}
 	if TraceLevel>Q { 
 		newFmt += n.traceValRdyDst(true)
 		StdoutLog.Printf(newFmt)

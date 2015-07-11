@@ -2,7 +2,7 @@ package flowgraph
 
 import (
 	"bufio"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"net"
 	"reflect"
@@ -70,7 +70,7 @@ func (e *Edge) IsSink() bool {
 	return e.Data == nil && e.Val == nil
 }
 
-// Src sets up an Edge as a remote value source.
+// Src sets up an Edge as a remote JSON value source.
 func (e *Edge) Src(n *Node, portString string) {
 
 	ln, err := net.Listen("tcp", portString)
@@ -89,13 +89,24 @@ func (e *Edge) Src(n *Node, portString string) {
 	c := n.cases[j].Chan
 	go func() {
 		for {
-			v, err := reader.ReadString('\n')
+			b, err := reader.ReadBytes('\n')
+			// n.Tracef("json input:  %v", string(b))
 			if err != nil {
-				if err != errors.New("EOF") {
-					n.LogError("read error: %v", err)
+				if err.Error() != "EOF" {
+					n.LogError("%v", err)
 				}
 				return
 			}
+
+			var v Datum
+			err = json.Unmarshal(b,&v)
+			if err != nil {
+				n.LogError("%v", err)
+			}
+			if IsSlice(v) {
+				// n.Tracef("type of [] is %s\n", reflect.TypeOf(Index(v, 0)))
+			}
+
 			c.Send(reflect.ValueOf(v))
 		}
 	} ()
@@ -123,7 +134,7 @@ func (e *Edge) Src(n *Node, portString string) {
 
 }
 
-// Dst sets up an Edge as a remote value destination.
+// Dst sets up an Edge as a remote JSON value destination.
 func (e *Edge) Dst(n *Node, portString string) {
 
 	conn, err := net.Dial("tcp", portString)
@@ -138,8 +149,8 @@ func (e *Edge) Dst(n *Node, portString string) {
 		for {
 			_, err := reader.ReadString('\n')
 			if err != nil {
-				if err != errors.New("EOF") {
-					n.LogError("read error: %v", err)
+				if err.Error() != "EOF" {
+					n.LogError("Dst read error: %v", err)
 				}
 				return
 			}
@@ -158,7 +169,12 @@ func (e *Edge) Dst(n *Node, portString string) {
 			v := <- ej
 			time.Sleep(10000)
 			bufCnt++
-			_, err := writer.WriteString(fmt.Sprintf("%v\n", v))
+			b,err := json.Marshal(v)
+			// n.Tracef("json output:  %v", string(b))
+			if err != nil {
+				n.LogError("%v", err)
+			}
+			_, err = writer.WriteString(string(b)+"\n")
 			if err != nil {
 				n.LogError("write error:  %v", err)
 				close(ej)
@@ -245,6 +261,7 @@ func (e *Edge) SrcRdy(n *Node) bool {
 			e.srcReadHandle(n, false)
 		}
 
+		return e.Rdy()
 	}
 	return true
 }
@@ -287,11 +304,7 @@ func (e *Edge) dstWriteRdy() bool {
 func (e *Edge) DstRdy(n *Node) bool {
 	if !e.Rdy() {
 		if !e.dstReadRdy() { 
-			f := e.dstWriteRdy()
-			if !f {
-				// e.flush()
-			}
-			return f
+			return e.dstWriteRdy()
 		}
 
 		for len(e.Ack)>0 {
@@ -299,10 +312,14 @@ func (e *Edge) DstRdy(n *Node) bool {
 			e.dstReadHandle(n, false)
 		}
 
-		if e.dstWriteRdy() { return true }
+		if e.dstWriteRdy() {
+			return true 
+		}
 	}
 			
-	return e.Rdy()
+	f := e.Rdy()
+	return f
+	
 }
 
 // SendData writes to the Data channel
@@ -355,7 +372,7 @@ func (e *Edge) SendAck(n *Node) {
 				e.Ack2 = nil
 			} else {
 				if (TraceLevel>=VV) {
-					n.Tracef("%s.Ack <-\n", e.Name)
+					n.Tracef("%s.Ack(%p) <-\n", e.Name, e.Ack)
 				}
 				e.Ack <- nada
 			}

@@ -101,10 +101,10 @@ func qsortFire (n *Node) {
 
 // FuncQsort recursively implements a quicksort with goroutines 
 // (x=qsort(a)).
-func FuncQsort(a, x Edge, poolSz, poolReserve int ) *Pool {
+func FuncQsort(a, x Edge, poolSz int ) *Pool {
 	
 	// Make a pool of qsort nodes that can be dynamically used, 
-	PoolQsort = MakePool(poolSz, poolReserve, "qsort", []Edge{a}, []Edge{x}, nil, qsortFire)
+	PoolQsort = MakePool(poolSz, "qsort", []Edge{a}, []Edge{x}, nil, qsortFire)
 	return &PoolQsort
 
 }
