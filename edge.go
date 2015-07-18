@@ -204,12 +204,11 @@ func (e *Edge) srcReadRdy(n *Node) bool {
 // srcReadHandle handles a source Edge data read.
 func (e *Edge) srcReadHandle (n *Node, selectFlag bool) {
 	var wrapFlag = false
-	if _,ok := e.Val.(nodeWrap); ok {
-		n2 := e.Val.(nodeWrap).node
-		e.Ack2 = n2.Dsts[0].Ack
+	if n2,ok := e.Val.(nodeWrap); ok {
+		e.Ack2 = n2.ack2
 		e.Val = e.Val.(nodeWrap).datum
 		wrapFlag = true
-		if &n2.FireFunc == &n.FireFunc { 
+		if &n2.node.FireFunc == &n.FireFunc { 
 			n.flag |=flagRecursed 
 		} else {
 			bitr := ^flagRecursed
@@ -218,19 +217,19 @@ func (e *Edge) srcReadHandle (n *Node, selectFlag bool) {
 	}
 	e.RdyCnt--
 	if (TraceLevel>=VV) {
-		var selectStr string
+		var attrs string
 		if selectFlag {
-			selectStr = " (s)"
+			attrs += " // s"
 		} else {
-			selectStr = " (!s)"
+			attrs = " // !s"
 		}
-		var asterisk string
-		if wrapFlag && TraceLevel>=VV { asterisk = fmt.Sprintf(" *(Ack2=%p)", e.Ack2)}
-		asterisk += selectStr
+		if wrapFlag && TraceLevel>=VV { 
+			attrs += fmt.Sprintf(",Ack2=%p", e.Ack2)
+		}
 		if (e.Val==nil) {
-			n.Tracef("<nil> <- %s.Data%s%ss\n", e.Name, asterisk)
+			n.Tracef("<nil> <- %s.Data%s%s\n", e.Name, attrs)
 		} else {
-			n.Tracef("%s <- %s.Data%s\n", String(e.Val), e.Name, asterisk)
+			n.Tracef("%s <- %s.Data%s\n", String(e.Val), e.Name, attrs)
 		}
 	}
 }
@@ -278,15 +277,15 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 	if (TraceLevel>=VV) {
 		var selectStr string
 		if selectFlag {
-			selectStr = " (s)"
+			selectStr = "// s"
 		} else {
-			selectStr = " (!s)"
+			selectStr = "// !s"
 		}
 		nm := e.Name + ".Ack"
 		if len(*e.Data)>1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
-		n.Tracef("<- %s(%p)%s\n", nm, e.Ack, selectStr)
+		n.Tracef("<- %s %s\n", nm, selectStr)
 	}
 }
 
@@ -326,32 +325,32 @@ func (e *Edge) DstRdy(n *Node) bool {
 func (e *Edge) SendData(n *Node) {
 	if(e.Data !=nil) {
 		if (!e.NoOut) {
+			for i := range *e.Data {
+				(*e.Data)[i] <- e.Val
+			}
+			e.RdyCnt += len(*e.Data)
+
 			if (TraceLevel>=VV) {
 				nm := e.Name + ".Data"
 				if len(*e.Data)>1 {
 					nm += "{" + strconv.Itoa(len(*e.Data)) + "}"
 				}
 				ev := e.Val
-				var asterisk string
+				var attrs string
 				
 				// remove from wrapper if in one
 				if _,ok := ev.(nodeWrap); ok {
-					n2 := ev.(nodeWrap).node
+					attrs += fmt.Sprintf(" // Ack2=%p", ev.(nodeWrap).ack2)
 					ev = ev.(nodeWrap).datum
-					asterisk += fmt.Sprintf(" *(Ack2=%p)", n2.Srcs[0].Ack)
 				}
 
 				if (ev==nil) {
-					n.Tracef("%s <- <nil>%s\n", nm, asterisk)
+					n.Tracef("%s <- <nil>%s\n", nm, attrs)
 				} else {
-					n.Tracef("%s <- %s%s\n", nm, String(ev), asterisk)
+					n.Tracef("%s <- %s%s\n", nm, String(ev), attrs)
 				}
 			}
 
-			for i := range *e.Data {
-				(*e.Data)[i] <- e.Val
-			}
-			e.RdyCnt += len(*e.Data)
 			e.Val = nil
 		} else {
 			e.NoOut = false
@@ -366,13 +365,13 @@ func (e *Edge) SendAck(n *Node) {
 			var nada Nada
 			if e.Ack2 != nil {
 				if (TraceLevel>=VV) {
-					n.Tracef("%s.Ack2(%p) <-\n", e.Name, e.Ack2)
+					n.Tracef("%s.Ack <- // Ack2=%p\n", e.Name, e.Ack2)
 				}
 				e.Ack2 <- nada
 				e.Ack2 = nil
 			} else {
 				if (TraceLevel>=VV) {
-					n.Tracef("%s.Ack(%p) <-\n", e.Name, e.Ack)
+					n.Tracef("%s.Ack <-\n", e.Name)
 				}
 				e.Ack <- nada
 			}

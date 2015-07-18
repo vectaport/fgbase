@@ -9,6 +9,7 @@ import (
 )
 
 var bushelCnt int64
+var poolQsort Pool
 
 type bushel struct {
 	Slic []int
@@ -93,7 +94,7 @@ func tboQsort(a Edge) Node {
 				if sort.IntsAreSorted(v.Original()) { n.Tracef("END for id=%d, depth=%d, len=%d\n", v.ID(), v.Depth(), v.Len()) }
 				n.Tracef("Original(%p) sorted %t, Slice sorted %t, depth=%d, id=%d, len=%d, poolsz=%d, ratio = %d\n", v.Original(), 
 					sort.IntsAreSorted(v.Original()), sort.IntsAreSorted(v.Slice()), v.Depth(), v.ID(), len(v.Original()), 
-					PoolQsort.Size(), len(v.Original())/(1+int(v.Depth())))
+					poolQsort.Size(), len(v.Original())/(1+int(v.Depth())))
 			}
 			default: {
 				n.Tracef("not of type RecursiveSort\n")
@@ -117,8 +118,9 @@ func TestQsort(t *testing.T) {
 	n[0] = tbiQsort(e[0], pow2)
 	n[1] = tboQsort(e[1])
 
-	p := FuncQsort(e[0], e[1], poolSz, 1)
-	copy(n[2:poolSz+2], p.Nodes())
+	poolQsort = FuncQsort(e[0], e[1], poolSz)
+	poolQsort.Alloc(&n[2], 1) // reserve one for input
+	copy(n[2:poolSz+2], poolQsort.Nodes())
 
 	RunAll(n, time.Duration(sec)*time.Second)
 

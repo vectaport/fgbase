@@ -36,8 +36,6 @@ const (
 	flagRecursed
 )
 
-var StartTime time.Time
-
 // NodeRdy is the function signature for evaluating readiness of a Node to fire.
 type NodeRdy func(*Node) bool
 
@@ -49,7 +47,7 @@ type NodeFire func(*Node)
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, pool bool) Node {
+func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, pool, recurse bool) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i-1
@@ -70,7 +68,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 		if srci.Data != nil {
 			j := len(*srci.Data)
 			if j==0 || !pool {
-				var df = func() int {if pool {return 0} else {return ChannelSize}}
+				var df = func() int {if pool&&recurse {return 0} else {return ChannelSize}}
 				*srci.Data = append(*srci.Data, make(chan Datum, df()))
 			} else {
 				j = 0
@@ -106,7 +104,8 @@ func makeNodeForPool(
 	name string, 
 	srcs, dsts []Edge, 
 	ready NodeRdy, 
-	fire NodeFire) Node {
+	fire NodeFire,
+        recurse bool) Node {
 	var srcsp,dstsp []*Edge
 	for i:=0; i<len(srcs); i++ {
 		srcsp = append(srcsp, &srcs[i])
@@ -114,7 +113,7 @@ func makeNodeForPool(
 	for i:=0; i<len(dsts); i++ {
 		dstsp = append(dstsp, &dsts[i])
 	}
-	return makeNode(name, srcsp, dstsp, ready, fire, true)
+	return makeNode(name, srcsp, dstsp, ready, fire, true, recurse)
 }
 
 // MakeNode returns a new Node with slices of input and output Edge's and functions for testing readiness then firing.
@@ -123,11 +122,7 @@ func MakeNode(
 	srcs, dsts []*Edge, 
 	ready NodeRdy, 
 	fire NodeFire) Node {
-	return makeNode(name, srcs, dsts, ready, fire, false)
-}
-
-func TimeSinceStart() float64 {
-	return time.Since(StartTime).Seconds()
+	return makeNode(name, srcs, dsts, ready, fire, false, false)
 }
 
 func prefixTracef(n *Node) (format string) {
@@ -195,7 +190,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				if srci.Val==nil  {
 					newFmt += "<nil>"
 				} else {
-					newFmt += fmt.Sprintf("%T(%s)", srci.Val, String(srci.Val))
+					newFmt += fmt.Sprintf("%s", String(srci.Val))
 				}
 			}
 		} else {
@@ -221,7 +216,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			if (dstiv != nil) {
 				s := String(dstiv)
 				if !IsSlice(dstiv) {
-					newFmt += fmt.Sprintf("%T(%s)", dstiv, s)
+					newFmt += fmt.Sprintf("%s", s)
 				} else {
 					newFmt += s
 				}
@@ -318,11 +313,7 @@ func (n *Node) Fire() {
 	if TraceLevel>Q { newFmt = n.traceValRdySrc(true) }
 	if (n.FireFunc!=nil) { 
 		n.FireFunc(n) 
-	} else {
-		for _,e := range n.Srcs {
-			e.Val = nil
-		}
-	}
+	} 
 	if TraceLevel>Q { 
 		newFmt += n.traceValRdyDst(true)
 		StdoutLog.Printf(newFmt)
@@ -427,10 +418,10 @@ func RunAll(n []Node, timeout time.Duration) {
 	}
 }
 
-// NodeWrap bundles a Node pointer and a Datum to pass information about an
-// upstream node downstream.  Used for acking back in a Pool.
-func (n *Node) NodeWrap(d Datum) Datum {
-	return nodeWrap{n, d}
+// NodeWrap bundles a Node pointer, and an ack channel with a Datum, in order to 
+// pass information about an upstream node downstream.  Used for acking back in a Pool.
+func (n *Node) NodeWrap(d Datum, ack chan Nada) Datum {
+	return nodeWrap{n, d, ack}
 }
 
 // Recursed returns true if a Node from the same Pool is upstream of this Node.

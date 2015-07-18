@@ -72,7 +72,8 @@ func MakePool(
 	name string, 
 	srcs, dsts []Edge,
 	ready NodeRdy, 
-	fire NodeFire) Pool {
+	fire NodeFire,
+        recurse bool) Pool {
 
 	var p Pool
 	p.size = size
@@ -82,7 +83,7 @@ func MakePool(
 		var srcs2, dsts2 []Edge
 		for j := 0; j<len(srcs); j++ { srcs2 = append(srcs2, srcs[j]) }
 		for j := 0; j<len(dsts); j++ { dsts2 = append(dsts2, dsts[j]) }
-		p.nodes[i] = makeNodeForPool(name, srcs2, dsts2, ready, fire)
+		p.nodes[i] = makeNodeForPool(name, srcs2, dsts2, ready, fire, recurse)
 	}
 	return p
 

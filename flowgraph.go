@@ -3,8 +3,12 @@
 package flowgraph
 
 import (
+	"flag"
 	"log"
 	"os"
+	"runtime"
+	"strconv"
+	"time"
 )
 
 // Log for tracing flowgraph execution.
@@ -52,6 +56,9 @@ var TracePointer = false
 // Unique Node id.
 var NodeID int64
 
+// RunSeconds is the number of seconds to run this flowgraph.
+var RunSeconds time.Duration = -1
+
 // Global count of number of Node executions.
 var globalFireCnt int64
 
@@ -59,6 +66,7 @@ var globalFireCnt int64
 type nodeWrap struct {
 	node *Node
 	datum Datum
+	ack2 chan Nada
 }
 
 // ChannelSize is the buffer size for every channel.
@@ -68,3 +76,27 @@ var ChannelSize = 1
 func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 	return MakeEdges(sze),MakeNodes(szn)
 }
+
+// ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities.
+func ConfigByFlag() {
+
+	ncorep := flag.Int("ncore", runtime.NumCPU()-1, "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
+	secp := flag.Int("sec", 1, "seconds to run")
+	tracep := flag.String("trace", "V", "trace level, Q|V|VV|VVV|VVVV")
+	chanszp := flag.Int("chansz", 1, "channel size")
+
+	flag.Parse()
+
+	runtime.GOMAXPROCS(*ncorep)
+	RunSeconds = time.Duration(*secp)*time.Second
+	TraceLevel = TraceLevels[*tracep]
+	ChannelSize = *chanszp
+}
+
+var StartTime time.Time
+
+// TimeSinceStart returns time since start of running flowgraph.
+func TimeSinceStart() float64 {
+	return time.Since(StartTime).Seconds()
+}
+
