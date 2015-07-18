@@ -4,6 +4,7 @@ import (
 	"sort"
 )
 
+// RecursiveSort extends sort.Interface for recursive sorting.
 type RecursiveSort interface {
 	sort.Interface
 

@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+// Pool of Node's 
 type Pool struct {
 	nodes []Node  
 	size int

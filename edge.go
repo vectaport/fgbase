@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Nada is the empty struct for use as an ack.
 type Nada struct {}
 
 // Edge of a flowgraph.
@@ -35,7 +36,7 @@ func makeEdge(name string, initVal Datum) Edge {
 	var e Edge
 	e.Name = name
 	e.Val = initVal
-	dc := make([]chan Datum, 0)
+	var dc []chan Datum
 	e.Data = &dc
 	e.Ack = make(chan Nada, ChannelSize)
 	return e
@@ -394,10 +395,10 @@ func MakeEdges(sz int) []Edge {
 }
 
 // PoolEdge returns an output Edge that is directed back into the Pool.
-func (dst *Edge) PoolEdge(src *Edge) Edge {
+func (e *Edge) PoolEdge(src *Edge) Edge {
 	e := *dst
 	e.Data = src.Data
-	e.Name = dst.Name+"("+src.Name+")"
+	e.Name = e.Name+"("+src.Name+")"
 	return e
 }
 	

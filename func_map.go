@@ -27,7 +27,8 @@ func FuncMap(a Edge, x []Edge, poolSz int, xSelect MapSel) Pool {
 		if a.SrcRdy(n) {
 			i := xSelect(n)
 			a.Aux = i
-			if i<0 {return false} else {return x[i].DstRdy(n)}
+			if i<0 {return false} 
+			return x[i].DstRdy(n)
 		}
 		return false
 	}
