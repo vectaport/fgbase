@@ -113,6 +113,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	ChannelSize = *chanszPtr
 }
 
+// StartTime is when the flowgraph started running.
 var StartTime time.Time
 
 // TimeSinceStart returns time since start of running flowgraph.
