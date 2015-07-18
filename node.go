@@ -393,8 +393,8 @@ func MakeNodes(sz int) []Node {
 	return n
 }
 
-// RunAll calls Run for each Node.
-func RunAll(n []Node, timeout time.Duration) {
+// RunAll calls Run for each Node, and timesout after RunTime.
+func RunAll(n []Node) {
 		
 	StartTime = time.Now()
 	for i:=0; i<len(n); i++ {
@@ -405,6 +405,7 @@ func RunAll(n []Node, timeout time.Duration) {
 		go node.Run()
 	}
 
+	timeout := RunTime
 	if timeout>0 { 
 		time.Sleep(timeout) 
 		defer StdoutLog.Printf("\n")

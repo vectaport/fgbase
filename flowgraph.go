@@ -56,8 +56,8 @@ var TracePointer = false
 // Unique Node id.
 var NodeID int64
 
-// RunSeconds is the number of seconds to run this flowgraph.
-var RunSeconds time.Duration = -1
+// RunTime is the number of seconds to run this flowgraph.
+var RunTime time.Duration = -1
 
 // Global count of number of Node executions.
 var globalFireCnt int64
@@ -78,19 +78,39 @@ func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 }
 
 // ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities.
-func ConfigByFlag() {
+func ConfigByFlag(defaults map[string]interface{}) {
 
-	ncorep := flag.Int("ncore", runtime.NumCPU()-1, "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
-	secp := flag.Int("sec", 1, "seconds to run")
-	tracep := flag.String("trace", "V", "trace level, Q|V|VV|VVV|VVVV")
-	chanszp := flag.Int("chansz", 1, "channel size")
+	var ncoreDef interface{} = runtime.NumCPU()-1
+	var secDef interface{} = 1
+	var traceDef interface{} = "V"
+	var chanszDef interface{} = 1
+
+	if defaults != nil {
+		if defaults["ncore"] != nil {
+			ncoreDef = defaults["ncore"]
+		}
+		if defaults["sec"] != nil {
+			secDef = defaults["sec"]
+		}
+		if defaults["trace"] != nil {
+			traceDef = defaults["trace"]
+		}
+		if defaults["chansz"] != nil {
+			chanszDef = defaults["chansz"]
+		}
+	}
+
+	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
+	secPtr := flag.Int("sec", secDef.(int), "seconds to run")
+	tracePtr := flag.String("trace", traceDef.(string), "trace level, Q|V|VV|VVV|VVVV")
+	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 
 	flag.Parse()
 
-	runtime.GOMAXPROCS(*ncorep)
-	RunSeconds = time.Duration(*secp)*time.Second
-	TraceLevel = TraceLevels[*tracep]
-	ChannelSize = *chanszp
+	runtime.GOMAXPROCS(*ncorePtr)
+	RunTime = time.Duration(*secPtr)*time.Second
+	TraceLevel = TraceLevels[*tracePtr]
+	ChannelSize = *chanszPtr
 }
 
 var StartTime time.Time
