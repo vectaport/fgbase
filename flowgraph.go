@@ -29,7 +29,7 @@ const (
 	VVVV      // full-length array dumps
 )
 
-// TraceLevels maps from string to enum for flag checking.
+// Map from string to enum for trace flag checking.
 var TraceLevels = map[string]int {
 	"Q": Q,
 	"V": V,
