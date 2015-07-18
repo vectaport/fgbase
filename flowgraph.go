@@ -56,11 +56,14 @@ var TracePointer = false
 // Unique Node id.
 var NodeID int64
 
-// RunTime is the number of seconds to run this flowgraph.
+// Duration to run this flowgraph.
 var RunTime time.Duration = -1
 
 // Global count of number of Node executions.
 var globalFireCnt int64
+
+// Buffer size for every channel.
+var ChannelSize = 1
 
 // node channel wrapper
 type nodeWrap struct {
@@ -68,9 +71,6 @@ type nodeWrap struct {
 	datum Datum
 	ack2 chan Nada
 }
-
-// ChannelSize is the buffer size for every channel.
-var ChannelSize = 1
 
 // MakeGraph returns a slice of Edge and a slice of Node.
 func MakeGraph(sze, szn int) ([]Edge,[]Node) {
