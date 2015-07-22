@@ -21,6 +21,7 @@ func FuncReduce(a,x Edge, poolSz int, reducer func(i,d Datum)) Pool {
 
 	// Make a pool of reduce nodes that share input and output channels
 	recurse := false
-	return MakePool(poolSz, "reduce", []Edge{a}, []Edge{x}, nil, reduceFire, recurse)
+	spread := true
+	return MakePool(poolSz, "reduce", []Edge{a}, []Edge{x}, nil, reduceFire, recurse, spread)
 
 }

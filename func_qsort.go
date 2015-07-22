@@ -105,7 +105,8 @@ func FuncQsort(a, x Edge, poolSz int ) Pool {
 
 	// Make a pool of qsort nodes that can be dynamically used, 
 	recurse := true
-	p = MakePool(poolSz, "qsort", []Edge{a}, []Edge{x}, nil, qsortFire, recurse)
+	spread := false
+	p = MakePool(poolSz, "qsort", []Edge{a}, []Edge{x}, nil, qsortFire, recurse, spread)
 	return p
 
 }

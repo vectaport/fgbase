@@ -395,8 +395,7 @@ func MakeEdges(sz int) []Edge {
 }
 
 // PoolEdge returns an output Edge that is directed back into the Pool.
-func (e *Edge) PoolEdge(src *Edge) Edge {
-	e := *dst
+func (e *Edge) PoolEdge(src *Edge) *Edge {
 	e.Data = src.Data
 	e.Name = e.Name+"("+src.Name+")"
 	return e

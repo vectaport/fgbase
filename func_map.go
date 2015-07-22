@@ -16,10 +16,11 @@ func mapFire (n *Node) {
 	i := a.Aux.(int)
 	x[i].Val = n.NodeWrap(a.Val, x[i].Ack)
 	x[i].NoOut = false
+
 }
 
 // FuncMap maps a value to one of n reducers.
-func FuncMap(a Edge, x []Edge, poolSz int, xSelect MapSel) Pool {
+func FuncMap(a, x []Edge, xSelect MapSel) Pool {
 
 	var  mapRdy = func (n *Node) bool {
 		a := n.Srcs[0]
@@ -33,9 +34,9 @@ func FuncMap(a Edge, x []Edge, poolSz int, xSelect MapSel) Pool {
 		return false
 	}
 	
-	
 	// Make a pool of map nodes that share input and output channels
 	recurse := false
-	return MakePool(poolSz, "map", []Edge{a}, x, mapRdy, mapFire, recurse)
+	spread := true
+	return MakePool(len(a), "map", a, x, mapRdy, mapFire, recurse, spread)
 
 }
