@@ -4,24 +4,22 @@ import (
 )
 
 // FuncReduce reduces a stream of data into a single Datum.
-func FuncReduce(a,x Edge, poolSz int, reducer func(i,d Datum)) Pool {
+func FuncReduce(a,x Edge, reducer func(n *Node, s,d Datum) Datum) Node {
 
 	i := 0
-	var dict Datum
 	var reduceFire = func (n *Node) {
 		a := n.Srcs[0]
-		reducer(a.Val, dict)
+		a.Aux = reducer(n, a.Val, a.Aux)
 		i++
-		if i%100==0 {
-			x.Val = dict
+		if i%1000==0 || true {
+			x.Val = a.Aux
 		} else {
 			x.NoOut = true
 		}
 	}
 
-	// Make a pool of reduce nodes that share input and output channels
-	recurse := false
-	spread := true
-	return MakePool(poolSz, "reduce", []Edge{a}, []Edge{x}, nil, reduceFire, recurse, spread)
+	a.Aux = make([]string, 0)
 
+	node := MakeNode("reduce", []*Edge{&a}, []*Edge{&x}, nil, reduceFire)
+	return node
 }
