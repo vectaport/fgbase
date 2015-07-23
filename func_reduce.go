@@ -11,11 +11,7 @@ func FuncReduce(a,x Edge, reducer func(n *Node, s,d Datum) Datum) Node {
 		a := n.Srcs[0]
 		a.Aux = reducer(n, a.Val, a.Aux)
 		i++
-		if i%1000==0 || true {
-			x.Val = a.Aux
-		} else {
-			x.NoOut = true
-		}
+		x.Val = a.Aux
 	}
 
 	a.Aux = make([]string, 0)
