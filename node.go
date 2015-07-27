@@ -68,8 +68,8 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 		if srci.Data != nil {
 			j := len(*srci.Data)
 			if j==0 || !pool {
-				var df = func() int {if pool&&recurse {return 0}; return ChannelSize}
-				*srci.Data = append(*srci.Data, make(chan Datum, df()))
+				df := func() int {if pool&&recurse {return 0}; return ChannelSize}()
+				*srci.Data = append(*srci.Data, make(chan Datum, df)
 			} else {
 				j = 0
 			}
