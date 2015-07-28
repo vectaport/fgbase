@@ -13,8 +13,8 @@ type Node struct {
 	ID int64                        // unique id
 	Name string                     // for tracing
 	Cnt int64                       // execution count
-	Srcs []*Edge                    // upstream links
-	Dsts []*Edge                    // downstream links
+	Srcs []*Edge                    // upstream Edge's
+	Dsts []*Edge                    // downstream Edge's
 	RdyFunc NodeRdy                 // func to test Edge readiness
 	FireFunc NodeFire               // func to fire off the Node
 	RunFunc NodeRun                 // func to repeatedly run Node
@@ -393,12 +393,32 @@ func MakeNodes(sz int) []Node {
 	return n
 }
 
-// RunAll calls Run for each Node, and timesout after RunTime.
-func RunAll(n []Node) {
-		
+// buildEdgeNodes builds the slice of EdgeNode for each Edge
+func buildEdgeNodes(nodes []Node) {
+	for i,n := range nodes {
+		for j := range n.Srcs {
+			srcj := n.Srcs[j]
+			k := 0
+			for ; k<len(*srcj.EdgeNodes) && (*srcj.EdgeNodes)[k].srcFlag; k++ {}
+			*srcj.EdgeNodes = append(*srcj.EdgeNodes, EdgeNode{})
+			copy((*srcj.EdgeNodes)[k+1:], (*srcj.EdgeNodes)[k:])
+			(*srcj.EdgeNodes)[k] = EdgeNode{node:&nodes[i], srcFlag:true}
+		}
+		for j := range n.Dsts {
+			dstj := n.Dsts[j]
+			*dstj.EdgeNodes = append(*dstj.EdgeNodes, EdgeNode{node:&nodes[i], srcFlag:false})
+		}
+	}
+}
+
+// RunAll calls Run for each Node, and times out after RunTime.
+func RunAll(nodes []Node) {
+
+	buildEdgeNodes(nodes)
+
 	StartTime = time.Now()
-	for i:=0; i<len(n); i++ {
-		var node = &n[i]
+	for i:=0; i<len(nodes); i++ {
+		node := &nodes[i]
 		if TraceLevel>=VVVV {
 			node.Tracef("\n")
 		}
@@ -413,8 +433,8 @@ func RunAll(n []Node) {
 
 	if TraceLevel>=VVVV {
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>\n")
-		for i:=0; i<len(n); i++ {
-			n[i].traceValRdy(false)
+		for i:=0; i<len(nodes); i++ {
+			nodes[i].traceValRdy(false)
 		}
 	}
 }

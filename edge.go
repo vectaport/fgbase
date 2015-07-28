@@ -13,20 +13,27 @@ import (
 // Nada is the empty struct for use as an ack.
 type Nada struct {}
 
+// EdgeNode contains information on a Node connected to an Edge.
+type EdgeNode struct {
+	node *Node
+	srcFlag bool
+} 
+
 // Edge of a flowgraph.
 type Edge struct {
 
 	// values shared by upstream and downstream Node
-	Name string        // for trace
-	Data *[]chan Datum // slice of data channels
-	Ack chan Nada      // request (or acknowledge) channel
+	Name string           // for trace
+	Data *[]chan Datum    // slice of data channels
+	Ack chan Nada         // request (or acknowledge) channel
+	EdgeNodes *[]EdgeNode // list of Node's associated with this Edge.	 
 
 	// values unique to upstream and downstream Node
-	Val Datum          // generic empty interface
-	RdyCnt int         // readiness of I/O
-	NoOut bool         // set true to inhibit one output, data or ack
-	Aux Datum          // auxiliary empty interface to hold state
-	Ack2 chan Nada     // alternate channel for ack steering
+	Val Datum             // generic empty interface
+	RdyCnt int            // readiness of I/O
+	NoOut bool            // set true to inhibit one output, data or ack
+	Aux Datum             // auxiliary empty interface to hold state
+	Ack2 chan Nada        // alternate channel for ack steering
 
 }
 
@@ -39,6 +46,8 @@ func makeEdge(name string, initVal Datum) Edge {
 	var dc []chan Datum
 	e.Data = &dc
 	e.Ack = make(chan Nada, ChannelSize)
+	nl := make([]EdgeNode, 0)
+	e.EdgeNodes = &nl
 	return e
 }
 
