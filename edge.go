@@ -14,9 +14,9 @@ import (
 type Nada struct {}
 
 // EdgeNode contains information on a Node connected to an Edge.
-type EdgeNode struct {
+type edgeNode struct {
 	node *Node
-	srcFlag bool
+	head bool
 } 
 
 // Edge of a flowgraph.
@@ -26,7 +26,7 @@ type Edge struct {
 	Name string           // for trace
 	Data *[]chan Datum    // slice of data channels
 	Ack chan Nada         // request (or acknowledge) channel
-	EdgeNodes *[]EdgeNode // list of Node's associated with this Edge.	 
+	edgeNodes *[]edgeNode // list of Node's associated with this Edge.	 
 
 	// values unique to upstream and downstream Node
 	Val Datum             // generic empty interface
@@ -46,8 +46,8 @@ func makeEdge(name string, initVal Datum) Edge {
 	var dc []chan Datum
 	e.Data = &dc
 	e.Ack = make(chan Nada, ChannelSize)
-	nl := make([]EdgeNode, 0)
-	e.EdgeNodes = &nl
+	nl := make([]edgeNode, 0)
+	e.edgeNodes = &nl
 	return e
 }
 
@@ -302,7 +302,7 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _,c := range *e.Data {
-		if cap(c)==len(c) { 
+		if cap(c)<len(c)+e.NumHead() { 
 			return false 
 		}
 	}
@@ -410,3 +410,14 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 	return e
 }
 	
+// NumHead is the number of Node's upstream of an Edge
+func (e *Edge) NumHead() int {
+	i := 0
+	for ; i<len(*e.edgeNodes) && (*e.edgeNodes)[i].head; i++ {}
+	return i
+}
+
+// NumTail is the number of Node's downstream of an Edge
+func (e *Edge) NumTail() int {
+	return len(*e.edgeNodes)-e.NumHead()
+}

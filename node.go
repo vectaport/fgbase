@@ -28,7 +28,7 @@ type Node struct {
 
 type edgeDir struct {
 	edge *Edge
-	srcFlag bool
+	head bool
 }
 
 const (
@@ -339,7 +339,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 		n.LogError("receive from select not ok for i=%d case", i);
 		return false
 	}
-	if n.caseToEdgeDir[i].srcFlag {
+	if n.caseToEdgeDir[i].head {
 		srci := n.caseToEdgeDir[i].edge
 		srci.Val = recv.Interface()
 		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
@@ -393,20 +393,47 @@ func MakeNodes(sz int) []Node {
 	return n
 }
 
-// buildEdgeNodes builds the slice of EdgeNode for each Edge
+// buildEdgeNodes builds the slice of edgeNode for each Edge
 func buildEdgeNodes(nodes []Node) {
 	for i,n := range nodes {
 		for j := range n.Srcs {
 			srcj := n.Srcs[j]
-			k := 0
-			for ; k<len(*srcj.EdgeNodes) && (*srcj.EdgeNodes)[k].srcFlag; k++ {}
-			*srcj.EdgeNodes = append(*srcj.EdgeNodes, EdgeNode{})
-			copy((*srcj.EdgeNodes)[k+1:], (*srcj.EdgeNodes)[k:])
-			(*srcj.EdgeNodes)[k] = EdgeNode{node:&nodes[i], srcFlag:true}
+			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node:&nodes[i], head:false})
 		}
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
-			*dstj.EdgeNodes = append(*dstj.EdgeNodes, EdgeNode{node:&nodes[i], srcFlag:false})
+			k := 0
+			for ; k<len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].head; k++ {}
+			*dstj.edgeNodes = append(*dstj.edgeNodes, edgeNode{})
+			copy((*dstj.edgeNodes)[k+1:], (*dstj.edgeNodes)[k:])
+			(*dstj.edgeNodes)[k] = edgeNode{node:&nodes[i], head:true}
+		}
+	}
+}
+
+// extendChannelCaps extends the channel capacity to support arbitrated fan-in.
+func extendChannelCaps(nodes []Node) {
+	for _,n := range nodes {
+		for j := range n.Dsts {
+			dstj := n.Dsts[j]
+			// StdoutLog.Printf("edge %s has nodes %v with len(Data)=%d\n", dstj.Name, dstj.edgeNodes, len(*dstj.Data))
+			h := dstj.NumHead()
+			if h>1 {
+				l := len(*dstj.Data)
+				// StdoutLog.Printf("Multiple upstream nodes on one channel for %s (len(*dstj.Data)=%d vs dstj.NumHead()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumHead(), dstj.edgeNodes)
+				for k := 0; k<l; k++ {
+					if cap((*dstj.Data)[k])<h {
+						(*dstj.Data)[k] = make(chan Datum, h)
+					}
+
+				}
+			}
+			if false {
+				if len(*dstj.Data)!= dstj.NumTail() {
+					StdoutLog.Printf("Multiple downstream nodes on one channel for %s (len(*dstj.Data)=%d vs dstj.NumTail()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumTail(), dstj.edgeNodes)
+				}
+			}
+			
 		}
 	}
 }
@@ -415,6 +442,7 @@ func buildEdgeNodes(nodes []Node) {
 func RunAll(nodes []Node) {
 
 	buildEdgeNodes(nodes)
+	extendChannelCaps(nodes)
 
 	StartTime = time.Now()
 	for i:=0; i<len(nodes); i++ {
