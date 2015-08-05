@@ -77,7 +77,9 @@ func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 	return MakeEdges(sze),MakeNodes(szn)
 }
 
-// ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities.
+// ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities,
+// while at the same time parsing all other flags.  Use the defaults argument to override
+// default settings for ncore, sec, trace, and chansz.
 func ConfigByFlag(defaults map[string]interface{}) {
 
 	var ncoreDef interface{} = runtime.NumCPU()-1

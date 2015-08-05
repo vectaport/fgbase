@@ -100,8 +100,7 @@ func String(d Datum) string {
 	return fmt.Sprintf("%T(%+v)", d, d)
 }
 
-// StringSlice returns a ellipse shortened string representation of a 
-// slice when TraceLevel<VVVV.
+// StringSlice returns a string representation of a slice, ellipse shortened if TraceLevel<VVVV.
 func StringSlice(d Datum) string {
 	m := 8
 	l := Len(d)
@@ -119,8 +118,8 @@ func StringSlice(d Datum) string {
 	return s
 }
 
-// StringStruct returns a string representation of a struct with an
-// ellipse shortened string representation of any slice when TraceLevel<VVVV.
+// StringStruct returns a string representation of a struct with 
+// ellipse shortened slices if TraceLevel<VVVV.
 func StringStruct(d Datum) string {
 	dv := reflect.ValueOf(d)
 	l := dv.NumField()
