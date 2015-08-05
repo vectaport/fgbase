@@ -16,7 +16,7 @@ type Nada struct {}
 // EdgeNode contains information on a Node connected to an Edge.
 type edgeNode struct {
 	node *Node
-	head bool
+	upstream bool
 } 
 
 // Edge of a flowgraph.
@@ -302,7 +302,7 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _,c := range *e.Data {
-		if cap(c)<len(c)+e.NumHead() { 
+		if cap(c)<len(c)+e.NumUpstream() { 
 			return false 
 		}
 	}
@@ -352,6 +352,27 @@ func (e *Edge) SendData(n *Node) {
 				if _,ok := ev.(nodeWrap); ok {
 					attrs += fmt.Sprintf(" // Ack2=%p", ev.(nodeWrap).ack2)
 					ev = ev.(nodeWrap).datum
+				}
+
+				if false {
+					// add other attributes for debug purposes
+					if attrs=="" {
+						attrs += " // "
+					} else {
+						attrs += ","
+					}
+					attrs += "len={"
+					for i := range *e.Data {
+						if i!=0 { attrs += "," }
+						attrs += strconv.Itoa(len((*e.Data)[i]))
+					}
+					attrs += "},"
+					attrs += "cap={"
+					for i := range *e.Data {
+						if i!=0 { attrs += "," }
+						attrs += strconv.Itoa(cap((*e.Data)[i]))
+					}
+					attrs += "}"
 				}
 
 				if (ev==nil) {
@@ -410,14 +431,32 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 	return e
 }
 	
-// NumHead is the number of Node's upstream of an Edge
-func (e *Edge) NumHead() int {
+ // NumUpstream is the number of Node's upstream of an Edge
+func (e *Edge) NumUpstream() int {
 	i := 0
-	for ; i<len(*e.edgeNodes) && (*e.edgeNodes)[i].head; i++ {}
+	for ; i<len(*e.edgeNodes) && (*e.edgeNodes)[i].upstream; i++ {}
 	return i
 }
 
-// NumTail is the number of Node's downstream of an Edge
-func (e *Edge) NumTail() int {
-	return len(*e.edgeNodes)-e.NumHead()
+// NumDownstream is the number of Node's downstream of an Edge
+func (e *Edge) NumDownstream() int {
+	return len(*e.edgeNodes)-e.NumUpstream()
 }
+
+// NodeUpstream returns the ith upstream Node of an Edge
+func (e *Edge) NodeUpstream(i int) *Node {
+	if i>e.NumUpstream() || i<0 {
+		return nil
+	}
+	return (*e.edgeNodes)[i].node
+}
+
+// NodeDownstream returns the ith downstream Node of an Edge
+func (e *Edge) NodeDownstream(i int) *Node {
+	if i>e.NumDownstream() || i<0 {
+		return nil
+	}
+	h := e.NumUpstream()
+	return (*e.edgeNodes)[i+h].node
+}
+

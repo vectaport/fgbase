@@ -3,10 +3,6 @@ package flowgraph
 import (
 )
 
-// MapSel is the function signature used by FuncMap to select an output edge given
-// current input and internal state of the Node.
-type MapSel func(*Node) int
-
 func mapFire (n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts
@@ -20,13 +16,13 @@ func mapFire (n *Node) {
 }
 
 // FuncMap maps a value to one of n reducers.
-func FuncMap(a, x []Edge, xSelect MapSel) Pool {
+func FuncMap(a, x []Edge, mapper func(*Node) int) Pool {
 
 	var  mapRdy = func (n *Node) bool {
 		a := n.Srcs[0]
 		x := n.Dsts
 		if a.SrcRdy(n) {
-			i := xSelect(n)
+			i := mapper(n)
 			a.Aux = i
 			if i<0 {return false} 
 			return x[i].DstRdy(n)

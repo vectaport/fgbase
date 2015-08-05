@@ -28,7 +28,7 @@ type Node struct {
 
 type edgeDir struct {
 	edge *Edge
-	head bool
+	upstream bool
 }
 
 const (
@@ -272,11 +272,11 @@ func (n *Node) TraceVals() { if TraceLevel!=Q { n.traceValRdy(true) } }
 func (n *Node) incrFireCnt() {
 	if (GlobalStats) {
 		c := atomic.AddInt64(&globalFireCnt, 1)
-		 n.Cnt = c-1
-	 } else {
-		 n.Cnt = n.Cnt+1
-	 }
- }
+		n.Cnt = c-1
+	} else {
+		n.Cnt = n.Cnt+1
+	}
+}
 
 // RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
@@ -339,7 +339,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 		n.LogError("receive from select not ok for i=%d case", i);
 		return false
 	}
-	if n.caseToEdgeDir[i].head {
+	if n.caseToEdgeDir[i].upstream {
 		srci := n.caseToEdgeDir[i].edge
 		srci.Val = recv.Interface()
 		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
@@ -398,15 +398,15 @@ func buildEdgeNodes(nodes []Node) {
 	for i,n := range nodes {
 		for j := range n.Srcs {
 			srcj := n.Srcs[j]
-			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node:&nodes[i], head:false})
+			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node:&nodes[i], upstream:false})
 		}
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
 			k := 0
-			for ; k<len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].head; k++ {}
+			for ; k<len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].upstream; k++ {}
 			*dstj.edgeNodes = append(*dstj.edgeNodes, edgeNode{})
 			copy((*dstj.edgeNodes)[k+1:], (*dstj.edgeNodes)[k:])
-			(*dstj.edgeNodes)[k] = edgeNode{node:&nodes[i], head:true}
+			(*dstj.edgeNodes)[k] = edgeNode{node:&nodes[i], upstream:true}
 		}
 	}
 }
@@ -416,21 +416,28 @@ func extendChannelCaps(nodes []Node) {
 	for _,n := range nodes {
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
-			// StdoutLog.Printf("edge %s has nodes %v with len(Data)=%d\n", dstj.Name, dstj.edgeNodes, len(*dstj.Data))
-			h := dstj.NumHead()
+			h := dstj.NumUpstream()
 			if h>1 {
 				l := len(*dstj.Data)
-				// StdoutLog.Printf("Multiple upstream nodes on one channel for %s (len(*dstj.Data)=%d vs dstj.NumHead()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumHead(), dstj.edgeNodes)
 				for k := 0; k<l; k++ {
 					if cap((*dstj.Data)[k])<h {
-						(*dstj.Data)[k] = make(chan Datum, h)
+						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumUpstream()=%d)\n", dstj.Name, len(*dstj.Data), dstj.NumDownstream())
+						c := make(chan Datum, h)
+						(*dstj.Data)[k] = c
+
+						// update relevant select case and data channel upstreamup
+						nn := dstj.NodeDownstream(0)
+						x := nn.edgeToCase[nn.Srcs[0]]
+						nn.cases[x] = reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(c)}
+						nn.dataBackup[x] = nn.cases[x].Chan
+
 					}
 
 				}
 			}
 			if false {
-				if len(*dstj.Data)!= dstj.NumTail() {
-					StdoutLog.Printf("Multiple downstream nodes on one channel for %s (len(*dstj.Data)=%d vs dstj.NumTail()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumTail(), dstj.edgeNodes)
+				if len(*dstj.Data)!= dstj.NumDownstream() {
+					StdoutLog.Printf("Multiple downstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumDownstream()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumUpstream(), dstj.edgeNodes)
 				}
 			}
 			
