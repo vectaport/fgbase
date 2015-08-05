@@ -63,7 +63,7 @@ func CopySlice(d Datum) Datum {
 }
 
 // String returns a string representation of a Datum with 
-// ellipse shortened slices when TraceLevel<VVVV.
+// ellipse shortened slices if TraceLevel<VVVV.
 func String(d Datum) string {
        
 	if IsSlice(d) {
