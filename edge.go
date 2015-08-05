@@ -46,7 +46,7 @@ func makeEdge(name string, initVal Datum) Edge {
 	var dc []chan Datum
 	e.Data = &dc
 	e.Ack = make(chan Nada, ChannelSize)
-	nl := make([]edgeNode, 0)
+	var nl []edgeNode
 	e.edgeNodes = &nl
 	return e
 }
