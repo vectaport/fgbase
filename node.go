@@ -28,7 +28,7 @@ type Node struct {
 
 type edgeDir struct {
 	edge *Edge
-	upstream bool
+	srcFlag bool
 }
 
 const (
@@ -339,7 +339,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 		n.LogError("receive from select not ok for i=%d case", i);
 		return false
 	}
-	if n.caseToEdgeDir[i].upstream {
+	if n.caseToEdgeDir[i].srcFlag {
 		srci := n.caseToEdgeDir[i].edge
 		srci.Val = recv.Interface()
 		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
@@ -398,15 +398,15 @@ func buildEdgeNodes(nodes []Node) {
 	for i,n := range nodes {
 		for j := range n.Srcs {
 			srcj := n.Srcs[j]
-			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node:&nodes[i], upstream:false})
+			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node:&nodes[i], srcFlag:false})
 		}
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
 			k := 0
-			for ; k<len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].upstream; k++ {}
+			for ; k<len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].srcFlag; k++ {}
 			*dstj.edgeNodes = append(*dstj.edgeNodes, edgeNode{})
 			copy((*dstj.edgeNodes)[k+1:], (*dstj.edgeNodes)[k:])
-			(*dstj.edgeNodes)[k] = edgeNode{node:&nodes[i], upstream:true}
+			(*dstj.edgeNodes)[k] = edgeNode{node:&nodes[i], srcFlag:true}
 		}
 	}
 }
@@ -416,17 +416,17 @@ func extendChannelCaps(nodes []Node) {
 	for _,n := range nodes {
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
-			h := dstj.NumUpstream()
+			h := dstj.NumSrc()
 			if h>1 {
 				l := len(*dstj.Data)
 				for k := 0; k<l; k++ {
 					if cap((*dstj.Data)[k])<h {
-						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumUpstream()=%d)\n", dstj.Name, len(*dstj.Data), dstj.NumDownstream())
+						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumSrc()=%d)\n", dstj.Name, len(*dstj.Data), dstj.NumDst())
 						c := make(chan Datum, h)
 						(*dstj.Data)[k] = c
 
 						// update relevant select case and data channel upstreamup
-						nn := dstj.NodeDownstream(0)
+						nn := dstj.NodeDst(0)
 						x := nn.edgeToCase[nn.Srcs[0]]
 						nn.cases[x] = reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(c)}
 						nn.dataBackup[x] = nn.cases[x].Chan
@@ -436,8 +436,8 @@ func extendChannelCaps(nodes []Node) {
 				}
 			}
 			if false {
-				if len(*dstj.Data)!= dstj.NumDownstream() {
-					StdoutLog.Printf("Multiple downstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumDownstream()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumUpstream(), dstj.edgeNodes)
+				if len(*dstj.Data)!= dstj.NumDst() {
+					StdoutLog.Printf("Multiple downstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumDst()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumSrc(), dstj.edgeNodes)
 				}
 			}
 			
@@ -463,7 +463,9 @@ func RunAll(nodes []Node) {
 	timeout := RunTime
 	if timeout>0 { 
 		time.Sleep(timeout) 
-		defer StdoutLog.Printf("\n")
+		if TraceLevel>QQ {
+			defer StdoutLog.Printf("\n")
+		}
 	}
 
 	if TraceLevel>=VVVV {

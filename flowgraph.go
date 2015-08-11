@@ -22,7 +22,8 @@ var GlobalStats = false
 
 // Trace level constants.
 const (
-	Q = iota  // quiet
+	QQ = iota // ultra-quiet for minimal stats
+	Q         // quiet, default
 	V         // trace Node execution
 	VV        // trace channel IO
 	VVV       // trace state before select
@@ -36,6 +37,7 @@ var TraceLevels = map[string]int {
 	"VV": VV,
 	"VVV": VVV,
 	"VVVV": VVVV,
+	"QQ": QQ,
 }
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.

@@ -16,7 +16,7 @@ type Nada struct {}
 // EdgeNode contains information on a Node connected to an Edge.
 type edgeNode struct {
 	node *Node
-	upstream bool
+	srcFlag bool
 } 
 
 // Edge of a flowgraph.
@@ -302,7 +302,7 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _,c := range *e.Data {
-		if cap(c)<len(c)+e.NumUpstream() { 
+		if cap(c)<len(c)+e.NumSrc() { 
 			return false 
 		}
 	}
@@ -431,32 +431,32 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 	return e
 }
 	
- // NumUpstream is the number of Node's upstream of an Edge
-func (e *Edge) NumUpstream() int {
+ // NumSrc is the number of Node's upstream of an Edge
+func (e *Edge) NumSrc() int {
 	i := 0
-	for ; i<len(*e.edgeNodes) && (*e.edgeNodes)[i].upstream; i++ {}
+	for ; i<len(*e.edgeNodes) && (*e.edgeNodes)[i].srcFlag; i++ {}
 	return i
 }
 
-// NumDownstream is the number of Node's downstream of an Edge
-func (e *Edge) NumDownstream() int {
-	return len(*e.edgeNodes)-e.NumUpstream()
+// NumDst is the number of Node's downstream of an Edge
+func (e *Edge) NumDst() int {
+	return len(*e.edgeNodes)-e.NumSrc()
 }
 
-// NodeUpstream returns the ith upstream Node of an Edge
-func (e *Edge) NodeUpstream(i int) *Node {
-	if i>e.NumUpstream() || i<0 {
+// NodeSrc returns the ith upstream Node of an Edge
+func (e *Edge) NodeSrc(i int) *Node {
+	if i>e.NumSrc() || i<0 {
 		return nil
 	}
 	return (*e.edgeNodes)[i].node
 }
 
-// NodeDownstream returns the ith downstream Node of an Edge
-func (e *Edge) NodeDownstream(i int) *Node {
-	if i>e.NumDownstream() || i<0 {
+// NodeDst returns the ith downstream Node of an Edge
+func (e *Edge) NodeDst(i int) *Node {
+	if i>e.NumDst() || i<0 {
 		return nil
 	}
-	h := e.NumUpstream()
+	h := e.NumSrc()
 	return (*e.edgeNodes)[i+h].node
 }
 

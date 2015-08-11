@@ -16,13 +16,13 @@ func mapFire (n *Node) {
 }
 
 // FuncMap maps a value to one of n reducers.
-func FuncMap(a, x []Edge, mapper func(*Node) int) Pool {
+func FuncMap(a, x []Edge, mapper func(n *Node, datum Datum) int) Pool {
 
 	var  mapRdy = func (n *Node) bool {
 		a := n.Srcs[0]
 		x := n.Dsts
 		if a.SrcRdy(n) {
-			i := mapper(n)
+			i := mapper(n, a.Val)
 			a.Aux = i
 			if i<0 {return false} 
 			return x[i].DstRdy(n)
