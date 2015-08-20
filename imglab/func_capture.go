@@ -8,7 +8,7 @@ import (
 func captureFire (n *flowgraph.Node) {
 
 	x := n.Dsts[0]
-	cap := x.Aux.(*opencv.Capture)
+	cap := n.Aux.(*opencv.Capture)
 	if cap.GrabFrame() {
 		i1 := cap.RetrieveFrame(1)
 		i2 := i1.Clone()
@@ -24,8 +24,8 @@ func captureFire (n *flowgraph.Node) {
 func FuncCapture(x flowgraph.Edge) flowgraph.Node {
 	node := flowgraph.MakeNode("capture", nil, []*flowgraph.Edge{&x}, nil, captureFire)
 
-	x.Aux = opencv.NewCameraCapture(0)
-	if x.Aux == nil {
+	node.Aux = opencv.NewCameraCapture(0)
+	if node.Aux == nil {
 		panic("cannot open capture device")
 	}
 

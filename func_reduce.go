@@ -7,12 +7,12 @@ import (
 func FuncReduce(a,x Edge, reducer func(n *Node, datum,collection Datum) Datum) Node {
 
 	var reduceFire = func (n *Node) {
-		a.Aux = reducer(n, a.Val, a.Aux)
-		x.Val = a.Aux
+		n.Aux = reducer(n, a.Val, n.Aux)
+		x.Val = n.Aux
 	}
 
-	a.Aux = make([]string, 0)
 
 	node := MakeNode("reduce", []*Edge{&a}, []*Edge{&x}, nil, reduceFire)
+	node.Aux = make([]string, 0)
 	return node
 }

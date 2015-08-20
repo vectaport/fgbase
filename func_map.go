@@ -9,7 +9,7 @@ func mapFire (n *Node) {
 	for j := range x {
 		x[j].NoOut = true
 	}
-	i := a.Aux.(int)
+	i := n.Aux.(int)
 	x[i].Val = n.NodeWrap(a.Val, x[i].Ack)
 	x[i].NoOut = false
 
@@ -23,7 +23,7 @@ func FuncMap(a, x []Edge, mapper func(n *Node, datum Datum) int) Pool {
 		x := n.Dsts
 		if a.SrcRdy(n) {
 			i := mapper(n, a.Val)
-			a.Aux = i
+			n.Aux = i
 			if i<0 {return false} 
 			return x[i].DstRdy(n)
 		}

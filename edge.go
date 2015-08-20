@@ -32,7 +32,6 @@ type Edge struct {
 	Val Datum             // generic empty interface
 	RdyCnt int            // readiness of I/O
 	NoOut bool            // set true to inhibit one output, data or ack
-	Aux Datum             // auxiliary empty interface to hold state
 	Ack2 chan Nada        // alternate channel for ack steering
 
 }

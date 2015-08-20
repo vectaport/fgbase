@@ -13,7 +13,7 @@ type irw struct {
 
 func dstFire (n *Node) {	 
 	a := n.Srcs[0] 		 
-	s := a.Aux.(*irw)
+	s := n.Aux.(*irw)
 	rw := s.RW
 	var err error
 
@@ -47,7 +47,7 @@ func FuncDst(a Edge, rw io.ReadWriter) Node {
 	node := MakeNode("dst", []*Edge{&a}, nil, nil, dstFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
-	a.Aux = &irw{RW: bufio.NewReadWriter(reader, writer)}
+	node.Aux = &irw{RW: bufio.NewReadWriter(reader, writer)}
 	return node
 	
 }

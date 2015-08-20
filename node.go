@@ -18,6 +18,7 @@ type Node struct {
 	RdyFunc NodeRdy                 // func to test Edge readiness
 	FireFunc NodeFire               // func to fire off the Node
 	RunFunc NodeRun                 // func to repeatedly run Node
+	Aux Datum                       // auxiliary empty interface to hold state
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	dataBackup []reflect.Value      // backup data channels

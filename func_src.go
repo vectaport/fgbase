@@ -7,7 +7,7 @@ import (
 
 func srcFire (n *Node) {	 
 	x := n.Dsts[0] 		 
-	rw := x.Aux.(*bufio.ReadWriter)
+	rw := n.Aux.(*bufio.ReadWriter)
 	var err error
 
 	// read data string
@@ -40,7 +40,7 @@ func FuncSrc(x Edge, rw io.ReadWriter) Node {
 	node := MakeNode("src", nil, []*Edge{&x}, nil, srcFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
-	x.Aux = bufio.NewReadWriter(reader, writer)
+ 	node.Aux = bufio.NewReadWriter(reader, writer)
 	return node
 	
 }

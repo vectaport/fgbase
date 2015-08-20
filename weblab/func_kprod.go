@@ -10,7 +10,7 @@ import (
 func kprodFire (n *flowgraph.Node) {
 
 	a := n.Srcs[0]
-	producer := a.Aux.(sarama.AsyncProducer)
+	producer := n.Aux.(sarama.AsyncProducer)
 	producer.Input() <- &sarama.ProducerMessage{Topic: "test", Key: nil, Value: sarama.StringEncoder(fmt.Sprintf("%v", a.Val))}
 
 }
@@ -24,7 +24,7 @@ func FuncKprod(a flowgraph.Edge) flowgraph.Node {
 		panic(err)
 	}
 
-	a.Aux = producer
+	node.Aux = producer
 
 	node.RunFunc = func (n *flowgraph.Node) {
 		defer func() {

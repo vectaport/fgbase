@@ -8,7 +8,7 @@ import (
 func kconsFire (n *flowgraph.Node) {
 
 	x := n.Dsts[0]
-	partitionConsumer := x.Aux.(sarama.PartitionConsumer)
+	partitionConsumer := n.Aux.(sarama.PartitionConsumer)
 	x.Val = <- partitionConsumer.Messages() 
 
 }
@@ -38,7 +38,7 @@ func FuncKcons(x flowgraph.Edge, topic string) flowgraph.Node {
 		n.DefaultRunFunc()
 	}
 
-	x.Aux = partitionConsumer
+	node.Aux = partitionConsumer
 
 	return node
 }

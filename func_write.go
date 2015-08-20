@@ -8,7 +8,7 @@ import (
 
 func writeFire (n *Node) {	 
 	a := n.Srcs[0] 		 
-	w := a.Aux.(*bufio.Writer)
+	w := n.Aux.(*bufio.Writer)
 	var err error
 
 	// write data string
@@ -27,7 +27,7 @@ func writeFire (n *Node) {
 func FuncWrite(a Edge, w io.Writer) Node {
 
 	node := MakeNode("write", []*Edge{&a}, nil, nil, writeFire)
-	a.Aux = bufio.NewWriter(w)
+	node.Aux = bufio.NewWriter(w)
 	return node
 	
 }

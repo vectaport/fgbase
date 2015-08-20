@@ -5,7 +5,7 @@ import (
 
 func constFire(n *Node) {
 	x := n.Dsts[0]
-	x.Val = x.Aux
+	x.Val = n.Aux
 }
 
 // FuncConst produces a constant value (x = c).  Can also
@@ -13,6 +13,6 @@ func constFire(n *Node) {
 func FuncConst(x Edge, c Datum) Node {
 
 	node:=MakeNode("const", nil, []*Edge{&x}, nil, constFire)
-	x.Aux = c
+	node.Aux = c
 	return node
 }

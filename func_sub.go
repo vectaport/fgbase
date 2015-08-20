@@ -36,6 +36,7 @@ func subFire(n *Node) {
 		n.LogError("incompatible types for subtraction (%v-%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.Val = nil
 	} else {
+
 		x.Val = subFire2(atmp, btmp)
 	}
 }
