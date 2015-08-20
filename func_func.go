@@ -4,8 +4,8 @@ import (
 )
 
 // FuncFunc is the fully general func with any number of inputs and outputs,
-// and the fully arbitrary function pointer that accepts and produces a slice
-// of empty interfaces (Datum).
+// and use of a rather general function pointer that accepts and produces a slice
+// of empty interfaces (Datum) (the *Node is for tracing).
 func FuncFunc(src, dst []Edge, f func(*Node, []Datum) []Datum ) Node {
 	var funcFire = func(n *Node) {
 		srcv := make([]Datum, 0)
