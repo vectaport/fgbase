@@ -9,7 +9,7 @@ import (
 func FuncFunc(src, dst []Edge, f func(*Node, []Datum) []Datum, anyRdy bool ) Node {
 
 	var funcRdy = func(n *Node) bool {
-		if anyRdy { return true }
+		// if anyRdy { return true }
 		return n.RdyAll()
 	}
 

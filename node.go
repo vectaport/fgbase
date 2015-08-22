@@ -232,7 +232,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			}
 		} else {
 			if true {
-				newFmt += fmt.Sprintf("%s={%v}", dsti.Name, dsti.RdyCnt)
+				newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
 			} else {
 				newFmt += fmt.Sprintf("%s=%+v", dsti.Name, dsti)
 			}
