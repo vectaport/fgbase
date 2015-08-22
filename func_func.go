@@ -8,10 +8,12 @@ import (
 // of empty interfaces (Datum) (the *Node is for tracing).
 func FuncFunc(src, dst []Edge, f func(*Node, []Datum) []Datum, anyRdy bool ) Node {
 
+/*
 	var funcRdy = func(n *Node) bool {
 		// if anyRdy { return true }
 		return n.RdyAll()
 	}
+*/
 
 	var funcFire = func(n *Node) {
 		var srcv []Datum
@@ -34,7 +36,7 @@ func FuncFunc(src, dst []Edge, f func(*Node, []Datum) []Datum, anyRdy bool ) Nod
 		dstp = append(dstp, &dst[i])
 	}
 
-	node := MakeNode("func", srcp, dstp, funcRdy, funcFire)
+	node := MakeNode("func", srcp, dstp, nil, funcFire)
 	return node
 	
 }

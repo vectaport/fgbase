@@ -294,9 +294,12 @@ func (n *Node) RdyAll() bool {
 			}
 		}
 	} else {
+		n.Tracef("CALLING RDYFUNC XX\n")
 		if !n.RdyFunc(n) { 
+			n.Tracef("NOT RDY\n")
 			return false 
 		}
+		n.Tracef("RDY\n")
 	}
 	
 	// restore data channels for next use
@@ -349,6 +352,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 		dsti := n.caseToEdgeDir[i].edge
 		dsti.dstReadHandle(n, true)
 	}
+	if TraceLevel >= VVV {n.Tracef(">><<\n")}
 	return recvOK
 }
 
