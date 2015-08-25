@@ -279,27 +279,32 @@ func (n *Node) incrFireCnt() {
 	}
 }
 
+// DefaultRdyFunc tests for everything ready.
+func (n *Node) DefaultRdyFunc() bool {
+	for i := range n.Srcs {
+		if !n.Srcs[i].SrcRdy(n) {
+			return false
+		}
+	}
+	for i := range n.Dsts {
+		if !n.Dsts[i].DstRdy(n) {
+			return false
+		}
+	}
+	return true
+}
+
 // RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
 	
 	if (n.RdyFunc == nil) {
-		for i := range n.Srcs {
-			if !n.Srcs[i].SrcRdy(n) {
-				return false
-			}
-		}
-		for i := range n.Dsts {
-			if !n.Dsts[i].DstRdy(n) {
-				return false
-			}
+		if !n.DefaultRdyFunc() {
+			return false
 		}
 	} else {
-		n.Tracef("CALLING RDYFUNC XX\n")
 		if !n.RdyFunc(n) { 
-			n.Tracef("NOT RDY\n")
 			return false 
 		}
-		n.Tracef("RDY\n")
 	}
 	
 	// restore data channels for next use
@@ -340,7 +345,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if TraceLevel >= VVV {n.traceValRdy(false)}
 	i,recv,recvOK := reflect.Select(n.cases)
 	if !recvOK {
-		n.LogError("receive from select not ok for i=%d case", i);
+		n.LogError("receive from select not ok for case %d", i);
 		return false
 	}
 	if n.caseToEdgeDir[i].srcFlag {
@@ -352,7 +357,6 @@ func (n *Node) RecvOne() (recvOK bool) {
 		dsti := n.caseToEdgeDir[i].edge
 		dsti.dstReadHandle(n, true)
 	}
-	if TraceLevel >= VVV {n.Tracef(">><<\n")}
 	return recvOK
 }
 
@@ -430,7 +434,7 @@ func extendChannelCaps(nodes []Node) {
 						c := make(chan Datum, h)
 						(*dstj.Data)[k] = c
 
-						// update relevant select case and data channel upstreamup
+						// update relevant select case and data channel upstream
 						nn := dstj.NodeDst(0)
 						x := nn.edgeToCase[nn.Srcs[0]]
 						nn.cases[x] = reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(c)}

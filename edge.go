@@ -1,288 +1,305 @@
-package flowgraph
+ package flowgraph
 
-import (
-	"bufio"
-	"encoding/json"
-	"fmt"
-	"net"
-	"reflect"
-	"strconv"
-	"time"
-)
+ import (
+	 "bufio"
+	 "encoding/json"
+	 "fmt"
+	 "net"
+	 "reflect"
+	 "strconv"
+	 "time"
+ )
 
-// Nada is the empty struct for use as an ack.
-type Nada struct {}
+ // Nada is the empty struct for use as an ack.
+ type Nada struct {}
 
-// EdgeNode contains information on a Node connected to an Edge.
-type edgeNode struct {
-	node *Node
-	srcFlag bool
-} 
+ // EdgeNode contains information on a Node connected to an Edge.
+ type edgeNode struct {
+	 node *Node
+	 srcFlag bool
+ } 
 
-// Edge of a flowgraph.
-type Edge struct {
+ // Edge of a flowgraph.
+ type Edge struct {
 
-	// values shared by upstream and downstream Node
-	Name string           // for trace
-	Data *[]chan Datum    // slice of data channels
-	Ack chan Nada         // request (or acknowledge) channel
-	edgeNodes *[]edgeNode // list of Node's associated with this Edge.	 
+	 // values shared by upstream and downstream Node
+	 Name string           // for trace
+	 Data *[]chan Datum    // slice of data channels
+	 Ack chan Nada         // request (or acknowledge) channel
+	 edgeNodes *[]edgeNode // list of Node's associated with this Edge.	 
 
-	// values unique to upstream and downstream Node
-	Val Datum             // generic empty interface
-	RdyCnt int            // readiness of I/O
-	NoOut bool            // set true to inhibit one output, data or ack
-	Ack2 chan Nada        // alternate channel for ack steering
+	 // values unique to upstream and downstream Node
+	 Val Datum             // generic empty interface
+	 RdyCnt int            // readiness of I/O
+	 NoOut bool            // set true to inhibit one output, data or ack
+	 Ack2 chan Nada        // alternate channel for ack steering
 
-}
+ }
 
-// Return new Edge to connect one upstream Node to one or more downstream Node's.
-// Initialize optional data value to start flow.
-func makeEdge(name string, initVal Datum) Edge {
-	var e Edge
-	e.Name = name
-	e.Val = initVal
-	var dc []chan Datum
-	e.Data = &dc
-	e.Ack = make(chan Nada, ChannelSize)
-	var nl []edgeNode
-	e.edgeNodes = &nl
-	return e
-}
+ // Return new Edge to connect one upstream Node to one or more downstream Node's.
+ // Initialize optional data value to start flow.
+ func makeEdge(name string, initVal Datum) Edge {
+	 var e Edge
+	 e.Name = name
+	 e.Val = initVal
+	 var dc []chan Datum
+	 e.Data = &dc
+	 e.Ack = make(chan Nada, ChannelSize)
+	 var nl []edgeNode
+	 e.edgeNodes = &nl
+	 return e
+ }
 
-// MakeEdge initializes optional data value to start flow.
-func MakeEdge(name string, initVal Datum) Edge {
-	return makeEdge(name, initVal)
-}
+ // MakeEdge initializes optional data value to start flow.
+ func MakeEdge(name string, initVal Datum) Edge {
+	 return makeEdge(name, initVal)
+ }
 
-// Const sets up an Edge to provide a constant value.
-func (e *Edge) Const(d Datum) {
-	e.Val = d
-	e.Data = nil
-	e.Ack = nil
-}
-	
-// IsConst returns true if Edge provides a constant value.
-func (e *Edge) IsConst() bool { 
-	return e.Data == nil && e.Val != nil
-}
+ // Const sets up an Edge to provide a constant value.
+ func (e *Edge) Const(d Datum) {
+	 e.Val = d
+	 e.Data = nil
+	 e.Ack = nil
+ }
 
-// Sink sets up an Edge as a value sink.
-func (e *Edge) Sink() {
-	e.Val = nil
-	e.Data = nil
-	e.Ack = nil
-}
+ // IsConst returns true if Edge provides a constant value.
+ func (e *Edge) IsConst() bool { 
+	 return e.Data == nil && e.Val != nil
+ }
 
-// IsSink returns true if Edge is a value sink.
-func (e *Edge) IsSink() bool { 
-	return e.Data == nil && e.Val == nil
-}
+ // Sink sets up an Edge as a value sink.
+ func (e *Edge) Sink() {
+	 e.Val = nil
+	 e.Data = nil
+	 e.Ack = nil
+ }
 
-// Src sets up an Edge as a remote JSON value source.
-func (e *Edge) Src(n *Node, portString string) {
+ // IsSink returns true if Edge is a value sink.
+ func (e *Edge) IsSink() bool { 
+	 return e.Data == nil && e.Val == nil
+ }
 
-	ln, err := net.Listen("tcp", portString)
-	if err != nil {
-		StderrLog.Printf("%v\n", err)
-		return
+ // Src sets up an Edge as a remote JSON value source.
+ func (e *Edge) Src(n *Node, portString string) {
+
+	 ln, err := net.Listen("tcp", portString)
+	 if err != nil {
+		 StderrLog.Printf("%v\n", err)
+		 return
+	 }
+	 conn, err := ln.Accept()
+	 if err != nil {
+		 StderrLog.Printf("%v\n", err)
+		 return
+	 }
+
+	 reader := bufio.NewReader(conn)
+	 j := n.edgeToCase[e]
+	 c := n.cases[j].Chan
+	 go func() {
+		 for {
+			 b, err := reader.ReadBytes('\n')
+			 // n.Tracef("json input:  %v", string(b))
+			 if err != nil {
+				 if err.Error() != "EOF" {
+					 n.LogError("%v", err)
+				 }
+				 return
+			 }
+
+			 var v Datum
+			 err = json.Unmarshal(b,&v)
+			 if err != nil {
+				 n.LogError("%v", err)
+			 }
+			 if IsSlice(v) {
+				 // n.Tracef("type of [] is %s\n", reflect.TypeOf(Index(v, 0)))
+			 }
+
+			 c.Send(reflect.ValueOf(v))
+		 }
+	 } ()
+
+
+	 writer := bufio.NewWriter(conn)
+	 go func() {
+		 bufCnt := 0
+		 for {
+			 <- e.Ack
+			 bufCnt++
+			 _, err := writer.WriteString("\n")
+			 if err != nil {
+				 n.LogError("write error: %v", err)
+				 close(e.Ack)
+				 e.Ack = nil
+				 return
+			 }
+			 if bufCnt==ChannelSize {
+				 writer.Flush()
+				 bufCnt = 0
+			 }
+		 }
+	 } ()
+
+ }
+
+ // Dst sets up an Edge as a remote JSON value destination.
+ func (e *Edge) Dst(n *Node, portString string) {
+
+	 conn, err := net.Dial("tcp", portString)
+	 if err != nil {
+		 StderrLog.Printf("%v\n", err)
+		 return
+	 }
+
+	 reader := bufio.NewReader(conn)
+	 go func() {
+		 var nada Nada
+		 for {
+			 _, err := reader.ReadString('\n')
+			 if err != nil {
+				 if err.Error() != "EOF" {
+					 n.LogError("Dst read error: %v", err)
+				 }
+				 return
+			 }
+			 e.Ack <- nada
+		 }
+	 } ()
+
+
+	 writer := bufio.NewWriter(conn)
+	 j := len(*e.Data)
+	 *e.Data = append(*e.Data, make(chan Datum, ChannelSize))
+	 ej := (*e.Data)[j]
+	 go func() {
+		 bufCnt := 0
+		 for {
+			 v := <- ej
+			 time.Sleep(10000)
+			 bufCnt++
+			 b,err := json.Marshal(v)
+			 // n.Tracef("json output:  %v", string(b))
+			 if err != nil {
+				 n.LogError("%v", err)
+			 }
+			 _, err = writer.WriteString(string(b)+"\n")
+			 if err != nil {
+				 n.LogError("write error:  %v", err)
+				 close(ej)
+				 ej = nil
+				 return
+			 }
+			 if bufCnt==ChannelSize {
+				 writer.Flush()
+				 bufCnt = 0
+			 }
+		 }
+	 } ()
+
+ }
+
+ // Rdy tests if RdyCnt has returned to zero.
+ func (e *Edge) Rdy() bool {
+	 return e.RdyCnt==0
+ }
+
+ // srcReadRdy tests if a source Edge is ready for a data read.
+ func (e *Edge) srcReadRdy(n *Node) bool {
+	 i := n.edgeToCase[e]
+	 return n.cases[i].Chan.IsValid() && n.cases[i].Chan.Len()>0
+ }
+
+ // srcReadHandle handles a source Edge data read.
+ func (e *Edge) srcReadHandle (n *Node, selectFlag bool) {
+	 var wrapFlag = false
+	 if n2,ok := e.Val.(nodeWrap); ok {
+		 e.Ack2 = n2.ack2
+		 e.Val = e.Val.(nodeWrap).datum
+		 wrapFlag = true
+		 if &n2.node.FireFunc == &n.FireFunc { 
+			 n.flag |=flagRecursed 
+		 } else {
+			 bitr := ^flagRecursed
+			 n.flag =(n.flag & ^bitr)
+		 }
+	 }
+	 e.RdyCnt--
+	 if false { 
+		 n.Tracef("srcReadHandle -- %s.RdyCnt=%d (%s)\n", e.Name, e.RdyCnt,
+			 func() string { if selectFlag { return "s" }; return "!s"}()) 
+	 }
+	 if e.RdyCnt<0 { 
+		 n.Tracef("%s.RdyCnt less than zero, time to panic\n", e.Name)
+	 }
+	 if (TraceLevel>=VV) {
+		 var attrs string
+		 if selectFlag {
+			 attrs += " // s"
+		 } else {
+			 attrs = " // !s"
+		 }
+		 if wrapFlag && TraceLevel>=VV { 
+			 attrs += fmt.Sprintf(",Ack2=%p", e.Ack2)
+		 }
+		 if (e.Val==nil) {
+			 n.Tracef("<nil> <- %s.Data%s\n", e.Name, attrs)
+		 } else {
+			 n.Tracef("%s <- %s.Data%s\n", String(e.Val), e.Name, attrs)
+		 }
+	 }
+	if e.RdyCnt<0 { 
+		panic("Edge.srcReadHandle:  Edge RdyCnt less than zero")
 	}
-	conn, err := ln.Accept()
-	if err != nil {
-		StderrLog.Printf("%v\n", err)
-		return
-	}
+ }
 
-	reader := bufio.NewReader(conn)
-	j := n.edgeToCase[e]
-	c := n.cases[j].Chan
-	go func() {
-		for {
-			b, err := reader.ReadBytes('\n')
-			// n.Tracef("json input:  %v", string(b))
-			if err != nil {
-				if err.Error() != "EOF" {
-					n.LogError("%v", err)
-				}
-				return
-			}
+ // srcWriteRdy tests if a source Edge is ready for an ack write.
+ func (e *Edge) srcWriteRdy() bool {
+	 return len(e.Ack)<cap(e.Ack)
+ }
 
-			var v Datum
-			err = json.Unmarshal(b,&v)
-			if err != nil {
-				n.LogError("%v", err)
-			}
-			if IsSlice(v) {
-				// n.Tracef("type of [] is %s\n", reflect.TypeOf(Index(v, 0)))
-			}
+ // SrcRdy tests if a source Edge is ready.
+ func (e *Edge) SrcRdy(n *Node) bool {
+	 if !e.Rdy() {
+		 if !e.srcReadRdy(n) { 
+			 return false 
+		 }
 
-			c.Send(reflect.ValueOf(v))
-		}
-	} ()
+		 i := n.edgeToCase[e]
+		 if n.cases[i].Chan!=reflect.ValueOf(nil) {
 
+			 c := n.cases[i].Chan
+			 var ok bool
+			 v,ok := c.Recv()
+			 if !ok {
+				 panic("Unexpected error in reading channel\n")
+			 }
+			 e.Val = v.Interface()
+			 n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+			 e.srcReadHandle(n, false)
+		 }
 
-	writer := bufio.NewWriter(conn)
-	go func() {
-		bufCnt := 0
-		for {
-			<- e.Ack
-			bufCnt++
-			_, err := writer.WriteString("\n")
-			if err != nil {
-				n.LogError("write error: %v", err)
-				close(e.Ack)
-				e.Ack = nil
-				return
-			}
-			if bufCnt==ChannelSize {
-				writer.Flush()
-				bufCnt = 0
-			}
-		}
-	} ()
+		 return e.Rdy()
+	 }
+	 return true
+ }
 
-}
-
-// Dst sets up an Edge as a remote JSON value destination.
-func (e *Edge) Dst(n *Node, portString string) {
-
-	conn, err := net.Dial("tcp", portString)
-	if err != nil {
-		StderrLog.Printf("%v\n", err)
-		return
-	}
-
-	reader := bufio.NewReader(conn)
-	go func() {
-		var nada Nada
-		for {
-			_, err := reader.ReadString('\n')
-			if err != nil {
-				if err.Error() != "EOF" {
-					n.LogError("Dst read error: %v", err)
-				}
-				return
-			}
-			e.Ack <- nada
-		}
-	} ()
-
-
-	writer := bufio.NewWriter(conn)
-	j := len(*e.Data)
-	*e.Data = append(*e.Data, make(chan Datum, ChannelSize))
-	ej := (*e.Data)[j]
-	go func() {
-		bufCnt := 0
-		for {
-			v := <- ej
-			time.Sleep(10000)
-			bufCnt++
-			b,err := json.Marshal(v)
-			// n.Tracef("json output:  %v", string(b))
-			if err != nil {
-				n.LogError("%v", err)
-			}
-			_, err = writer.WriteString(string(b)+"\n")
-			if err != nil {
-				n.LogError("write error:  %v", err)
-				close(ej)
-				ej = nil
-				return
-			}
-			if bufCnt==ChannelSize {
-				writer.Flush()
-				bufCnt = 0
-			}
-		}
-	} ()
-
-}
-
-// Rdy tests if RdyCnt has returned to zero.
-func (e *Edge) Rdy() bool {
-	return e.RdyCnt==0
-}
-
-// srcReadRdy tests if a source Edge is ready for a data read.
-func (e *Edge) srcReadRdy(n *Node) bool {
-	i := n.edgeToCase[e]
-	return n.cases[i].Chan.IsValid() && n.cases[i].Chan.Len()>0
-}
-
-// srcReadHandle handles a source Edge data read.
-func (e *Edge) srcReadHandle (n *Node, selectFlag bool) {
-	var wrapFlag = false
-	if n2,ok := e.Val.(nodeWrap); ok {
-		e.Ack2 = n2.ack2
-		e.Val = e.Val.(nodeWrap).datum
-		wrapFlag = true
-		if &n2.node.FireFunc == &n.FireFunc { 
-			n.flag |=flagRecursed 
-		} else {
-			bitr := ^flagRecursed
-			n.flag =(n.flag & ^bitr)
-		}
-	}
-	e.RdyCnt--
-	if (TraceLevel>=VV) {
-		var attrs string
-		if selectFlag {
-			attrs += " // s"
-		} else {
-			attrs = " // !s"
-		}
-		if wrapFlag && TraceLevel>=VV { 
-			attrs += fmt.Sprintf(",Ack2=%p", e.Ack2)
-		}
-		if (e.Val==nil) {
-			n.Tracef("<nil> <- %s.Data%s%s\n", e.Name, attrs)
-		} else {
-			n.Tracef("%s <- %s.Data%s\n", String(e.Val), e.Name, attrs)
-		}
-	}
-}
-
-// srcWriteRdy tests if a source Edge is ready for an ack write.
-func (e *Edge) srcWriteRdy() bool {
-	return len(e.Ack)<cap(e.Ack)
-}
-
-// SrcRdy tests if a source Edge is ready.
-func (e *Edge) SrcRdy(n *Node) bool {
-	if !e.Rdy() {
-		if !e.srcReadRdy(n) { 
-			return false 
-		}
-
-		i := n.edgeToCase[e]
-		if n.cases[i].Chan!=reflect.ValueOf(nil) {
-
-			c := n.cases[i].Chan
-			var ok bool
-			v,ok := c.Recv()
-			if !ok {
-				panic("Unexpected error in reading channel\n")
-			}
-			e.Val = v.Interface()
-			n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
-			e.srcReadHandle(n, false)
-		}
-
-		return e.Rdy()
-	}
-	return true
-}
-
-// dstReadRdy tests if a destination Edge is ready for an ack read.
-func (e *Edge) dstReadRdy() bool {
-	return len(e.Ack)>0
-}
+ // dstReadRdy tests if a destination Edge is ready for an ack read.
+ func (e *Edge) dstReadRdy() bool {
+	 return len(e.Ack)>0
+ }
 
 // dstReadHandle handles a destination Edge ack read.
 func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 	
 	e.RdyCnt--
+        if false {
+		n.Tracef("dstReadHandle -- %s.RdyCnt=%d (%s)\n", e.Name, e.RdyCnt,
+			func() string { if selectFlag { return "s" }; return "!s"}()) 
+	}
+	if e.RdyCnt<0 { 
+		n.Tracef("%sRdyCnt less than zero, time to panic\n", e.Name)
+	}
 	if (TraceLevel>=VV) {
 		var selectStr string
 		if selectFlag {
@@ -291,10 +308,13 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 			selectStr = "// !s"
 		}
 		nm := e.Name + ".Ack"
-		if len(*e.Data)>1 {
+		if true || len(*e.Data)>1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
 		n.Tracef("<- %s %s\n", nm, selectStr)
+	}
+	if e.RdyCnt<0 { 
+		panic("Edge.dstReadHandle:  Edge RdyCnt less than zero")
 	}
 }
 
@@ -315,9 +335,15 @@ func (e *Edge) DstRdy(n *Node) bool {
 			return e.dstWriteRdy()
 		}
 
-		for len(e.Ack)>0 {
+		l := len(e.Ack)
+		for l>0 {
+			if l>e.RdyCnt {
+				n.Tracef("READ ACK with l=%d and e.RdyCnt=%d\n", l, e.RdyCnt)
+				panic("Unexpected ack received\n")
+			}
 			<- e.Ack
 			e.dstReadHandle(n, false)
+			l--
 		}
 
 		if e.dstWriteRdy() {

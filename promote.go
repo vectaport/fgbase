@@ -56,6 +56,7 @@ func Promote(n *Node, a, b Datum) (aBig, bBig Datum, same bool) {
 
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)
+	// n.Tracef("promote:  ta %v, tb %v\n", ta, tb)
 
 	if ta==tb { return a,b,true }
 

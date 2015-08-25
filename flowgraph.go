@@ -88,6 +88,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var secDef interface{} = 1
 	var traceDef interface{} = "V"
 	var chanszDef interface{} = 1
+	var trsecDef interface{} = false
 
 	if defaults != nil {
 		if defaults["ncore"] != nil {
@@ -102,12 +103,16 @@ func ConfigByFlag(defaults map[string]interface{}) {
 		if defaults["chansz"] != nil {
 			chanszDef = defaults["chansz"]
 		}
+		if defaults["trsec"] != nil {
+			trsecDef = defaults["trsec"]
+		}
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
 	secPtr := flag.Int("sec", secDef.(int), "seconds to run")
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
+	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
 
 	flag.Parse()
 
@@ -115,6 +120,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	RunTime = time.Duration(*secPtr)*time.Second
 	TraceLevel = TraceLevels[*tracePtr]
 	ChannelSize = *chanszPtr
+	TraceSeconds = *trsecPtr
 }
 
 // When the flowgraph started running.
