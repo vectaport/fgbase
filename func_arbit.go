@@ -7,7 +7,7 @@ func arbitFire (n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
-	if(a.SrcRdy(n) && (!b.SrcRdy(n) || !n.Aux.(bool)) {
+	if a.SrcRdy(n) && (!b.SrcRdy(n) || !n.Aux.(bool)) {
 		n.Aux = true // aLast = true
 		x.Val = a.Val
 		b.NoOut = true
