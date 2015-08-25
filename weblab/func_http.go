@@ -13,8 +13,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.subhandle(w, r)
 }
 
-// FuncHttp creates an http server and passes requests downstream.
-func FuncHttp(x flowgraph.Edge, addr string, quitChan chan flowgraph.Nada) flowgraph.Node {
+// FuncHTTP creates an http server and passes requests downstream.
+func FuncHTTP(x flowgraph.Edge, addr string, quitChan chan flowgraph.Nada) flowgraph.Node {
 
 	node := flowgraph.MakeNode("http", nil, []*flowgraph.Edge{&x}, nil, nil)
 
