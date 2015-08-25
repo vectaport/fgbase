@@ -3,7 +3,7 @@ package flowgraph
 import (
 )
 
-// FuncFunc is the fully general func with any number of inputs and outputs,
+// FuncFunc is the fully general func with any number of input and output Edge's,
 // and fully general ready and fire funcs.
 func FuncFunc(src, dst []Edge, rdyFunc NodeRdy, fireFunc NodeFire) Node {
 
