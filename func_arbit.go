@@ -11,10 +11,14 @@ func arbitFire (n *Node) {
 		n.Aux = true // aLast = true
 		x.Val = a.Val
 		b.NoOut = true
+		if b.SrcRdy(n) {
+		}
 	} else if (b.SrcRdy(n)) {
-		n.Aux = false // aLast≈ = false
+		n.Aux = false // aLast = false
 		x.Val = b.Val
 		a.NoOut = true
+		if a.SrcRdy(n) {
+		}
 	}
 }
 

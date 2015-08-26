@@ -1,4 +1,4 @@
- package flowgraph
+package flowgraph
 
  import (
 	 "bufio"
@@ -431,7 +431,7 @@ func (e *Edge) SendAck(n *Node) {
 				}
 				e.Ack <- nada
 			}
-			e.RdyCnt = 1
+			e.RdyCnt++
 			
 		} else {
 			e.NoOut = false

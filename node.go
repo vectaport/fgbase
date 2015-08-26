@@ -21,9 +21,9 @@ type Node struct {
 	Aux Datum                       // auxiliary empty interface to hold state
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
-	dataBackup []reflect.Value      // backup data channels
 	caseToEdgeDir map [int] edgeDir // map from index of selected case to associated Edge
 	edgeToCase map [*Edge] int      // map from *Edge to index of associated select case
+	dataBackup []reflect.Value      // backup data channels
 	flag uintptr                    // flags for package internal use
 }
 
@@ -294,6 +294,15 @@ func (n *Node) DefaultRdyFunc() bool {
 	return true
 }
 
+// restoreDataChannels restore data channels for next use
+func (n *Node) restoreDataChannels () {
+	for i := range n.dataBackup {
+		if n.Srcs[i].RdyCnt>0 {
+			n.cases[i].Chan = n.dataBackup[i]
+		}
+	}
+}
+	
 // RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
 	
@@ -305,11 +314,6 @@ func (n *Node) RdyAll() bool {
 		if !n.RdyFunc(n) { 
 			return false 
 		}
-	}
-	
-	// restore data channels for next use
-	for i := range n.dataBackup {
-		n.cases[i].Chan = n.dataBackup[i]
 	}
 	
 	return true
@@ -367,6 +371,7 @@ func (n *Node) DefaultRunFunc () {
 			if TraceLevel >= VVV {n.traceValRdy(false)}
 			n.Fire()
 			n.SendAll()
+			n.restoreDataChannels()
 		}
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
@@ -383,18 +388,6 @@ func (n *Node) Run() {
 
 	n.DefaultRunFunc()
 }
-
-// FireThenWait fires off a ready Node then waits until it is ready again.
-func (n *Node) FireThenWait() {
-
-	if TraceLevel >= VVV {n.traceValRdy(false)}
-	if n.RdyAll() {
-		n.Fire()
-		n.SendAll()
-	}
-
-}
-
 
 // MakeNodes returns a slice of Node.
 func MakeNodes(sz int) []Node {
