@@ -22,7 +22,7 @@ func smoothFire (n *flowgraph.Node) {
 
 		if flowgraph.TraceLevel > flowgraph.Q {
 			for i:=0; i<3; i++ {
-				var s string = "BEFORE: "
+				var s = "BEFORE: "
 				for j:=0; j<3; j++ {
 					s += fmt.Sprintf("%v ", img0.Get2D(100+j, 100+i))
 				}
@@ -30,7 +30,7 @@ func smoothFire (n *flowgraph.Node) {
 			}
 			
 			for i:=0; i<3; i++ {
-				var s string = "AFTER: "
+				var s = "AFTER: "
 				for j:=0; j<3; j++ {
 					s += fmt.Sprintf("%v ", img1.Get2D(100+j, 100+i))
 				}
