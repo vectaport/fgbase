@@ -24,9 +24,9 @@ type RecursiveSort interface {
 
 // FuncQsort recursively implements a quicksort with goroutines 
 // (x=qsort(a)).
-func FuncQsort(a, x Edge, poolSz int ) Pool {
+func FuncQsort(a, x Edge, poolSz int ) *Pool {
 	
-	var p Pool
+	var p *Pool
 
 	qsortFire := func(n *Node) {
 
