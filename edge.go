@@ -281,7 +281,7 @@ package flowgraph
 
 		 return e.Rdy()
 	 }
-	 return true
+	 return e.IsConst() || e.NumSrc()>0
  }
 
  // dstReadRdy tests if a destination Edge is ready for an ack read.

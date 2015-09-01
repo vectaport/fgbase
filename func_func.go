@@ -5,18 +5,9 @@ import (
 
 // FuncFunc is the fully general func with any number of input and output Edge's,
 // and fully general ready and fire funcs.
-func FuncFunc(src, dst []Edge, rdyFunc NodeRdy, fireFunc NodeFire) Node {
+func FuncFunc(name string, src, dst []*Edge, rdyFunc NodeRdy, fireFunc NodeFire) Node {
 
-	var srcp []*Edge
-	for i := range src {
-		srcp = append(srcp, &src[i])
-	}
-	var dstp []*Edge
-	for i := range dst {
-		dstp = append(dstp, &dst[i])
-	}
-
-	node := MakeNode("func", srcp, dstp, rdyFunc, fireFunc)
+	node := MakeNode(name, src, dst, rdyFunc, fireFunc)
 	return node
 	
 }
