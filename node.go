@@ -19,6 +19,7 @@ type Node struct {
 	FireFunc NodeFire               // func to fire off the Node
 	RunFunc NodeRun                 // func to repeatedly run Node
 	Aux Datum                       // auxiliary empty interface to hold state
+	RdyState int                    // state of latest readiness
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	caseToEdgeDir map [int] edgeDir // map from index of selected case to associated Edge
