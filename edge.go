@@ -79,8 +79,8 @@ package flowgraph
 	 return e.Data == nil && e.Val == nil
  }
 
- // Src sets up an Edge as a remote JSON value source.
- func (e *Edge) Src(n *Node, portString string) {
+ // SrcJSON sets up an Edge with a remote JSON value source.
+ func (e *Edge) SrcJSON(n *Node, portString string) {
 
 	 ln, err := net.Listen("tcp", portString)
 	 if err != nil {
@@ -143,8 +143,8 @@ package flowgraph
 
  }
 
- // Dst sets up an Edge as a remote JSON value destination.
- func (e *Edge) Dst(n *Node, portString string) {
+ // DstJSON sets up an Edge with a remote JSON value destination.
+ func (e *Edge) DstJSON(n *Node, portString string) {
 
 	 conn, err := net.Dial("tcp", portString)
 	 n.Tracef("dialing err if any:  %v\n", err)
