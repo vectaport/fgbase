@@ -19,7 +19,7 @@ Features of github.com/vectaport/flowgraph:
  * an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things
 * test benches at [github.com/vectaport/flowgraph_test](http://github.com/vectaport/flowgraph_test)
 
-The flowgraph package can be used to render flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compilable Go code.  [_ipl_](http://ipl.sf.net) is an implementation of a flowgraph language suggested by [Karl Fant](http://karlfant.net).
+The flowgraph package can be used to (manually) render flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compilable Golang code.  [_ipl_](http://ipl.sf.net) is an implementation of a flowgraph language suggested by [Karl Fant](http://karlfant.net).
 
 Wiki Topics:
 
