@@ -147,6 +147,7 @@ package flowgraph
  func (e *Edge) Dst(n *Node, portString string) {
 
 	 conn, err := net.Dial("tcp", portString)
+	 n.Tracef("dialing err if any:  %v\n", err)
 	 if err != nil {
 		 StderrLog.Printf("%v\n", err)
 		 return
@@ -281,7 +282,7 @@ package flowgraph
 
 		 return e.Rdy()
 	 }
-	 return e.IsConst() || e.NumSrc()>0
+	 return true
  }
 
  // dstReadRdy tests if a destination Edge is ready for an ack read.
@@ -321,7 +322,7 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _,c := range *e.Data {
-		if cap(c)<len(c)+e.NumSrc() { 
+		if cap(c)<len(c)+e.SrcCnt() { 
 			return false 
 		}
 	}
@@ -456,32 +457,42 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 	return e
 }
 	
- // NumSrc is the number of Node's upstream of an Edge
-func (e *Edge) NumSrc() int {
+ // SrcCnt is the number of Node's upstream of an Edge
+func (e *Edge) SrcCnt() int {
 	i := 0
 	for ; i<len(*e.edgeNodes) && (*e.edgeNodes)[i].srcFlag; i++ {}
 	return i
 }
 
-// NumDst is the number of Node's downstream of an Edge
-func (e *Edge) NumDst() int {
-	return len(*e.edgeNodes)-e.NumSrc()
+// DstCnt is the number of Node's downstream of an Edge
+func (e *Edge) DstCnt() int {
+	return len(*e.edgeNodes)-e.SrcCnt()
 }
 
-// NodeSrc returns the ith upstream Node of an Edge
-func (e *Edge) NodeSrc(i int) *Node {
-	if i>e.NumSrc() || i<0 {
+// DstOrder returns the order of a Node in an Edge's destinations
+func (e *Edge) DstOrder(n *Node) int {
+	n.Tracef("e.edgeNodes %v\n", e.edgeNodes)
+	for i := e.SrcCnt(); i<len(*e.edgeNodes); i++ {
+		n.Tracef("e.edgeNodes[%d].node %v\n", i, (*e.edgeNodes)[i].node)
+		if (*e.edgeNodes)[i].node == n { return i }
+	}
+	return -1
+}
+
+// SrcNode returns the ith upstream Node of an Edge
+func (e *Edge) SrcNode(i int) *Node {
+	if i>e.SrcCnt() || i<0 {
 		return nil
 	}
 	return (*e.edgeNodes)[i].node
 }
 
-// NodeDst returns the ith downstream Node of an Edge
-func (e *Edge) NodeDst(i int) *Node {
-	if i>e.NumDst() || i<0 {
+// DstNode returns the ith downstream Node of an Edge
+func (e *Edge) DstNode(i int) *Node {
+	if i>e.DstCnt() || i<0 {
 		return nil
 	}
-	h := e.NumSrc()
+	h := e.SrcCnt()
 	return (*e.edgeNodes)[i+h].node
 }
 

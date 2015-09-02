@@ -419,17 +419,17 @@ func extendChannelCaps(nodes []Node) {
 	for _,n := range nodes {
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
-			h := dstj.NumSrc()
+			h := dstj.SrcCnt()
 			if h>1 {
 				l := len(*dstj.Data)
 				for k := 0; k<l; k++ {
 					if cap((*dstj.Data)[k])<h {
-						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumSrc()=%d)\n", dstj.Name, len(*dstj.Data), dstj.NumDst())
+						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.SrcCnt()=%d)\n", dstj.Name, len(*dstj.Data), dstj.DstCnt())
 						c := make(chan Datum, h)
 						(*dstj.Data)[k] = c
 
 						// update relevant select case and data channel upstream
-						nn := dstj.NodeDst(0)
+						nn := dstj.DstNode(0)
 						x := nn.edgeToCase[nn.Srcs[0]]
 						nn.cases[x] = reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(c)}
 						nn.dataBackup[x] = nn.cases[x].Chan
@@ -439,8 +439,8 @@ func extendChannelCaps(nodes []Node) {
 				}
 			}
 			if false {
-				if len(*dstj.Data)!= dstj.NumDst() {
-					StdoutLog.Printf("Multiple downstream nodes on %s (len(*dstj.Data)=%d vs dstj.NumDst()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.NumSrc(), dstj.edgeNodes)
+				if len(*dstj.Data)!= dstj.DstCnt() {
+					StdoutLog.Printf("Multiple downstream nodes on %s (len(*dstj.Data)=%d vs dstj.DstCnt()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.SrcCnt(), dstj.edgeNodes)
 				}
 			}
 			
