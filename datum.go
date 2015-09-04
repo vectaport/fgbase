@@ -3,6 +3,7 @@ package flowgraph
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 // Datum is an empty interface for generic data flow.
@@ -142,4 +143,21 @@ func StringStruct(d Datum) string {
 	return s
 }
 
-
+// ParseDatum parses a string for numeric constants, otherwise returns the string.
+func ParseDatum(s string) Datum {
+	var v Datum
+	i32,err := strconv.ParseInt(s, 10, 32)
+	if err==nil { v = int(i32); return v }
+	i64,err := strconv.ParseInt(s, 10, 64)
+	if err==nil { v = i64;  return v }
+	f32,err := strconv.ParseFloat(s, 32)
+	if err==nil { v = f32; return v }
+	f64,err := strconv.ParseFloat(s, 64)
+	if err==nil { v = f64; return v }
+	if s=="true"||s=="false" { 
+		b,err := strconv.ParseBool(s) 
+		if err==nil { v = b; return v }
+	}
+	v = s
+	return v
+}
