@@ -3,7 +3,6 @@ package flowgraph
 import (
 	"fmt"
 	"reflect"
-	"runtime"
 	"sync/atomic"
 	"time"
 )
@@ -170,10 +169,11 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 
 // LogError for logging of error messages.  Uses atomic log mechanism.
 func (n *Node) LogError(format string, v ...interface{}) {
-	_,nm,ln,_ := runtime.Caller(1)
+	// _,nm,ln,_ := runtime.Caller(1)
 	newFmt := prefixTracef(n)
+	newFmt += "ERROR:  "
 	newFmt += format
-	newFmt += fmt.Sprintf(" -- %s:%d ", nm, ln)
+	// newFmt += fmt.Sprintf(" -- %s:%d ", nm, ln)
 	StderrLog.Printf(newFmt, v...)
 }
 

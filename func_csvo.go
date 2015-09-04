@@ -5,36 +5,38 @@ import (
 	"io"
 )      			
 
-func csviFire (n *Node) {	 
-	x := n.Dsts
+func csvoFire (n *Node) {	 
+	a := n.Srcs
 	r := n.Aux.(*csv.Reader)
 	var err error
 
 	// read data string
 	record, err := r.Read()
 	check(err)
-	l := len(x)
+	l := len(a)
 	if l>len(record) { l = len(record) }
 	for i:=0; i<l; i++ {
 		if record[i]!="*" {
         		v := ParseDatum(record[i])
-			x[i].Val = v	
+			if !EqualsTest(n, v, a[i].Val) {
+				n.LogError("expected=%v, actual=%v", v, a[i].Val)	
+			}
 		} else {
-			x[i].NoOut = true
+			a[i].NoOut = true
 		}
 	}
 }
 
-// FuncCSVI reads a vector of input data values from a Reader.
+// FuncCSVO reads a vector of input data values from a Reader.
 // 
-func FuncCSVI(x []Edge, r io.Reader) Node {
+func FuncCSVO(a []Edge, r io.Reader) Node {
 
-	var xp []*Edge
-	for i := range x {
-		xp = append(xp, &x[i])
+	var ap []*Edge
+	for i := range a {
+		ap = append(ap, &a[i])
 	}
 
-	node := MakeNode("csvi", nil, xp, nil, csviFire)
+	node := MakeNode("csvo", ap, nil, nil, csvoFire)
 	r2 := csv.NewReader(r)
 	node.Aux = r2
 

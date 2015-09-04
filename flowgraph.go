@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+func check(e error) {
+	if e != nil {
+		StderrLog.Printf("%v\n", e)
+		os.Exit(1)
+	}
+}
+		
 // Log for tracing flowgraph execution.
 var StdoutLog = log.New(os.Stdout, "", 0)
 
