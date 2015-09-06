@@ -172,9 +172,14 @@ func StringStruct(d Datum) string {
 // ParseDatum parses a string for numeric constants, otherwise returns the string.
 func ParseDatum(s string) Datum {
 	var v Datum
-	i32,err := strconv.ParseInt(s, 10, 32)
+	base := 10
+	if len(s)>2 && s[0:2]=="0x" { 
+		base = 16 
+		s = s[2:]
+	}
+	i32,err := strconv.ParseInt(s, base, 32)
 	if err==nil { v = int(i32); return v }
-	i64,err := strconv.ParseInt(s, 10, 64)
+	i64,err := strconv.ParseInt(s, base, 64)
 	if err==nil { v = i64;  return v }
 	f32,err := strconv.ParseFloat(s, 32)
 	if err==nil { v = f32; return v }
