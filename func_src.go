@@ -14,10 +14,7 @@ func srcFire (n *Node) {
 	x.Val, err = rw.ReadString('\n')
 	if err != nil {
 		n.LogError("%v", err)
-		for i := range *x.Data {
-			close((*x.Data)[i])
-			(*x.Data)[i] = nil
-		}
+		x.CloseData()
 		return
 	}
 
@@ -25,10 +22,7 @@ func srcFire (n *Node) {
 	_, err = rw.WriteString("\n")
 	if err != nil {
 		n.LogError("%v", err)
-		for i := range *x.Data {
-			close((*x.Data)[i])
-			(*x.Data)[i] = nil
-		}
+		x.CloseData()
 		return
 	}
 	rw.Flush()

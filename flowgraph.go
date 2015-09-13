@@ -13,7 +13,7 @@ import (
 
 func check(e error) {
 	if e != nil {
-		StderrLog.Printf("%v\n", e)
+		StderrLog.Printf("ERROR:  %v\n", e)
 		os.Exit(1)
 	}
 }
@@ -59,6 +59,9 @@ var TraceFireCnt = true
 // Trace elapsed seconds.
 var TraceSeconds = false
 
+// Trace types in full detail, including common types.
+var TraceTypes = false
+
 // Trace Node pointer.
 var TracePointer = false
 
@@ -96,6 +99,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var traceDef interface{} = "V"
 	var chanszDef interface{} = 1
 	var trsecDef interface{} = false
+	var trtypDef interface{} = false
 
 	if defaults != nil {
 		if defaults["ncore"] != nil {
@@ -113,6 +117,9 @@ func ConfigByFlag(defaults map[string]interface{}) {
 		if defaults["trsec"] != nil {
 			trsecDef = defaults["trsec"]
 		}
+		if defaults["trtyp"] != nil {
+			trtypDef = defaults["trtyp"]
+		}
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
@@ -120,6 +127,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
+	trtypPtr := flag.Bool("trtyp", trtypDef.(bool), "trace types")
 
 	flag.Parse()
 
@@ -128,6 +136,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	TraceLevel = TraceLevels[*tracePtr]
 	ChannelSize = *chanszPtr
 	TraceSeconds = *trsecPtr
+	TraceTypes = *trtypPtr
 }
 
 // When the flowgraph started running.

@@ -299,7 +299,7 @@ func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
 			func() string { if selectFlag { return "s" }; return "!s"}()) 
 	}
 	if e.RdyCnt<0 { 
-		n.Tracef("%sRdyCnt less than zero, time to panic\n", e.Name)
+		n.Tracef("%s.RdyCnt less than zero, time to panic\n", e.Name)
 	}
 	if (TraceLevel>=VV) {
 		var selectStr string
@@ -496,3 +496,11 @@ func (e *Edge) DstNode(i int) *Node {
 	return (*e.edgeNodes)[i+h].node
 }
 
+
+// CloseData closes all outgoing data channels.
+func (e *Edge) CloseData() {
+	for i := range *e.Data {
+		close((*e.Data)[i])
+		(*e.Data)[i] = nil
+	}
+}

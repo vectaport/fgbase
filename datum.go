@@ -110,19 +110,36 @@ func String(d Datum) string {
 	if IsStruct(d) {
 		return StringStruct(d)
 	}
-	switch d.(type) {
-	case bool, int8, uint8, int16,uint16, int32, uint32, int64, uint64, int, uint: {
-		return fmt.Sprintf("%v", d)
-	}
-	case float32, float64: {
-		return fmt.Sprintf("%.4g", d)
-	}
-	case complex64, complex128: {
-		return fmt.Sprintf("%.4g", d)
-	}
-	case string: {
-		return fmt.Sprintf("%q", d)
-	}
+	if !TraceTypes {
+		switch d.(type) {
+		case bool, int8, int16, int32, int64, int: {
+			return fmt.Sprintf("%v", d)
+		}
+		case uint8, uint16, uint32, uint64, uint: {
+			w := 2
+			switch d.(type) {
+			case uint16: {
+				w = 4
+			}
+			case uint32: {
+				w = 8
+			}
+			case uint64, uint: {
+				w = 16
+			}
+			}
+			return fmt.Sprintf("0x%0"+strconv.Itoa(w)+"x", d)
+		}
+		case float32, float64: {
+			return fmt.Sprintf("%.4g", d)
+		}
+		case complex64, complex128: {
+			return fmt.Sprintf("%.4g", d)
+		}
+		case string: {
+			return fmt.Sprintf("%q", d)
+		}
+		}
 	}
 	return fmt.Sprintf("%T(%+v)", d, d)
 }
@@ -150,7 +167,11 @@ func StringSlice(d Datum) string {
 func StringStruct(d Datum) string {
 	dv := reflect.ValueOf(d)
 	l := dv.NumField()
-	s := fmt.Sprintf("%T({", d)
+	var s string
+	if TraceLevel >= VVVV {
+		s = fmt.Sprintf("%T", d)
+	}
+	s += "{"
 	flg := false
 	for i := 0; i<l; i++ {
 		ft := dv.Type().Field(i)
@@ -165,21 +186,40 @@ func StringStruct(d Datum) string {
 			s += String(dv.Field(i).Interface())
 		}
 	}
-	s += "})"
+	s += "}"
 	return s
 }
 
 // ParseDatum parses a string for numeric constants, otherwise returns the string.
 func ParseDatum(s string) Datum {
 	var v Datum
-	base := 10
-	if len(s)>2 && s[0:2]=="0x" { 
-		base = 16 
-		s = s[2:]
+
+	// trim trailing whitespace or comments
+	var s2 string
+	for i := range s {
+		if s[i]=='#' { break }
+		if len(s)>i+1 && s[i:i+2]=="//" { break }
+		if s[i]==' ' || s[i]=='\t' { break }
+		s2 += s[i:i+1]
 	}
-	i32,err := strconv.ParseInt(s, base, 32)
+	s = s2
+	
+	if len(s)>2 && s[0:2]=="0x" {
+		s = s[2:]
+		if len(s)<=4 {
+			u16,err := strconv.ParseUint(s, 16, 16)
+			if err==nil { v = uint16(u16); return v }
+		}
+		if len(s)<=8 {
+			u32,err := strconv.ParseUint(s, 16, 32)
+			if err==nil { v = uint32(u32); return v }
+		}
+		u64,err := strconv.ParseUint(s, 16, 64)
+		if err==nil { v = u64;  return v }
+	}
+	i32,err := strconv.ParseInt(s, 10, 32)
 	if err==nil { v = int(i32); return v }
-	i64,err := strconv.ParseInt(s, base, 64)
+	i64,err := strconv.ParseInt(s, 10, 64)
 	if err==nil { v = i64;  return v }
 	f32,err := strconv.ParseFloat(s, 32)
 	if err==nil { v = f32; return v }

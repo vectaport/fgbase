@@ -14,10 +14,7 @@ func readFire (n *Node) {
 	x.Val, err = r.ReadString('\n')
 	if err != nil {
 		n.LogError("%v", err)
-		for i := range *x.Data {
-			close((*x.Data)[i])
-			(*x.Data)[i] = nil
-		}
+		x.CloseData()
 	}
 
 }

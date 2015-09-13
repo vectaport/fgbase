@@ -240,7 +240,6 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		}
 	}
 	if !valOnly { newFmt += ">>" }
-	newFmt += "\n"
 	return newFmt
 }
 
@@ -256,6 +255,7 @@ func (n *Node) traceValRdy(valOnly bool) {
 
 	newFmt := n.traceValRdySrc(valOnly)
 	newFmt += n.traceValRdyDst(valOnly)
+	newFmt += "\n"
 	StdoutLog.Printf(newFmt)
 }
 
@@ -264,6 +264,7 @@ func (n *Node) traceValRdyErr() {
 
 	newFmt := n.traceValRdySrc(false)
 	newFmt += n.traceValRdyDst(false)
+	newFmt += "\n"
 	StderrLog.Printf(newFmt)
 }
 
@@ -330,6 +331,13 @@ func (n *Node) Fire() {
 	} 
 	if TraceLevel>Q { 
 		newFmt += n.traceValRdyDst(true)
+		if n.Aux != nil && IsStruct(n.Aux) {
+			s := String(n.Aux)
+			if s != "{}" {
+				newFmt += " // " + s
+			}
+		}
+		newFmt += "\n"
 		StdoutLog.Printf(newFmt)
 	}
 }
