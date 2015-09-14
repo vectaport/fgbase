@@ -206,6 +206,10 @@ func ParseDatum(s string) Datum {
 	
 	if len(s)>2 && s[0:2]=="0x" {
 		s = s[2:]
+		if len(s)<=2 {
+			u8,err := strconv.ParseUint(s, 16, 8)
+			if err==nil { v = uint8(u8); return v }
+		}
 		if len(s)<=4 {
 			u16,err := strconv.ParseUint(s, 16, 16)
 			if err==nil { v = uint16(u16); return v }
