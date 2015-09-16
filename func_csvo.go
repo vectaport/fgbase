@@ -31,7 +31,7 @@ func csvoRdy (n *Node) bool {
 	header := n.Aux.(csvState).header
 
 	for i := range a {
-		j := find(a[i].Name, header)
+		j := header[i]
 		if j>= 0 {
 			if !a[i].SrcRdy(n) {
 				if record[j]!="*" {
@@ -51,14 +51,14 @@ func csvoRdy (n *Node) bool {
 func csvoFire (n *Node) {	 
 	a := n.Srcs
 
-	record := n.Aux.(csvState).record
 	r := n.Aux.(csvState).csvreader
 	header := n.Aux.(csvState).header
+	record := n.Aux.(csvState).record
 
 	l := len(a)
 	if l>len(record) { l = len(record) }
 	for i:=0; i<l; i++ {
-		j := find(a[i].Name, header)
+		j := header[i]
 		if record[j]!="*" {
 			v := ParseDatum(record[i])
 			if !EqualsTest(n, v, a[i].Val) {
@@ -85,7 +85,11 @@ func FuncCSVO(a []Edge, r io.Reader) Node {
 	// save headers
 	headers, err := r2.Read()
 	check(err)
-	node.Aux = csvState{csvreader:r2, header:headers}
+	var h []int
+	for i := range headers {
+		h = append(h, find(a[i].Name, headers))
+	}
+	node.Aux = csvState{csvreader:r2, header:h}
 
 	return node
 	

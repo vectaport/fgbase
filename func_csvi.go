@@ -8,7 +8,7 @@ import (
 
 type csvState struct {
 	csvreader *csv.Reader
-	header []string
+	header []int // index of input/output based on header
 	record []string
 }
 
@@ -26,14 +26,14 @@ func csviRdy (n *Node) bool {
 	
 	if n.DefaultRdyFunc() {
 		r := n.Aux.(csvState).csvreader
-		h := n.Aux.(csvState).header
+		header := n.Aux.(csvState).header
 		record,err := r.Read()
 		if err == io.EOF {
 			n.Aux = nil
 			return false
 		} else {
 			check(err)
-			n.Aux = csvState{r, h, record}
+			n.Aux = csvState{r, header, record}
 			return true
 		}
 	}
@@ -49,7 +49,7 @@ func csviFire (n *Node) {
 	l := len(x)
 	if l>len(record) { l = len(record) }
 	for i:=0; i<l; i++ {
-		j := find(x[i].Name, header)
+		j := header[i]
 		if j>=0 {
 			if record[j]!="*" {
 				v := ParseDatum(record[j])
@@ -79,7 +79,11 @@ func FuncCSVI(x []Edge, r io.Reader) Node {
 	// save headers
 	headers, err := r2.Read()
 	check(err)
-	node.Aux = csvState{csvreader:r2, header:headers}
+	var h []int
+	for i := range headers {
+		h = append(h, find(x[i].Name, headers))
+	}
+	node.Aux = csvState{csvreader:r2, header:h}
 
 	return node
 	
