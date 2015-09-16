@@ -54,33 +54,48 @@ func biggerType(a, b Datum) bool {
 // Promote pair of numeric empty interfaces (Datum) as necessary.
 func Promote(n *Node, a, b Datum) (aBig, bBig Datum, same bool) {
 
+	var debug = false
+	
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)
-	// n.Tracef("promote:  ta %v, tb %v\n", ta, tb)
+	if debug {
+		n.Tracef("promote:  ta %v of Kind %s, tb %v of Kind %s\n", ta, ta.Kind().String(), tb, tb.Kind().String())
+	}
 
 	if ta==tb { return a,b,true }
+
+	if ta.Kind()==tb.Kind() {
+		if ta.Kind().String()==ta.String() {
+			if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case -2: promoting %v to %v\n", tb, ta) }
+			return a,reflect.ValueOf(b).Convert(ta).Interface(),true
+		} 
+		if tb.Kind().String()==tb.String() {
+			if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case -1: promoting %v to %v\n", ta, tb) }
+			return reflect.ValueOf(a).Convert(tb).Interface(),b,true
+		}
+	}
 
 	aBigger := biggerType(a, b)
 	if aBigger {
 		if tb.ConvertibleTo(ta) { 
-			if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 0: promoting %v to %v\n", tb, ta) }
+			if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case 0: promoting %v to %v\n", tb, ta) }
 			return a,reflect.ValueOf(b).Convert(ta).Interface(),true 
 		}
 	}
 
 	if ta.ConvertibleTo(tb) { 
-		if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 1: promoting %v to %v\n", ta, tb) }
+		if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case 1: promoting %v to %v\n", ta, tb) }
 		return reflect.ValueOf(a).Convert(tb).Interface(),b,true 
 	}
 
 	if !aBigger {
 		if tb.ConvertibleTo(ta) { 
-			if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 2: promoting %v to %v\n", tb, ta) }
+			if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case 2: promoting %v to %v\n", tb, ta) }
 			return a,reflect.ValueOf(b).Convert(ta).Interface(),true 
 		}
 	}
 
-	if false && TraceLevel>=VVV && n!=nil { n.Tracef("case 3: no promotion between %v to %v\n", tb, ta) }
+	if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case 3: no promotion between %v to %v\n", tb, ta) }
 	return a,b,false
 }
 

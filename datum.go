@@ -110,38 +110,46 @@ func String(d Datum) string {
 	if IsStruct(d) {
 		return StringStruct(d)
 	}
-	if !TraceTypes {
-		switch d.(type) {
-		case bool, int8, int16, int32, int64, int: {
-			return fmt.Sprintf("%v", d)
-		}
-		case uint8, uint16, uint32, uint64, uint: {
-			w := 2
-			switch d.(type) {
-			case uint16: {
-				w = 4
-			}
-			case uint32: {
-				w = 8
-			}
-			case uint64, uint: {
-				w = 16
-			}
-			}
-			return fmt.Sprintf("0x%0"+strconv.Itoa(w)+"x", d)
-		}
-		case float32, float64: {
-			return fmt.Sprintf("%.4g", d)
-		}
-		case complex64, complex128: {
-			return fmt.Sprintf("%.4g", d)
-		}
-		case string: {
-			return fmt.Sprintf("%q", d)
-		}
-		}
+
+	var s string
+	switch d.(type) {
+	case bool, int8, int16, int32, int64, int: {
+		s = fmt.Sprintf("%v", d)
 	}
-	return fmt.Sprintf("%T(%+v)", d, d)
+	case uint8, uint16, uint32, uint64, uint: {
+		w := 2
+		switch d.(type) {
+		case uint16: {
+			w = 4
+		}
+		case uint32: {
+			w = 8
+		}
+		case uint64, uint: {
+			w = 16
+		}
+		}
+		s = fmt.Sprintf("0x%0"+strconv.Itoa(w)+"x", d)
+	}
+	case float32, float64: {
+		s = fmt.Sprintf("%.4g", d)
+	}
+	case complex64, complex128: {
+		s = fmt.Sprintf("%.4g", d)
+	}
+	case string: {
+		s = fmt.Sprintf("%q", d)
+	}
+	}
+
+	
+	if !TraceTypes && s!="" {
+		return s
+	}
+	if s=="" {
+		s = fmt.Sprintf("%v", d)
+	}
+	return fmt.Sprintf("%T(%s)", d, s)
 }
 
 // StringSlice returns a string representation of a slice, ellipse shortened if TraceLevel<VVVV.

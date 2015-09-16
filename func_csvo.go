@@ -11,30 +11,38 @@ func csvoRdy (n *Node) bool {
 	if n.Aux == nil { return false }
 	
 	a := n.Srcs
-	r := n.Aux.(readerrecord).csvreader
+	r := n.Aux.(csvState).csvreader
+	h := n.Aux.(csvState).header
 
 	if n.Aux== nil { return false }
 
-	if n.Aux.(readerrecord).record==nil {
+	if n.Aux.(csvState).record==nil {
 		record,err := r.Read()
 		if err == io.EOF {
 			os.Exit(0)
 			return false
 		} else {
 			check(err)
-			n.Aux = readerrecord{r, record}
+			n.Aux = csvState{r, h, record}
 		}
 	}
 
-	record := n.Aux.(readerrecord).record
+	record := n.Aux.(csvState).record
+	header := n.Aux.(csvState).header
 
 	for i := range a {
-		if !a[i].SrcRdy(n) {
-			if record[i]!="*" {
-				return false
-			} else {
-				a[i].NoOut = true
+		j := find(a[i].Name, header)
+		if j>= 0 {
+			if !a[i].SrcRdy(n) {
+				if record[j]!="*" {
+					return false
+				} else {
+					a[i].NoOut = true
+				}
 			}
+		} else {
+			n.LogError("Named output missing from .csv file:  %s\n", a[i].Name)
+			os.Exit(1)
 		}
 	}
 	return true
@@ -43,21 +51,23 @@ func csvoRdy (n *Node) bool {
 func csvoFire (n *Node) {	 
 	a := n.Srcs
 
-	record := n.Aux.(readerrecord).record
-	r := n.Aux.(readerrecord).csvreader
+	record := n.Aux.(csvState).record
+	r := n.Aux.(csvState).csvreader
+	header := n.Aux.(csvState).header
 
 	l := len(a)
 	if l>len(record) { l = len(record) }
 	for i:=0; i<l; i++ {
-		if record[i]!="*" {
+		j := find(a[i].Name, header)
+		if record[j]!="*" {
 			v := ParseDatum(record[i])
 			if !EqualsTest(n, v, a[i].Val) {
-				n.LogError("expected=%v, actual=%v", v, a[i].Val)	
+				n.LogError("expected=%T(%v) (0x%x), actual=%T(%v) (0x%x)", v, v, v, a[i].Val, a[i].Val, a[i].Val)	
 			}
 		}
 	}
 
-	n.Aux = readerrecord{csvreader:r}
+	n.Aux = csvState{csvreader:r, header:header}
 	
 }
 
@@ -70,12 +80,12 @@ func FuncCSVO(a []Edge, r io.Reader) Node {
 	}
 
 	node := MakeNode("csvo", ap, nil, csvoRdy, csvoFire)
-	r2 := readerrecord{csvreader:csv.NewReader(r)}
-	node.Aux = r2
+	r2 := csv.NewReader(r)
 
-	// skip headers
-	_, err := r2.csvreader.Read()
+	// save headers
+	headers, err := r2.Read()
 	check(err)
+	node.Aux = csvState{csvreader:r2, header:headers}
 
 	return node
 	
