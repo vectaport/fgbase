@@ -404,7 +404,7 @@ func MakeNodes(sz int) []Node {
 	return n
 }
 
-// buildEdgeNodes builds the slice of edgeNode for each Edge
+// buildEdgeNodes builds the slice of edgeNode for each Edge to allow reflection.
 func buildEdgeNodes(nodes []Node) {
 	for i,n := range nodes {
 		for j := range n.Srcs {
@@ -456,11 +456,29 @@ func extendChannelCaps(nodes []Node) {
 	}
 }
 
+// clearUpstreamAcks increments RdyCnt upstream from every downstream Edge
+// (Node input edge) to reflect the fact that flow is initialized here.
+func clearUpstreamAcks(nodes []Node) {
+	for _,n := range nodes {
+		for j := range n.Srcs {
+			if n.Srcs[j].Val != nil {
+				n.cases[j].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+			}
+		}
+		for j := range n.Dsts {
+			if n.Dsts[j].Val != nil {
+				n.Dsts[j].RdyCnt++
+			}
+		}
+	}
+}
+
 // RunAll calls Run for each Node, and times out after RunTime.
 func RunAll(nodes []Node) {
 
 	buildEdgeNodes(nodes)
 	extendChannelCaps(nodes)
+	clearUpstreamAcks(nodes)
 
 	StartTime = time.Now()
 	for i:=0; i<len(nodes); i++ {

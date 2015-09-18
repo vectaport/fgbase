@@ -504,3 +504,14 @@ func (e *Edge) CloseData() {
 		(*e.Data)[i] = nil
 	}
 }
+
+
+// NameEdges adds a name to each Edge
+func NameEdges(edges []Edge, names []string) {
+	l := len(names)
+	for i := range edges {
+		if i == l { break }
+		edges[i].Name = names[i]
+		
+	}
+}

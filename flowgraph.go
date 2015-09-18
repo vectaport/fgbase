@@ -39,12 +39,12 @@ const (
 
 // Map from string to enum for trace flag checking.
 var TraceLevels = map[string]int {
+	"QQ": QQ,
 	"Q": Q,
 	"V": V,
 	"VV": VV,
 	"VVV": VVV,
 	"VVVV": VVVV,
-	"QQ": QQ,
 }
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
