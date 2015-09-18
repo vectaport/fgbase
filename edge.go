@@ -260,35 +260,35 @@ package flowgraph
  }
 
  // SrcRdy tests if a source Edge is ready.
- func (e *Edge) SrcRdy(n *Node) bool {
-	 if !e.Rdy() {
-		 if !e.srcReadRdy(n) { 
-			 return false 
-		 }
+func (e *Edge) SrcRdy(n *Node) bool {
+	if !e.Rdy() {
+		if !e.srcReadRdy(n) { 
+			return false 
+		}
+		
+		i := n.edgeToCase[e]
+		if n.cases[i].Chan!=reflect.ValueOf(nil) {
+			
+			c := n.cases[i].Chan
+			var ok bool
+			v,ok := c.Recv()
+			if !ok {
+				panic("Unexpected error in reading channel\n")
+			}
+			e.Val = v.Interface()
+			n.RemoveInputCase(e)
+			e.srcReadHandle(n, false)
+		}
+		
+		return e.Rdy()
+	}
+	return true
+}
 
-		 i := n.edgeToCase[e]
-		 if n.cases[i].Chan!=reflect.ValueOf(nil) {
-
-			 c := n.cases[i].Chan
-			 var ok bool
-			 v,ok := c.Recv()
-			 if !ok {
-				 panic("Unexpected error in reading channel\n")
-			 }
-			 e.Val = v.Interface()
-			 n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
-			 e.srcReadHandle(n, false)
-		 }
-
-		 return e.Rdy()
-	 }
-	 return true
- }
-
- // dstReadRdy tests if a destination Edge is ready for an ack read.
- func (e *Edge) dstReadRdy() bool {
-	 return len(e.Ack)>0
- }
+// dstReadRdy tests if a destination Edge is ready for an ack read.
+func (e *Edge) dstReadRdy() bool {
+	return len(e.Ack)>0
+}
 
 // dstReadHandle handles a destination Edge ack read.
 func (e *Edge) dstReadHandle (n *Node, selectFlag bool) {
@@ -433,7 +433,6 @@ func (e *Edge) SendAck(n *Node) {
 				e.Ack <- nada
 			}
 			e.RdyCnt++
-			
 		} else {
 			e.NoOut = false
 		}
@@ -471,9 +470,7 @@ func (e *Edge) DstCnt() int {
 
 // DstOrder returns the order of a Node in an Edge's destinations
 func (e *Edge) DstOrder(n *Node) int {
-	n.Tracef("e.edgeNodes %v\n", e.edgeNodes)
 	for i := e.SrcCnt(); i<len(*e.edgeNodes); i++ {
-		n.Tracef("e.edgeNodes[%d].node %v\n", i, (*e.edgeNodes)[i].node)
 		if (*e.edgeNodes)[i].node == n { return i }
 	}
 	return -1

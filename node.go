@@ -364,7 +364,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if n.caseToEdgeDir[i].srcFlag {
 		srci := n.caseToEdgeDir[i].edge
 		srci.Val = recv.Interface()
-		n.cases[i].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+		n.RemoveInputCase(srci)
 		srci.srcReadHandle(n, true)
 	} else {
 		dsti := n.caseToEdgeDir[i].edge
@@ -462,7 +462,7 @@ func clearUpstreamAcks(nodes []Node) {
 	for _,n := range nodes {
 		for j := range n.Srcs {
 			if n.Srcs[j].Val != nil {
-				n.cases[j].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+				n.RemoveInputCase(n.Srcs[j])
 			}
 		}
 		for j := range n.Dsts {
@@ -516,3 +516,11 @@ func (n *Node) Recursed() bool { return n.flag&flagRecursed==flagRecursed }
 
 // IsPool returns true if Node is part of a Pool.
 func (n *Node) IsPool() bool { return n.flag&flagPool==flagPool }
+
+// RemoveInputCase removes the nth input of a Node from the select switch.
+// It is restored after RdyAll.
+func (n *Node) RemoveInputCase(e *Edge) {
+	if !e.IsConst() {
+		n.cases[n.edgeToCase[e]].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
+	}
+}
