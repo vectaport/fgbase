@@ -145,6 +145,7 @@ func String(d Datum) string {
 	
 	if !TraceTypes && s!="" {
 		return s
+
 	}
 	if s=="" {
 		s = fmt.Sprintf("%v", d)

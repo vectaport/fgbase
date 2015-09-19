@@ -196,7 +196,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				}
 			}
 		} else {
-			newFmt += "{}"
+			newFmt += "_"  // the empty string
 		}
 	}
 	newFmt += ";"
@@ -226,7 +226,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			} else {
 				newFmt += func () string { 
 					if (dsti.NoOut) { 
-						return "{}" 
+						return "_" 
 					}
 					return "<nil>" 
 				} ()
