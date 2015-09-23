@@ -156,7 +156,7 @@ func String(d Datum) string {
 	if s=="" {
 		s = fmt.Sprintf("%v", d)
 	}
-	if IsInt(d) {
+	if IsInt(d) && !TraceTypes {
 		return fmt.Sprintf("%s", s)
 	} else {
 		return fmt.Sprintf("%T(%s)", d, s)
@@ -180,6 +180,33 @@ func StringSlice(d Datum) string {
 	s += "])"
 	return s
 }
+
+// shadowSlice returns the nth pair of struct field indices where 
+// the first field is a slice shadowed by the second (with a "shadow" prefix).  
+// -1,-1 returned if the nth pair is not found.
+func shadowSlice(d Datum, nth int) (m,n int) {
+	if !IsStruct(d) {
+		return -1,-1
+	}
+
+	dv := reflect.ValueOf(d)
+	l := dv.NumField()
+	cnt := 0
+	for i := 0; i<l; i++ {
+		if cnt==nth {
+			return -1,-1
+		}
+		sl := dv.Type().Field(i)
+		if sl.Name[0] >= 'A' && sl.Name[0] <= 'Z' {
+
+			// search for shadow struct
+			for j :=0; j<l; j++ {
+			}
+		}
+	}
+	return -1,-1
+}
+
 
 // StringStruct returns a string representation of a struct with 
 // ellipse shortened slices if TraceLevel<VVVV.

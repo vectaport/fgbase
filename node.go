@@ -196,7 +196,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				}
 			}
 		} else {
-			if false {
+			if true {
 				newFmt += "_"  // the empty string
 			} else {
 				newFmt += fmt.Sprintf("%+v", srci.Val)
@@ -219,21 +219,20 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		if (i!=0) { newFmt += "," }
 		if (valOnly) {
 			newFmt += fmt.Sprintf("%s=", dsti.Name)
-			if (dstiv != nil) {
-				s := String(dstiv)
-				if !IsSlice(dstiv) {
-					newFmt += fmt.Sprintf("%s", s)
-				} else {
-					newFmt += s
-				}
-
+                        if dsti.NoOut {
+				newFmt += "_"
 			} else {
-				newFmt += func () string { 
-					if (dsti.NoOut) { 
-						return "_" 
+				if (dstiv != nil) {
+					s := String(dstiv)
+					if !IsSlice(dstiv) {
+						newFmt += fmt.Sprintf("%s", s)
+					} else {
+						newFmt += s
 					}
-					return "<nil>" 
-				} ()
+					
+				} else {
+					newFmt += "<nil>"
+				}
 			}
 		} else {
 			if true {
