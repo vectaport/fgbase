@@ -196,7 +196,11 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				}
 			}
 		} else {
-			newFmt += "_"  // the empty string
+			if false {
+				newFmt += "_"  // the empty string
+			} else {
+				newFmt += fmt.Sprintf("%+v", srci.Val)
+			}
 		}
 	}
 	newFmt += ";"
@@ -235,7 +239,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			if true {
 				newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
 			} else {
-				newFmt += fmt.Sprintf("%s=%+v", dsti.Name, dsti)
+				newFmt += fmt.Sprintf("%s=%+v", dsti.Name, dsti.Val)
 			}
 		}
 	}

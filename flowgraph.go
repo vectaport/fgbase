@@ -147,3 +147,11 @@ func TimeSinceStart() float64 {
 	return time.Since(StartTime).Seconds()
 }
 
+// StringsToMap converts []string into map[string]int.
+func StringsToMap(strings []string) map[string]int {
+	m := make(map[string]int)
+	for i := range strings {
+		m[strings[i]] = i
+	}
+	return m
+}

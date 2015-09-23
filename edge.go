@@ -155,7 +155,6 @@ package flowgraph
 
 	 reader := bufio.NewReader(conn)
 	 go func() {
-		 var nada Nada
 		 for {
 			 _, err := reader.ReadString('\n')
 			 if err != nil {
@@ -164,7 +163,7 @@ package flowgraph
 				 }
 				 return
 			 }
-			 e.Ack <- nada
+			 e.Ack <- Nada{}
 		 }
 	 } ()
 
@@ -419,18 +418,17 @@ func (e *Edge) SendData(n *Node) {
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.NoOut) {
-			var nada Nada
 			if e.Ack2 != nil {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack <- // Ack2=%p\n", e.Name, e.Ack2)
 				}
-				e.Ack2 <- nada
+				e.Ack2 <- Nada{}
 				e.Ack2 = nil
 			} else {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack <-\n", e.Name)
 				}
-				e.Ack <- nada
+				e.Ack <- Nada{}
 			}
 			e.RdyCnt++
 		} else {

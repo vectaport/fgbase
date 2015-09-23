@@ -48,38 +48,43 @@ func csvoRdy (n *Node) bool {
 	return true
 }
 
-func csvoFire (n *Node) {	 
-	a := n.Srcs
+// FuncCSVO reads a vector of input data values from a Reader.
+func FuncCSVO(a []Edge, r io.Reader, enums map[string]int ) Node {
 
-	r := n.Aux.(csvState).csvreader
-	header := n.Aux.(csvState).header
-	record := n.Aux.(csvState).record
-
-	l := len(a)
-	if l>len(record) { l = len(record) }
-	for i:=0; i<l; i++ {
-		j := header[i]
-		if record[j]!="*" {
-			v := ParseDatum(record[i])
-			if !EqualsTest(n, v, a[i].Val) {
-				n.LogError("expected=%T(%v) (0x%x), actual=%T(%v) (0x%x)", v, v, v, a[i].Val, a[i].Val, a[i].Val)	
+	var rdyFunc = func (n *Node) {	 
+		a := n.Srcs
+		
+		r := n.Aux.(csvState).csvreader
+		header := n.Aux.(csvState).header
+		record := n.Aux.(csvState).record
+		
+		l := len(a)
+		if l>len(record) { l = len(record) }
+		for i:=0; i<l; i++ {
+			j := header[i]
+			if record[j]!="*" {
+				var v Datum
+				var ok bool
+				v,ok = enums[record[j]]
+				if !ok {
+					v = ParseDatum(record[i])
+				}
+				if !EqualsTest(n, v, a[i].Val) {
+					n.LogError("expected=%T(%v) (0x%x), actual=%T(%v) (0x%x)", v, v, v, a[i].Val, a[i].Val, a[i].Val)	
+				}
 			}
 		}
+		
+		n.Aux = csvState{csvreader:r, header:header}
+		
 	}
-
-	n.Aux = csvState{csvreader:r, header:header}
 	
-}
-
-// FuncCSVO reads a vector of input data values from a Reader.
-func FuncCSVO(a []Edge, r io.Reader) Node {
-
 	var ap []*Edge
 	for i := range a {
 		ap = append(ap, &a[i])
 	}
 
-	node := MakeNode("csvo", ap, nil, csvoRdy, csvoFire)
+	node := MakeNode("csvo", ap, nil, csvoRdy, rdyFunc)
 	r2 := csv.NewReader(r)
 
 	// save headers

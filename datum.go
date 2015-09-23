@@ -53,8 +53,14 @@ func EqualsTest(n *Node, a,b Datum) bool {
 	case float64: { return a2.(float64)==b2.(float64) }
 	case complex64: { return a2.(complex64)==b2.(complex64) }
 	case complex128: { return a2.(complex128)==b2.(complex128) }
+	case Nada: { return true }
 	default: { return false }
 	}
+}
+
+// IsInt returns true if empty interface (Datum) is an int.
+func IsInt (d Datum) bool {
+	return reflect.ValueOf(d).Kind()==reflect.Int
 }
 
 // IsSlice returns true if empty interface (Datum) is a slice.
@@ -150,7 +156,11 @@ func String(d Datum) string {
 	if s=="" {
 		s = fmt.Sprintf("%v", d)
 	}
-	return fmt.Sprintf("%T(%s)", d, s)
+	if IsInt(d) {
+		return fmt.Sprintf("%s", s)
+	} else {
+		return fmt.Sprintf("%T(%s)", d, s)
+	}
 }
 
 // StringSlice returns a string representation of a slice, ellipse shortened if TraceLevel<VVVV.
@@ -212,6 +222,10 @@ func ParseDatum(s string) Datum {
 		s2 += s[i:i+1]
 	}
 	s = s2
+
+	if s=="{}" {
+		return Nada{}
+	}
 	
 	if len(s)>2 && s[0:2]=="0x" {
 		s = s[2:]

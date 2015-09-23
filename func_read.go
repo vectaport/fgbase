@@ -3,6 +3,7 @@ package flowgraph
 import (		
 	"bufio"
 	"io"
+	"os"
 )      			
 
 func readFire (n *Node) {	 
@@ -13,6 +14,9 @@ func readFire (n *Node) {
 	// read data string
 	x.Val, err = r.ReadString('\n')
 	if err != nil {
+		if err==io.EOF {
+			os.Exit(0)
+		}
 		n.LogError("%v", err)
 		x.CloseData()
 	}

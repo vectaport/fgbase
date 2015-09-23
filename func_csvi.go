@@ -40,40 +40,44 @@ func csviRdy (n *Node) bool {
 	return false
 }
 
-func csviFire (n *Node) {	 
-	x := n.Dsts
+// FuncCSVI reads a vector of input data values from a Reader.
+func FuncCSVI(x []Edge, r io.Reader, enums map[string]int) Node {
 
-	// process data record
-	record := n.Aux.(csvState).record
-	header := n.Aux.(csvState).header
-	l := len(x)
-	if l>len(record) { l = len(record) }
-	for i:=0; i<l; i++ {
-		j := header[i]
-		if j>=0 {
-			if record[j]!="*" {
-				v := ParseDatum(record[j])
+	var fireFunc = func (n *Node) {	 
+		x := n.Dsts
+		
+		// process data record
+		record := n.Aux.(csvState).record
+		header := n.Aux.(csvState).header
+		l := len(x)
+		if l>len(record) { l = len(record) }
+		for i:=0; i<l; i++ {
+			j := header[i]
+			if j>=0 {
+				if record[j]=="*" {
+					x[i].NoOut = true
+					continue
+				}
+				var v Datum
+				var ok bool
+				v,ok = enums[record[j]]
+				if !ok {
+					v = ParseDatum(record[j])
+				}
 				x[i].Val = v	
 			} else {
-				x[i].NoOut = true
+				n.LogError("Named input missing from .csv file:  %s\n", x[i].Name)
+				os.Exit(1)
 			}
-		} else {
-			n.LogError("Named input missing from .csv file:  %s\n", x[i].Name)
-			os.Exit(1)
 		}
 	}
-}
-
-// FuncCSVI reads a vector of input data values from a Reader.
-// 
-func FuncCSVI(x []Edge, r io.Reader) Node {
 
 	var xp []*Edge
 	for i := range x {
 		xp = append(xp, &x[i])
 	}
 
-	node := MakeNode("csvi", nil, xp, csviRdy, csviFire)
+	node := MakeNode("csvi", nil, xp, csviRdy, fireFunc)
 	r2 := csv.NewReader(r)
 
 	// save headers
