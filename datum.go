@@ -171,13 +171,13 @@ func StringSlice(d Datum) string {
 	dv := reflect.ValueOf(d)
 	dt := reflect.TypeOf(d)
 	dts := dt.String()
-	s := fmt.Sprintf("[:%d]%s([", dv.Len(), dts[2:len(dts)])
+	s := fmt.Sprintf("[:%d]%s{", dv.Len(), dts[2:len(dts)])
 	for i := 0; i<m; i++ {
 		if i!=0 {s += " "}
 		s += fmt.Sprintf("%s", String(Index(d,i)))
 	}
 	if m<l && TraceLevel<VVVV {s += " ..."}
-	s += "])"
+	s += "}"
 	return s
 }
 
