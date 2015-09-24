@@ -54,7 +54,7 @@ func biggerType(a, b Datum) bool {
 // Promote pair of numeric empty interfaces (Datum) as necessary.
 func Promote(n *Node, a, b Datum) (aBig, bBig Datum, same bool) {
 
-	var debug = false
+	var debug = false && n!=nil
 	
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)

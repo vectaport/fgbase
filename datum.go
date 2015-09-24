@@ -181,30 +181,94 @@ func StringSlice(d Datum) string {
 	return s
 }
 
-// shadowSlice returns the nth pair of struct field indices where 
-// the first field is a slice shadowed by the second (with a "shadow" prefix).  
-// -1,-1 returned if the nth pair is not found.
-func shadowSlice(d Datum, nth int) (m,n int) {
+// isShadowSlice returns true if the nth field of the struct is a slice that is shadowing
+// another field.
+func isShadowSlice(d Datum, nth int) bool {
 	if !IsStruct(d) {
-		return -1,-1
+		return false
 	}
 
 	dv := reflect.ValueOf(d)
 	l := dv.NumField()
-	cnt := 0
-	for i := 0; i<l; i++ {
-		if cnt==nth {
-			return -1,-1
-		}
-		sl := dv.Type().Field(i)
-		if sl.Name[0] >= 'A' && sl.Name[0] <= 'Z' {
+	if nth>=l {
+		return false
+	}
+	shadow := dv.Type().Field(nth)
 
-			// search for shadow struct
-			for j :=0; j<l; j++ {
-			}
+	// search for shadowing struct
+	for j :=0; j<l; j++ {
+		if j==nth { continue }
+		slice := dv.Type().Field(j)
+		if shadow.Type.String()== slice.Type.String() && shadow.Name=="Shadow"+slice.Name {
+			return true
 		}
 	}
-	return -1,-1
+
+	return false
+}
+
+
+// shadowSlice returns the index of a struct field that is a slice that
+// is being shadowed by the nth field of the struct (with a "Shadow" prefix and matching type).  
+// -1 returned if not found
+func shadowSlice(d Datum, nth int) int {
+	if !IsStruct(d) {
+		return -1
+	}
+
+	dv := reflect.ValueOf(d)
+	l := dv.NumField()
+	if nth>=l {
+		return -1
+	}
+	slice := dv.Type().Field(nth)
+
+	// search for shadowed struct
+	for j :=0; j<l; j++ {
+		if j==nth { continue }
+		shadow := dv.Type().Field(j)
+		if shadow.Type.String()== slice.Type.String() && shadow.Name=="Shadow"+slice.Name {
+			return j
+		}
+	}
+
+	return -1
+}
+
+
+// shadowString returns a struct-like string for a shadows slice, where the index of a changed
+// value proceeds the value and a colon.
+func shadowString(d Datum, sliceIndex, shadowIndex int) string {
+	if !IsStruct(d) {
+		return ""
+	}
+
+	dv := reflect.ValueOf(d)
+	n := dv.NumField()
+	if sliceIndex>=n || shadowIndex>=n {
+		return ""
+	}
+
+	slice := dv.Field(sliceIndex).Interface()
+	shadow := dv.Field(shadowIndex).Interface()
+	st := reflect.TypeOf(slice).String()
+
+	l := Len(slice)
+	s := fmt.Sprintf("[:%d]%v{", l, st[2:])
+
+	var first = true
+	for i := 0; i<l; i++ {
+		if !EqualsTest(nil, Index(slice, i), Index(shadow, i)) {
+			if !first {
+				s += " "
+			} else {
+				first = false
+			}
+			s += fmt.Sprintf("%d:%s", i, String(Index(slice, i)))
+		}
+	}
+	s += "}"
+	return s
 }
 
 
@@ -222,6 +286,9 @@ func StringStruct(d Datum) string {
 	for i := 0; i<l; i++ {
 		ft := dv.Type().Field(i)
 		if ft.Name[0]>='A' && ft.Name[0]<='Z' {
+			if isShadowSlice(d, i) {
+				continue
+			}
 			if flg { 
 				s += " " 
 			} else {
@@ -229,7 +296,12 @@ func StringStruct(d Datum) string {
 			}
 			s += ft.Name
 			s += ":"
-			s += String(dv.Field(i).Interface())
+			j := shadowSlice(d, i)
+			if j<0 {
+				s += String(dv.Field(i).Interface())
+			} else {
+				s += shadowString(d, i, j)
+			}
 		}
 	}
 	s += "}"
