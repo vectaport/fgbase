@@ -48,8 +48,10 @@ func csvoRdy (n *Node) bool {
 	return true
 }
 
-// FuncCSVO reads a vector of input data values from a Reader.
-func FuncCSVO(a []Edge, r io.Reader, enums map[string]int ) Node {
+// FuncCSVO reads a vector of input data values from a Reader and tests for expected values..
+func FuncCSVO(a []Edge, r io.Reader, headers []string) Node {
+
+	enums := StringsToMap(headers)
 
 	var rdyFunc = func (n *Node) {	 
 		a := n.Srcs
@@ -67,10 +69,11 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]int ) Node {
 				var ok bool
 				v,ok = enums[record[j]]
 				if !ok {
-					v = ParseDatum(record[i])
+					v = ParseDatum(record[j])
 				}
 				if !EqualsTest(n, v, a[i].Val) {
-					n.LogError("expected=%T(%v) (0x%x), actual=%T(%v) (0x%x)", v, v, v, a[i].Val, a[i].Val, a[i].Val)	
+					n.LogError("%s:  expected %T(%v) (0x%x), actual %T(%v) (0x%x)", 
+						a[i].Name, v, v, v, a[i].Val, a[i].Val, a[i].Val)	
 				}
 			}
 		}
@@ -91,7 +94,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]int ) Node {
 	headers, err := r2.Read()
 	check(err)
 	var h []int
-	for i := range headers {
+	for i := range a {
 		h = append(h, find(a[i].Name, headers))
 	}
 	node.Aux = csvState{csvreader:r2, header:h}

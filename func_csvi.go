@@ -41,7 +41,9 @@ func csviRdy (n *Node) bool {
 }
 
 // FuncCSVI reads a vector of input data values from a Reader.
-func FuncCSVI(x []Edge, r io.Reader, enums map[string]int) Node {
+func FuncCSVI(x []Edge, r io.Reader, headers []string) Node {
+
+	enums := StringsToMap(headers)
 
 	var fireFunc = func (n *Node) {	 
 		x := n.Dsts
@@ -84,8 +86,11 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]int) Node {
 	headers, err := r2.Read()
 	check(err)
 	var h []int
-	for i := range headers {
-		h = append(h, find(x[i].Name, headers))
+	for i := range x {
+		ix := find(x[i].Name, headers)
+		if ix>= 0 {
+			h = append(h, ix)
+		}
 	}
 	node.Aux = csvState{csvreader:r2, header:h}
 
