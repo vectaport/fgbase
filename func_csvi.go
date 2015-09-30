@@ -41,9 +41,7 @@ func csviRdy (n *Node) bool {
 }
 
 // FuncCSVI reads a vector of input data values from a Reader.
-func FuncCSVI(x []Edge, r io.Reader, headers []string) Node {
-
-	enums := StringsToMap(headers)
+func FuncCSVI(x []Edge, r io.Reader, enums map[string]Datum) Node {
 
 	var fireFunc = func (n *Node) {	 
 		x := n.Dsts
@@ -62,9 +60,11 @@ func FuncCSVI(x []Edge, r io.Reader, headers []string) Node {
 				}
 				var v Datum
 				var ok bool
-				v,ok = enums[record[j]]
+				if enums!= nil {
+					v,ok = enums[record[j]]
+				}
 				if !ok {
-					v = ParseDatum(record[j])
+						v = ParseDatum(record[j])
 				}
 				x[i].Val = v	
 			} else {

@@ -49,9 +49,7 @@ func csvoRdy (n *Node) bool {
 }
 
 // FuncCSVO reads a vector of input data values from a Reader and tests for expected values..
-func FuncCSVO(a []Edge, r io.Reader, headers []string) Node {
-
-	enums := StringsToMap(headers)
+func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 
 	var rdyFunc = func (n *Node) {	 
 		a := n.Srcs
@@ -67,7 +65,9 @@ func FuncCSVO(a []Edge, r io.Reader, headers []string) Node {
 			if record[j]!="*" {
 				var v Datum
 				var ok bool
-				v,ok = enums[record[j]]
+				if enums!=nil { 
+					v,ok = enums[record[j]]
+				}
 				if !ok {
 					v = ParseDatum(record[j])
 				}
