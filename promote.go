@@ -64,6 +64,8 @@ func Promote(n *Node, a, b Datum) (aBig, bBig Datum, same bool) {
 
 	if ta==tb { return a,b,true }
 
+	if ta==nil || tb==nil { return a,b,false }
+
 	if ta.Kind()==tb.Kind() {
 		if ta.Kind().String()==ta.String() {
 			if debug && TraceLevel>=VVV && n!=nil { n.Tracef("case -2: promoting %v to %v\n", tb, ta) }

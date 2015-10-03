@@ -73,7 +73,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 					v = ParseDatum(record[j])
 				}
 				if !EqualsTest(n, v, a[i].Val) {
-					n.LogError("%s:  expected %T(%v) (0x%x), actual %T(%v) (0x%x)", 
+					n.LogError("%s:  expected %T(%v|0x%x), actual %T(%v|0x%x)", 
 						a[i].Name, v, v, v, a[i].Val, a[i].Val, a[i].Val)	
 				}
 			}

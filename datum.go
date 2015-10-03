@@ -37,25 +37,7 @@ func EqualsTest(n *Node, a,b Datum) bool {
 	a2,b2,same := Promote(n, a, b)
 	if !same { return false }
 
-	switch a2.(type) {
-	case string: { return a2.(string)==b2.(string) }		
-        case int8: { return a2.(int8)==b2.(int8) }
-        case uint8: { return a2.(uint8)==b2.(uint8) }
-        case int16: { return a2.(int16)==b2.(int16) }
-        case uint16: { return a2.(uint16)==b2.(uint16) }
-        case int32: { return a2.(int32)==b2.(int32) }
-        case uint32: { return a2.(uint32)==b2.(uint32) }
-	case int64: { return a2.(int64)==b2.(int64) }
-        case uint64: { return a2.(uint64)==b2.(uint64) }
-	case int: { return a2.(int)==b2.(int) }
-	case uint: { return a2.(uint)==b2.(uint) }
-	case float32: { return a2.(float32)==b2.(float32) }
-	case float64: { return a2.(float64)==b2.(float64) }
-	case complex64: { return a2.(complex64)==b2.(complex64) }
-	case complex128: { return a2.(complex128)==b2.(complex128) }
-	case Nada: { return true }
-	default: { return false }
-	}
+	return a2==b2
 }
 
 // IsInt returns true if empty interface (Datum) is an int.
