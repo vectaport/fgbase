@@ -284,6 +284,27 @@ func (e *Edge) SrcRdy(n *Node) bool {
 	return true
 }
 
+ // SrcWait waits for a source Edge to be ready.
+func (e *Edge) SrcWait(n *Node) {
+	if !e.Rdy() {
+
+		i := n.edgeToCase[e]
+		if n.cases[i].Chan!=reflect.ValueOf(nil) {
+			c := n.cases[i].Chan
+			var ok bool
+			v,ok := c.Recv()
+			if !ok {
+				panic("Unexpected error in reading channel\n")
+			}
+			e.Val = v.Interface()
+			n.RemoveInputCase(e)
+			e.srcReadHandle(n, false)
+		} else {
+			panic("Unexpected nil src data channel\n")
+		}
+	}
+}
+
 // dstReadRdy tests if a destination Edge is ready for an ack read.
 func (e *Edge) dstReadRdy() bool {
 	return len(e.Ack)>0
@@ -411,6 +432,8 @@ func (e *Edge) SendData(n *Node) {
 		} else {
 			e.NoOut = false
 		}
+	} else {
+		e.NoOut = false
 	}
 }
 
@@ -434,6 +457,8 @@ func (e *Edge) SendAck(n *Node) {
 		} else {
 			e.NoOut = false
 		}
+	} else {
+		e.NoOut = false
 	}
 }
 

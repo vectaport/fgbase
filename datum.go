@@ -50,7 +50,7 @@ func IsSlice (d Datum) bool {
 	return reflect.ValueOf(d).Kind()==reflect.Slice
 }
 
-// IsStruct returns true if empty interface (Datum) is a slice.
+// IsStruct returns true if empty interface (Datum) is a struct.
 func IsStruct (d Datum) bool {
 	return reflect.ValueOf(d).Kind()==reflect.Struct
 }
@@ -264,6 +264,10 @@ func StringStruct(d Datum) string {
 		s = fmt.Sprintf("%T", d)
 	}
 	s += "{"
+	if reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d) {
+		s += "}"
+		return s
+	}
 	flg := false
 	for i := 0; i<l; i++ {
 		ft := dv.Type().Field(i)
@@ -339,4 +343,15 @@ func ParseDatum(s string) Datum {
 	}
 	v = s
 	return v
+}
+
+
+// IsNada tests if a Datum (an empty interface) is Nada (an empty struct)
+func IsNada(d Datum) bool {
+	return reflect.TypeOf(d)==reflect.TypeOf(Nada{})
+}
+
+// IsZero returns true if a Datum has a golang zero value
+func IsZero(d Datum) bool {
+	return reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d)
 }

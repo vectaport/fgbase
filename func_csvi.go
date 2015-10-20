@@ -54,6 +54,8 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]Datum) Node {
 		if l>len(record) { l = len(record) }
 		for i:=0; i<l; i++ {
 			j := header[i]
+			// n.Tracef("i=%d, j=%d\n", i, j)
+			// n.Tracef("record=%v, header=%v\n", record, header)
 			if j>=0 {
 				if record[j]=="*" {
 					x[i].NoOut = true
@@ -62,7 +64,7 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]Datum) Node {
 				var v Datum
 				var ok bool
 				if enums!= nil {
-					v,ok = enums[x[i].Name+"."+record[j]]
+					v,ok = enums[record[j]]
 				}
 				if !ok {
 						v = ParseDatum(record[j])

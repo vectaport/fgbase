@@ -67,7 +67,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 				var v Datum
 				var ok bool
 				if enums!=nil { 
-					v,ok = enums[a[i].Name+"."+record[j]]
+					v,ok = enums[record[j]]
 				}
 				if !ok {
 					v = ParseDatum(record[j])

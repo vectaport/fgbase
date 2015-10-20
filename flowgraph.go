@@ -144,6 +144,7 @@ var StartTime time.Time
 
 // TimeSinceStart returns time since start of running flowgraph.
 func TimeSinceStart() float64 {
+	if IsZero(StartTime) { return -1 }
 	return time.Since(StartTime).Seconds()
 }
 

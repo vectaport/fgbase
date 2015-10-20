@@ -23,7 +23,7 @@ type Node struct {
 	cases []reflect.SelectCase      // select cases to read from Edge's
 	caseToEdgeDir map [int] edgeDir // map from index of selected case to associated Edge
 	edgeToCase map [*Edge] int      // map from *Edge to index of associated select case
-	dataBackup []reflect.Value      // backup data channels
+	dataBackup []reflect.Value      // backup data channels for inputs
 	flag uintptr                    // flags for package internal use
 }
 
@@ -83,7 +83,9 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 	}
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
-		dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
+		// dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
+		dsti.RdyCnt = 0
+
 		if dsti.Ack!=nil {
 			if pool {
 				dsti.Ack = make(chan Nada, ChannelSize)
@@ -145,7 +147,12 @@ func prefixTracef(n *Node) (format string) {
 	}
 
 	if TraceSeconds  || TraceLevel >= VVVV {
-		newFmt += fmt.Sprintf(":%.4f", TimeSinceStart())
+		t := TimeSinceStart()
+		if t>=0.0 {
+			newFmt += fmt.Sprintf(":%.4f", TimeSinceStart())
+		} else {
+			newFmt += ":*"
+		}
 	}
 
 	if TracePointer{
@@ -307,6 +314,16 @@ func (n *Node) restoreDataChannels () {
 		}
 	}
 }
+
+// RestoreDataChannel restores the data channel for a given source edge
+func (n *Node) RestoreDataChannel (e *Edge) {
+	for i := range n.Srcs {
+		if n.Srcs[i]==e {
+			n.cases[i].Chan = n.dataBackup[i]
+			break
+		}
+	}
+}
 	
 // RdyAll tests readiness of Node to execute.
 func (n *Node) RdyAll() bool {
@@ -333,10 +350,12 @@ func (n *Node) Fire() {
 		n.FireFunc(n) 
 	} 
 	if TraceLevel>Q { 
+		// newFmt += "\t"
 		newFmt += n.traceValRdyDst(true)
 		if n.Aux != nil && IsStruct(n.Aux) {
 			s := String(n.Aux)
 			if s != "{}" {
+				// newFmt += "\t// " + s
 				newFmt += " // " + s
 			}
 		}
@@ -459,7 +478,7 @@ func extendChannelCaps(nodes []Node) {
 	}
 }
 
-// clearUpstreamAcks increments RdyCnt upstream from every downstream Edge
+// clearUpstreamAcks increments RdyCnt upstream from every initialized downstream Edge
 // (Node input edge) to reflect the fact that flow is initialized here.
 func clearUpstreamAcks(nodes []Node) {
 	for _,n := range nodes {
@@ -470,7 +489,7 @@ func clearUpstreamAcks(nodes []Node) {
 		}
 		for j := range n.Dsts {
 			if n.Dsts[j].Val != nil {
-				n.Dsts[j].RdyCnt++
+				n.Dsts[j].RdyCnt += len(*n.Dsts[j].Data)
 			}
 		}
 	}
@@ -483,12 +502,15 @@ func RunAll(nodes []Node) {
 	extendChannelCaps(nodes)
 	clearUpstreamAcks(nodes)
 
+	if TraceLevel>=VVVV {
+		for i := range nodes {
+			nodes[i].TraceValRdy()
+		}
+		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
+	}
 	StartTime = time.Now()
 	for i:=0; i<len(nodes); i++ {
 		node := &nodes[i]
-		if TraceLevel>=VVVV {
-			node.Tracef("\n")
-		}
 		go node.Run()
 	}
 
@@ -501,7 +523,7 @@ func RunAll(nodes []Node) {
 	}
 
 	if TraceLevel>=VVVV {
-		StdoutLog.Printf("<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>\n")
+		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
 		for i:=0; i<len(nodes); i++ {
 			nodes[i].traceValRdy(false)
 		}
