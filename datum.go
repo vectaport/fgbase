@@ -242,7 +242,7 @@ func shadowString(d Datum, sliceIndex, shadowIndex int) string {
 	for i := 0; i<l; i++ {
 		if !EqualsTest(nil, Index(slice, i), Index(shadow, i)) {
 			if !first {
-				s += " "
+				s += ", "
 			} else {
 				first = false
 			}
@@ -267,6 +267,9 @@ func StringStruct(d Datum) string {
 	if reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d) {
 		s += "}"
 		return s
+	}
+	if s,ok := d.(fmt.Stringer); ok {
+		return s.String()
 	}
 	flg := false
 	for i := 0; i<l; i++ {
