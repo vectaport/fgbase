@@ -520,6 +520,8 @@ func RunAll(nodes []Node) {
 		if TraceLevel>QQ {
 			defer StdoutLog.Printf("\n")
 		}
+	} else {
+		select {}  // sleep forever
 	}
 
 	if TraceLevel>=VVVV {

@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"io"
 	"os"
+	"reflect"
 )      			
 
 
@@ -63,6 +64,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 		if l>len(record) { l = len(record) }
 		for i:=0; i<l; i++ {
 			j := header[i]
+
 			if record[j]!="*" {
 				var v Datum
 				var ok bool
@@ -73,8 +75,45 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 					v = ParseDatum(record[j])
 				}
 				if !EqualsTest(n, v, a[i].Val) {
-					n.LogError("%s:  expected %T(%v|0x%x), actual %T(%v|0x%x)", 
-						a[i].Name, v, v, v, a[i].Val, a[i].Val, a[i].Val)	
+
+					// check if space-separated struct to compare
+					if record[j][0]=='{' && record[j][len(record[j])-1]=='}' && IsStruct(a[i].Val) {
+						l := len(record[j])
+						s := record[j][1:l-1]
+						m := 0
+						for {
+							if s == "" { break }
+							var p string
+							k := 0
+							for {
+								if k==len(s) || s[k]==' ' { break }
+								p += string(s[k])
+								k++
+							}
+							if k!=len(s) {
+								s = s[k+1:]
+							} else {
+								s = ""
+							}
+							if enums != nil {
+								v,ok = enums[p]
+							}
+							if !ok {
+								v = ParseDatum(p)
+							}
+							
+							av := reflect.ValueOf(a[i].Val)
+							ft := av.Field(m).Interface()
+							if !EqualsTest(n, v, ft) {
+								n.LogError("%s:  expected %T(%v|0x%x) from field %d of %T(%v)", 
+									a[i].Name, v, v, v, i, a[i].Val, a[i].Val)	
+							}
+							m++
+						}
+					} else {
+						n.LogError("%s:  expected %T(%v|0x%x), actual %T(%v|0x%x)", 
+							a[i].Name, v, v, v, a[i].Val, a[i].Val, a[i].Val)	
+					}
 				}
 			}
 		}
