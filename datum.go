@@ -264,7 +264,7 @@ func StringStruct(d Datum) string {
 		s = fmt.Sprintf("%T", d)
 	}
 	s += "{"
-	if reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d) {
+	if false && reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d) {
 		s += "}"
 		return s
 	}
