@@ -53,7 +53,7 @@ func csvoRdy (n *Node) bool {
 // input from upstream.  enums is an optional map from field.enum to a Datum.
 func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 
-	var rdyFunc = func (n *Node) {	 
+	var fireFunc = func (n *Node) {	 
 		a := n.Srcs
 		
 		r := n.Aux.(csvState).csvreader
@@ -127,7 +127,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]Datum) Node {
 		ap = append(ap, &a[i])
 	}
 
-	node := MakeNode("csvo", ap, nil, csvoRdy, rdyFunc)
+	node := MakeNode("csvo", ap, nil, csvoRdy, fireFunc)
 	r2 := csv.NewReader(r)
 
 	// save headers
