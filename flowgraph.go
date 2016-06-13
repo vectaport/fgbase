@@ -80,8 +80,8 @@ var ChannelSize = 1
 // node channel wrapper
 type nodeWrap struct {
 	node *Node
-	datum Datum
-	ack2 chan Nada
+	datum interface{}
+	ack2 chan struct{}
 }
 
 // MakeGraph returns a slice of Edge and a slice of Node.

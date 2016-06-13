@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func rshFire2(a, b Datum) Datum {
+func rshFire2(a, b interface{}) interface{} {
 	
 	switch a.(type) {
         case uint8: { return a.(uint8)>>b.(uint8) }

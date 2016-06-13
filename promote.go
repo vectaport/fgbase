@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func biggerType(a, b Datum) bool {
+func biggerType(a, b interface{}) bool {
 	switch a.(type) {
 	case bool: { }
 	case int8, uint8: {
@@ -51,8 +51,8 @@ func biggerType(a, b Datum) bool {
 	return false
 }
 
-// Promote pair of numeric empty interfaces (Datum) as necessary.
-func Promote(n *Node, a, b Datum) (aBig, bBig Datum, same bool) {
+// Promote pair of numeric empty interfaces (interface{}) as necessary.
+func Promote(n *Node, a, b interface{}) (aBig, bBig interface{}, same bool) {
 
 	var debug = false && n!=nil
 	

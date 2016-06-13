@@ -41,8 +41,8 @@ func csviRdy (n *Node) bool {
 }
 
 // FuncCSVI reads a vector of input data values from a Reader and outputs
-// them downstream.  enums is an optional map from field.enum to a Datum.
-func FuncCSVI(x []Edge, r io.Reader, enums map[string]Datum) Node {
+// them downstream.  enums is an optional map from field.enum to an empty interface.
+func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 
 	var fireFunc = func (n *Node) {	 
 		x := n.Dsts
@@ -61,7 +61,7 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]Datum) Node {
 					x[i].NoOut = true
 					continue
 				}
-				var v Datum
+				var v interface{}
 				var ok bool
 				if enums!= nil {
 					v,ok = enums[record[j]]

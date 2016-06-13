@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func addFire2(a, b Datum) Datum {
+func addFire2(a, b interface{}) interface{} {
 	
 	switch a.(type) {
         case int8: { return a.(int8)+b.(int8) }

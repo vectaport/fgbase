@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func lshFire2(a, b Datum) Datum {
+func lshFire2(a, b interface{}) interface{} {
 	
 	switch a.(type) {
         case uint8: { return a.(uint8)<<b.(uint8) }

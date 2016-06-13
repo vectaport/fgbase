@@ -10,9 +10,6 @@ package flowgraph
 	 "time"
  )
 
- // Nada is the empty struct for use as an ack.
- type Nada struct {}
-
  // EdgeNode contains information on a Node connected to an Edge.
  type edgeNode struct {
 	 node *Node
@@ -23,40 +20,40 @@ package flowgraph
  type Edge struct {
 
 	 // values shared by upstream and downstream Node
-	 Name string           // for trace
-	 Data *[]chan Datum    // slice of data channels
-	 Ack chan Nada         // request (or acknowledge) channel
-	 edgeNodes *[]edgeNode // list of Node's associated with this Edge.	 
+	 Name string              // for trace
+	 Data *[]chan interface{} // slice of data channels
+	 Ack chan struct{}        // request (or acknowledge) channel
+	 edgeNodes *[]edgeNode    // list of Node's associated with this Edge.	 
 
 	 // values unique to upstream and downstream Node
-	 Val Datum             // generic empty interface
-	 RdyCnt int            // readiness of I/O
-	 NoOut bool            // set true to inhibit one output, data or ack
-	 Ack2 chan Nada        // alternate channel for ack steering
+	 Val interface{}         // generic empty interface
+	 RdyCnt int              // readiness of I/O
+	 NoOut bool              // set true to inhibit one output, data or ack
+	 Ack2 chan struct{}      // alternate channel for ack steering
 
  }
 
  // Return new Edge to connect one upstream Node to one or more downstream Node's.
  // Initialize optional data value to start flow.
- func makeEdge(name string, initVal Datum) Edge {
+ func makeEdge(name string, initVal interface{}) Edge {
 	 var e Edge
 	 e.Name = name
 	 e.Val = initVal
-	 var dc []chan Datum
+	 var dc []chan interface{}
 	 e.Data = &dc
-	 e.Ack = make(chan Nada, ChannelSize)
+	 e.Ack = make(chan struct{}, ChannelSize)
 	 var nl []edgeNode
 	 e.edgeNodes = &nl
 	 return e
  }
 
  // MakeEdge initializes optional data value to start flow.
- func MakeEdge(name string, initVal Datum) Edge {
+ func MakeEdge(name string, initVal interface{}) Edge {
 	 return makeEdge(name, initVal)
  }
 
  // Const sets up an Edge to provide a constant value.
- func (e *Edge) Const(d Datum) {
+ func (e *Edge) Const(d interface{}) {
 	 e.Val = d
 	 e.Data = nil
 	 e.Ack = nil
@@ -107,7 +104,7 @@ package flowgraph
 				 return
 			 }
 
-			 var v Datum
+			 var v interface{}
 			 err = json.Unmarshal(b,&v)
 			 if err != nil {
 				 n.LogError("%v", err)
@@ -163,14 +160,14 @@ package flowgraph
 				 }
 				 return
 			 }
-			 e.Ack <- Nada{}
+			 e.Ack <- struct{}{}
 		 }
 	 } ()
 
 
 	 writer := bufio.NewWriter(conn)
 	 j := len(*e.Data)
-	 *e.Data = append(*e.Data, make(chan Datum, ChannelSize))
+	 *e.Data = append(*e.Data, make(chan interface{}, ChannelSize))
 	 ej := (*e.Data)[j]
 	 go func() {
 		 bufCnt := 0
@@ -437,7 +434,7 @@ func (e *Edge) SendData(n *Node) {
 	}
 }
 
-// SendAck writes Nada to the Ack channel
+// SendAck writes struct{} to the Ack channel
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
 		if (!e.NoOut) {
@@ -445,13 +442,13 @@ func (e *Edge) SendAck(n *Node) {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack <- // Ack2=%p\n", e.Name, e.Ack2)
 				}
-				e.Ack2 <- Nada{}
+				e.Ack2 <- struct{}{}
 				e.Ack2 = nil
 			} else {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack <-\n", e.Name)
 				}
-				e.Ack <- Nada{}
+				e.Ack <- struct{}{}
 			}
 			e.RdyCnt++
 		} else {

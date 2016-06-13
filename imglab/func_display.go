@@ -7,7 +7,7 @@ import (
 
 type displayStruct struct {
 	window *opencv.Window
-	quitChan chan flowgraph.Nada
+	quitChan chan struct{}
 }
 
 	
@@ -24,7 +24,7 @@ func displayFire (n *flowgraph.Node) {
 	if n.Aux.(displayStruct).quitChan != nil {
 		key := opencv.WaitKey(0)
 		if key == 27 {
-			var nada flowgraph.Nada
+			var nada struct{}
 			n.Aux.(displayStruct).quitChan <- nada
 		}
 	} else {
@@ -34,7 +34,7 @@ func displayFire (n *flowgraph.Node) {
 }
 
 // FuncDisplay displays an opencv image.
-func FuncDisplay(a flowgraph.Edge, quitChan chan flowgraph.Nada) flowgraph.Node {
+func FuncDisplay(a flowgraph.Edge, quitChan chan struct{}) flowgraph.Node {
 	node := flowgraph.MakeNode("display", []*flowgraph.Edge{&a}, nil, nil, displayFire)
 	node.Aux = displayStruct{opencv.NewWindow("display"), quitChan}
 	return node

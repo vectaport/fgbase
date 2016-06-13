@@ -17,7 +17,7 @@ type Node struct {
 	RdyFunc NodeRdy                 // func to test Edge readiness
 	FireFunc NodeFire               // func to fire off the Node
 	RunFunc NodeRun                 // func to repeatedly run Node
-	Aux Datum                       // auxiliary empty interface to hold state
+	Aux interface{}                 // auxiliary empty interface to hold state
 	RdyState int                    // state of latest readiness
 
 	cases []reflect.SelectCase      // select cases to read from Edge's
@@ -70,7 +70,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 			j := len(*srci.Data)
 			if j==0 || !pool {
 				df := func() int {if pool&&recurse {return 0}; return ChannelSize}()
-				*srci.Data = append(*srci.Data, make(chan Datum, df))
+				*srci.Data = append(*srci.Data, make(chan interface{}, df))
 			} else {
 				j = 0
 			}
@@ -88,7 +88,7 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 
 		if dsti.Ack!=nil {
 			if pool {
-				dsti.Ack = make(chan Nada, ChannelSize)
+				dsti.Ack = make(chan struct{}, ChannelSize)
 			}
 			n.cases = append(n.cases, reflect.SelectCase{Dir:reflect.SelectRecv, Chan:reflect.ValueOf(dsti.Ack)})
 			n.caseToEdgeDir[cnt] = edgeDir{dsti, false}
@@ -455,7 +455,7 @@ func extendChannelCaps(nodes []Node) {
 				for k := 0; k<l; k++ {
 					if cap((*dstj.Data)[k])<h {
 						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.SrcCnt()=%d)\n", dstj.Name, len(*dstj.Data), dstj.DstCnt())
-						c := make(chan Datum, h)
+						c := make(chan interface{}, h)
 						(*dstj.Data)[k] = c
 
 						// update relevant select case and data channel upstream
@@ -532,9 +532,9 @@ func RunAll(nodes []Node) {
 	}
 }
 
-// NodeWrap bundles a Node pointer, and an ack channel with a Datum, in order to 
+// NodeWrap bundles a Node pointer, and an ack channel with an empty interface, in order to 
 // pass information about an upstream node downstream.  Used for acking back in a Pool.
-func (n *Node) NodeWrap(d Datum, ack chan Nada) Datum {
+func (n *Node) NodeWrap(d interface{}, ack chan struct{}) interface{} {
 	return nodeWrap{n, d, ack}
 }
 

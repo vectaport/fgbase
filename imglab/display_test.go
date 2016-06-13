@@ -26,10 +26,10 @@ func TestDisplay(t *testing.T) {
 
 	test := true
 
-	var quitChan chan flowgraph.Nada
+	var quitChan chan struct{}
 	var wait time.Duration
 	if !test {
-		quitChan =make(chan flowgraph.Nada)
+		quitChan =make(chan struct{})
 	} else {
 		wait = 1
 	}
