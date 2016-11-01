@@ -1,7 +1,7 @@
 package flowgraph
 
 import (		
-	"golang.org/x/crypto/nacl/box"
+       "golang.org/x/crypto/nacl/box"
 )      			
 
 type enc struct {
