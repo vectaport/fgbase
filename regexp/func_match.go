@@ -15,15 +15,23 @@ func matchFire (n *flowgraph.Node) {
                 return
         }
 
-	slice := a.Val.([]byte)
+	s := a.Val.(string)
+	if len(s)<len(match) {
+		x.Val = nil
+		return
+	}
+	
+	matched := true
 	for i := range match {
-                if slice[i]!=match[i] {
-		        x.Val = nil
-                        return
-                }
+		if s[i]!=match[i] { matched = false; break }
         }
+	if matched {
+		x.Val = s[len(match):]
+		return
+	}
 
-	x.Val = slice[len(match):]
+	x.Val = nil
+	return
 }
 
 // FuncMatch advances a byte slice if it matches a string, otherwise returns the empty slice
