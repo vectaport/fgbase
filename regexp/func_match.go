@@ -23,7 +23,7 @@ func matchFire (n *flowgraph.Node) {
 	
 	matched := true
 	for i := range match {
-		if s[i]!=match[i] { matched = false; break }
+		if s[i]!=match[i] && match[i] != '.' { matched = false; break }
         }
 	if matched {
 		x.Val = s[len(match):]
