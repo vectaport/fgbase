@@ -1,8 +1,24 @@
 package regexp
 
-import (		
-       "github.com/vectaport/flowgraph"
-)      			
+import (
+	"github.com/vectaport/flowgraph"
+)
+
+func bq(str string) func() (char byte, bquoted bool) {
+	s := str
+	return func() (char byte, bquoted bool) {
+		if len(s)==0 {return 0x00,false}
+		c := s[0]
+		if c!='\\' || len(s)==1 {
+			s = s[1:]
+			return c,false
+		} else {
+			c = s[1]
+			s = s[2:]
+			return c,true
+		}
+	}
+}
 
 func matchFire (n *flowgraph.Node) {	 
 	a := n.Srcs[0] 		 
@@ -16,14 +32,20 @@ func matchFire (n *flowgraph.Node) {
         }
 
 	s := a.Val.(string)
-	if len(s)<len(match) {
-		x.Val = nil
-		return
-	}
+
+	bqsf := bq(s)
+	bqmf := bq(match)
 	
 	matched := true
-	for i := range match {
-		if s[i]!=match[i] && match[i] != '.' { matched = false; break }
+	for {
+		scurr,_ := bqsf()
+		mcurr,mbq := bqmf()
+		
+		if mcurr == 0x00 { break } // match is done
+		
+		if scurr == 0x00 { matched = false; break } // string is done
+		
+		if scurr != mcurr && (mcurr != '.' || mbq) { matched = false; break } // match is over
         }
 	if matched {
 		x.Val = s[len(match):]
