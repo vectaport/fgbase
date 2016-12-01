@@ -4,7 +4,7 @@ import (
 	"github.com/vectaport/flowgraph"
 )
 
-func bq(str string) func() (char byte, bquoted bool) {
+func backslash(str string) func() (char byte, bquoted bool) {
 	s := str
 	return func() (char byte, bquoted bool) {
 		if len(s)==0 {return 0x00,false}
@@ -22,9 +22,9 @@ func bq(str string) func() (char byte, bquoted bool) {
 
 func matchFire (n *flowgraph.Node) {	 
 	a := n.Srcs[0] 		 
+	b := n.Srcs[1] 		 
 	x := n.Dsts[0] 		 
-	match := n.Aux.(string)
-
+	match := b.Val.(string)
 
         if a.Val==nil {
                 x.Val = nil
@@ -33,19 +33,19 @@ func matchFire (n *flowgraph.Node) {
 
 	s := a.Val.(string)
 
-	bqsf := bq(s)
-	bqmf := bq(match)
+	bssf := backslash(s)
+	bsmf := backslash(match)
 	
 	matched := true
 	for {
-		scurr,_ := bqsf()
-		mcurr,mbq := bqmf()
+		scurr,_ := bssf()
+		mcurr,mbs := bsmf()
 		
 		if mcurr == 0x00 { break } // match is done
 		
 		if scurr == 0x00 { matched = false; break } // string is done
 		
-		if scurr != mcurr && (mcurr != '.' || mbq) { matched = false; break } // match is over
+		if scurr != mcurr && (mcurr != '.' || mbs) { matched = false; break } // match is over
         }
 	if matched {
 		x.Val = s[len(match):]
@@ -57,10 +57,9 @@ func matchFire (n *flowgraph.Node) {
 }
 
 // FuncMatch advances a byte slice if it matches a string, otherwise returns the empty slice
-func FuncMatch(a flowgraph.Edge, x flowgraph.Edge, match string) flowgraph.Node {
+func FuncMatch(a,b flowgraph.Edge, x flowgraph.Edge) flowgraph.Node {
 	
-	node := flowgraph.MakeNode("match", []*flowgraph.Edge{&a}, []*flowgraph.Edge{&x}, nil, matchFire)
-	node.Aux = match
+	node := flowgraph.MakeNode("match", []*flowgraph.Edge{&a, &b}, []*flowgraph.Edge{&x}, nil, matchFire)
 	return node
 	
 }
