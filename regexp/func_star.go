@@ -28,9 +28,9 @@ func starFire (n *flowgraph.Node) {
 		}
 		x.Val = a.Val
 		y.NoOut = true
-		s,ok := a.Val.(string)
-		if ok {
-			n.Aux = starStruct{live:true, prev:s}
+		curr := a.Val.(Regexp).Curr
+		if curr!="" {
+			n.Aux = starStruct{live:true, prev:curr}
 			return
 		}
 		n.Aux = starStruct{live:true}
@@ -42,25 +42,26 @@ func starFire (n *flowgraph.Node) {
 	// if match failed
 	if b.Val==nil {
 		x.NoOut = true
-		y.Val = prev
+		y.Val = Regexp{Curr:prev, Orig:"LOSTORIG"}
 		n.Aux = starStruct{live:false, prev:prev}
 		return
 	}
 	
-	s := b.Val.(string)
+	curr := b.Val.(Regexp).Curr
+	orig := b.Val.(Regexp).Orig
 	
 	// match is complete
-	if len(s)==0 {
+	if len(curr)==0 {
 		x.NoOut = true
-		y.Val = s
+		y.Val = Regexp{Curr:curr, Orig:orig}
 		n.Aux = starStruct{live:false}
 		return
 	}
 	
 	// if match goes on
-	x.Val = s
+	x.Val = Regexp{Curr:curr, Orig:orig}
 	y.NoOut = true
-	n.Aux = starStruct{live:true, prev:b.Val.(string)}
+	n.Aux = starStruct{live:true, prev:b.Val.(Regexp).Curr}
 	return
 }
 

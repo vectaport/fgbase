@@ -29,12 +29,12 @@ func barFire (n *flowgraph.Node) {
 		return
         }
 
-        as := a.Val.(string)
-        bs := b.Val.(string)
+        as := a.Val.(Regexp).Curr
+        bs := b.Val.(Regexp).Curr
 	if len(as)>len(bs) {
-  		x.Val = as
+  		x.Val = a.Val
         }
-        x.Val = bs
+        x.Val = b.Val
 }
 
 // FuncBar waits for both inputs and returns the one that matches the shortest string.

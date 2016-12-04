@@ -31,9 +31,10 @@ func matchFire (n *flowgraph.Node) {
                 return
         }
 
-	s := a.Val.(string)
+	orig := a.Val.(Regexp).Orig
+	curr := a.Val.(Regexp).Curr
 
-	bssf := backslash(s)
+	bssf := backslash(curr)
 	bsmf := backslash(match)
 	
 	matched := true
@@ -48,7 +49,7 @@ func matchFire (n *flowgraph.Node) {
 		if scurr != mcurr && (mcurr != '.' || mbs) { matched = false; break } // match is over
         }
 	if matched {
-		x.Val = s[len(match):]
+		x.Val = Regexp{Curr:curr[len(match):], Orig:orig}
 		return
 	}
 
