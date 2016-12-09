@@ -5,84 +5,89 @@ import (
 )
 
 type starStruct struct {
-	live bool
-	prev string
+	prev map[string]string
 }
 
 func starFire (n *flowgraph.Node) {
-	a := n.Srcs[0]
-	b := n.Srcs[1]
-	x := n.Dsts[0]
-	y := n.Dsts[1]
+	newmatch := n.Srcs[0]
+	subsrc := n.Srcs[1]
+	dnstreq := n.Srcs[2]
 
-	live := n.Aux.(starStruct).live
-	prev := n.Aux.(starStruct).prev
+	oldmatch := n.Dsts[0]
+	subdst := n.Dsts[1]
+	upstreq := n.Dsts[2]
 
-	// first attempted match
-	if !live {
-		b.NoOut = true
-		if a.Val == nil {
-			x.NoOut = true
-			y.Val = nil
-			return
+	st := n.Aux.(starStruct)
+
+	if dnstreq.SrcRdy(n) {
+
+
+		// match >0
+		match := dnstreq.Val.(Search)
+		if match.State==Fail {
+			delete(st.prev, match.Orig)
+			subdst.NoOut = true
+		} else {
+			match.Curr = st.prev[match.Orig]
+			subdst.Val = match
 		}
-		x.Val = a.Val
-		y.NoOut = true
-		curr := a.Val.(Regexp).Curr
-		if curr!="" {
-			n.Aux = starStruct{live:true, prev:curr}
-			return
-		}
-		n.Aux = starStruct{live:true}
+		
+		newmatch.NoOut = true
+		subsrc.NoOut = true
+		oldmatch.NoOut = true
+		upstreq.NoOut = true
+		return
+	}
+
+	if subsrc.SrcRdy(n) {
+
+		// match >0
+		newmatch.Val = subsrc.Val
+			
+		newmatch.NoOut = true
+		dnstreq.NoOut = true
+		subdst.NoOut = true
+		upstreq.NoOut = true
+		return
+	}
+
+	if newmatch.SrcRdy(n) {
+
+		// match zero
+		match := newmatch.Val.(Search)
+		st.prev[match.Orig]=match.Curr
+		oldmatch.Val = match
+
+		subsrc.NoOut = true
+		dnstreq.NoOut = true
+		subdst.NoOut = true
+		upstreq.NoOut = true
 		return
 	}
 	
-	a.NoOut = true
-	
-	// if match failed
-	if b.Val==nil {
-		x.NoOut = true
-		y.Val = Regexp{Curr:prev, Orig:"LOSTORIG"}
-		n.Aux = starStruct{live:false, prev:prev}
-		return
-	}
-	
-	curr := b.Val.(Regexp).Curr
-	orig := b.Val.(Regexp).Orig
-	
-	// match is complete
-	if len(curr)==0 {
-		x.NoOut = true
-		y.Val = Regexp{Curr:curr, Orig:orig}
-		n.Aux = starStruct{live:false}
-		return
-	}
-	
-	// if match goes on
-	x.Val = Regexp{Curr:curr, Orig:orig}
-	y.NoOut = true
-	n.Aux = starStruct{live:true, prev:b.Val.(Regexp).Curr}
-	return
+
 }
 
 func starRdy (n *flowgraph.Node) bool {
-	if !n.Dsts[0].DstRdy(n) || !n.Dsts[1].DstRdy(n) { return false }
-	live := n.Aux.(starStruct).live
-	if live { return n.Srcs[1].SrcRdy(n) }
-	return n.Srcs[0].SrcRdy(n)
+	if !n.Dsts[0].DstRdy(n) || !n.Dsts[1].DstRdy(n) || !n.Dsts[2].DstRdy(n) { return false }
+	return n.Srcs[0].SrcRdy(n) || n.Srcs[1].SrcRdy(n) || n.Srcs[2].SrcRdy(n)
 }
 
 // FuncStar repeats a match
+//
 // inputs:
-// a -- new match (string)
-// b -- fedback result of last match, successful (remainder string) or not (nil)
+// newmatch -- new match string
+// subsrc   -- fedback result of last match, successful (remainder string) or not (nil)
+// dnstreq  -- receive downstream request for new remainder string
+//
 // outputs:
-// x -- continue match (remainder string)
-// y -- match done, successful (remainder string) or not (nil)
-func FuncStar(a, b, x, y flowgraph.Edge) flowgraph.Node {
+// oldmatch -- continue match (remainder string)
+// subdst   -- match done, successful (remainder string) or not (nil)
+// upstreq  -- send upstream request for new remainder string
+func FuncStar(newmatch, subsrc, dnstreq flowgraph.Edge, oldmatch, subdst, upstreq flowgraph.Edge) flowgraph.Node {
 
-	node := flowgraph.MakeNode("star", []*flowgraph.Edge{&a, &b}, []*flowgraph.Edge{&x, &y}, starRdy, starFire)
-	node.Aux = starStruct{}
+	node := flowgraph.MakeNode("star", []*flowgraph.Edge{&newmatch, &subsrc, &dnstreq}, []*flowgraph.Edge{&oldmatch, &subdst, &upstreq}, starRdy, starFire)
+	node.Aux = starStruct{prev:make(map[string]string)}
 	return node
 
 }

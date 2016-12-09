@@ -28,7 +28,7 @@ func regexpFire (n *flowgraph.Node) {
 		}
 		x.Val = a.Val
 		y.NoOut = true
-		curr := a.Val.(Regexp).Curr
+		curr := a.Val.(Search).Curr
 		if curr!="" {
 			n.Aux = regexpStruct{live:true, prev:curr}
 			return
@@ -48,7 +48,7 @@ func regexpFire (n *flowgraph.Node) {
 			return
 		}
 		curr := prev[1:]
-		x.Val = Regexp{Curr:curr, Orig:"LOSTORIG2"}
+		x.Val = Search{Curr:curr, Orig:"LOSTORIG2"}
 		y.NoOut = true
 		n.Aux = regexpStruct{live:true, prev:curr}
 		return
@@ -67,7 +67,7 @@ func regexpRdy (n *flowgraph.Node) bool {
 	return n.Srcs[0].SrcRdy(n)
 }
 
-// FuncRegexp repeats a match
+// FuncSearch repeats a match
 // inputs:
 // a -- new string
 // b -- fedback result of last regexp, successful (remainder string) or not (nil)

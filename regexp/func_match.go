@@ -26,13 +26,13 @@ func matchFire (n *flowgraph.Node) {
 	x := n.Dsts[0] 		 
 	match := b.Val.(string)
 
-        if a.Val==nil {
-                x.Val = nil
+        if a.Val.(Search).State==Fail {
+                x.Val = a.Val
                 return
         }
 
-	orig := a.Val.(Regexp).Orig
-	curr := a.Val.(Regexp).Curr
+	orig := a.Val.(Search).Orig
+	curr := a.Val.(Search).Curr
 
 	bssf := backslash(curr)
 	bsmf := backslash(match)
@@ -49,11 +49,11 @@ func matchFire (n *flowgraph.Node) {
 		if scurr != mcurr && (mcurr != '.' || mbs) { matched = false; break } // match is over
         }
 	if matched {
-		x.Val = Regexp{Curr:curr[len(match):], Orig:orig}
+		x.Val = Search{Curr:curr[len(match):], Orig:orig, State:Live}
 		return
 	}
 
-	x.Val = nil
+	x.Val = Search{Curr:curr[len(match):], Orig:orig }
 	return
 }
 

@@ -10,12 +10,17 @@ func barFire (n *flowgraph.Node) {
 	x := n.Dsts[0]
 	sink := n.Aux.(bool)
 
-        if a.Val==nil && b.Val==nil {
+        as := a.Val.(Search).Curr
+	ast := a.Val.(Search).State
+        bs := b.Val.(Search).Curr
+	bst := b.Val.(Search).State
+	
+        if ast==Fail && bst==Fail {
 		if sink {
 			x.NoOut = true
 			return
 		}
-                x.Val = nil
+                x.Val = Search{}
                 return
         }
 
@@ -29,8 +34,6 @@ func barFire (n *flowgraph.Node) {
 		return
         }
 
-        as := a.Val.(Regexp).Curr
-        bs := b.Val.(Regexp).Curr
 	if len(as)>len(bs) {
   		x.Val = a.Val
         }
