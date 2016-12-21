@@ -53,7 +53,7 @@ func matchFire (n *flowgraph.Node) {
 		return
 	}
 
-	x.Val = Search{Curr:curr[len(match):], Orig:orig }
+	x.Val = Search{Curr:curr, Orig:orig}
 	return
 }
 

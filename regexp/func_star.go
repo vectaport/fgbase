@@ -73,7 +73,7 @@ func starRdy (n *flowgraph.Node) bool {
 	return n.Srcs[0].SrcRdy(n) || n.Srcs[1].SrcRdy(n) || n.Srcs[2].SrcRdy(n)
 }
 
-// FuncStar repeats a match
+// FuncStar repeats a match zero or more times
 //
 // inputs:
 // newmatch -- new match string
