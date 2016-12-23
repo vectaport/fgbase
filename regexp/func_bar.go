@@ -15,7 +15,7 @@ func barFire (n *flowgraph.Node) {
         bs := b.Val.(Search).Curr
 	bst := b.Val.(Search).State
 	
-        if ast==Fail && bst==Fail {
+        if ast==Done && bst==Done {
 		if sink {
 			x.NoOut = true
 			return
@@ -24,12 +24,12 @@ func barFire (n *flowgraph.Node) {
                 return
         }
 
-        if a.Val==nil {
+        if ast==Done {
 	        x.Val = b.Val
 		return
         }
 
-        if b.Val==nil {
+        if bst==Done {
 	        x.Val = a.Val
 		return
         }
