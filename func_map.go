@@ -6,13 +6,8 @@ import (
 func mapFire (n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts
-	for j := range x {
-		x[j].NoOut = true
-	}
 	i := n.Aux.(int)
-	x[i].Val = n.NodeWrap(a.Val, x[i].Ack)
-	x[i].NoOut = false
-
+	x[i].DstPut(n.NodeWrap(a.SrcGet(), x[i].Ack))
 }
 
 // FuncMap maps a value to one of n reducers.

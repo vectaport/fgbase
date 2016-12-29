@@ -35,9 +35,9 @@ func FuncQsort(a, x Edge, poolSz int ) *Pool {
 		
 		// Ack early if Node available for upstream use.
 		ackEarly := p.Alloc(n, 1)
-		if ackEarly { 
+		if ackEarly {
+			a.Flow = true
 			a.SendAck(n)
-			a.NoOut = true
 		}
 
 		// If upstream is a Node from PoolQsort.
@@ -51,7 +51,8 @@ func FuncQsort(a, x Edge, poolSz int ) *Pool {
 			if m!=0 { p.Free(n, m) }
 		}()
 
-		d,ok := a.Val.(RecursiveSort)
+		av := a.SrcGet()
+		d,ok := av.(RecursiveSort)
 		if !ok {
 			n.LogError("not of type RecursiveSort (%T)\n", a.Val)
 			return
@@ -67,9 +68,8 @@ func FuncQsort(a, x Edge, poolSz int ) *Pool {
 
 		if l <= ChannelSize || !p.Alloc(n, 2) {
 			sort.Sort(d)
-			x.Val=n.NodeWrap(d, x.Ack)
+			x.DstPut(n.NodeWrap(d, x.Ack))
 			x.SendData(n)
-			x.NoOut = true
 			return
 		}
 
@@ -82,7 +82,7 @@ func FuncQsort(a, x Edge, poolSz int ) *Pool {
 		if mlo>1 {
 			n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
 			lo = n.NodeWrap(d.SubSlice(0, mlo), x.Ack)
-			xBack.Val = lo
+			xBack.DstPut(lo)
 			xBack.SendData(n)
 			x.RdyCnt++
 		} else {
@@ -91,7 +91,7 @@ func FuncQsort(a, x Edge, poolSz int ) *Pool {
 		if l-mhi>1 {
 			n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
 			hi = n.NodeWrap(d.SubSlice(mhi, l), x.Ack)
-			xBack.Val = hi
+			xBack.DstPut(hi)
 			xBack.SendData(n)
 			x.RdyCnt++
 		} else {
@@ -99,7 +99,6 @@ func FuncQsort(a, x Edge, poolSz int ) *Pool {
 		}
 
 		x.Val = []interface{}{lo, hi} // for tracing as lo|hi. 
-		x.NoOut = true
 	
 	}
 

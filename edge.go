@@ -28,7 +28,7 @@ package flowgraph
 	 // values unique to upstream and downstream Node
 	 Val interface{}         // generic empty interface
 	 RdyCnt int              // readiness of I/O
-	 NoOut bool              // set true to inhibit one output, data or ack
+	 Flow bool               // set true to allow one output, data or ack
 	 Ack2 chan struct{}      // alternate channel for ack steering
 
  }
@@ -377,7 +377,7 @@ func (e *Edge) DstRdy(n *Node) bool {
 // SendData writes to the Data channel
 func (e *Edge) SendData(n *Node) {
 	if(e.Data !=nil) {
-		if (!e.NoOut) {
+		if (e.Flow) {
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
 			}
@@ -426,18 +426,15 @@ func (e *Edge) SendData(n *Node) {
 			}
 
 			e.Val = nil
-		} else {
-			e.NoOut = false
 		}
-	} else {
-		e.NoOut = false
 	}
+	e.Flow = false
 }
 
 // SendAck writes struct{} to the Ack channel
 func (e *Edge) SendAck(n *Node) {
 	if(e.Ack !=nil) {
-		if (!e.NoOut) {
+		if (e.Flow) {
 			if e.Ack2 != nil {
 				if (TraceLevel>=VV) {
 					n.Tracef("%s.Ack <- // Ack2=%p\n", e.Name, e.Ack2)
@@ -451,12 +448,9 @@ func (e *Edge) SendAck(n *Node) {
 				e.Ack <- struct{}{}
 			}
 			e.RdyCnt++
-		} else {
-			e.NoOut = false
 		}
-	} else {
-		e.NoOut = false
 	}
+	e.Flow = false
 }
 
 // MakeEdges returns a slice of Edge.
@@ -531,4 +525,16 @@ func NameEdges(edges []Edge, names []string) {
 		edges[i].Name = names[i]
 		
 	}
+}
+
+// SrcGet returns the empty interface value flowing from the input Edge
+func (e *Edge) SrcGet() interface{} {
+	e.Flow = true
+	return e.Val
+}
+
+// DstPut sets the empty interface value flowing to the output Edge
+func (e *Edge) DstPut(v interface{}) {
+	e.Flow = true
+	e.Val = v
 }

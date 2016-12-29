@@ -9,10 +9,10 @@ import (
 func readFire (n *Node) {	 
 	x := n.Dsts[0] 		 
 	r := n.Aux.(*bufio.Reader)
-	var err error
 
 	// read data string
-	x.Val, err = r.ReadString('\n')
+	xv, err := r.ReadString('\n')
+	x.DstPut(xv)
 	if err != nil {
 		if err==io.EOF {
 			os.Exit(0)

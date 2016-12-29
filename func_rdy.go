@@ -5,8 +5,10 @@ import (
 
 func rdyFire(n *Node) {
 	a := n.Srcs[0]
+	b := n.Srcs[1]
 	x := n.Dsts[0]
-	x.Val = a.Val
+	b.Flow = true
+	x.DstPut(a.SrcGet())
 }
 
 // FuncRdy waits for two values before passing on the first (b; x = a).

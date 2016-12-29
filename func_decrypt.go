@@ -17,10 +17,11 @@ func decryptFire (n *Node) {
         publicKey := s.RemotePublicKey
         nonce := s.Nonce
 
-        before := a.Val.([]byte)
+	av := a.SrcGet()
+        before := av.([]byte)
 	after, ok := box.Open(nil, before, &nonce, publicKey, privateKey)
         _ = ok
-        x.Val = string(after)
+        x.DstPut(string(after))
 }
 
 // FuncDecrypt decrypts a buffer of byte data

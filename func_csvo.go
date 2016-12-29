@@ -37,8 +37,6 @@ func csvoRdy (n *Node) bool {
 			if !a[i].SrcRdy(n) {
 				if record[j]!="*" {
 					return false
-				} else {
-					a[i].NoOut = true
 				}
 			}
 		} else {
@@ -74,10 +72,11 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]interface{}) Node {
 				if !ok {
 					v = ParseDatum(record[j])
 				}
-				if !EqualsTest(n, v, a[i].Val) {
+				av := a[i].SrcGet()
+				if !EqualsTest(n, v, av) {
 
 					// check if space-separated struct to compare
-					if record[j][0]=='{' && record[j][len(record[j])-1]=='}' && IsStruct(a[i].Val) {
+					if record[j][0]=='{' && record[j][len(record[j])-1]=='}' && IsStruct(av) {
 						l := len(record[j])
 						s := record[j][1:l-1]
 						m := 0
@@ -102,17 +101,17 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]interface{}) Node {
 								v = ParseDatum(p)
 							}
 							
-							av := reflect.ValueOf(a[i].Val)
+							av := reflect.ValueOf(av)
 							ft := av.Field(m).Interface()
 							if !EqualsTest(n, v, ft) {
 								n.LogError("%s:  expected %T(%v|0x%x) from field %d of %T(%v)", 
-									a[i].Name, v, v, v, i, a[i].Val, a[i].Val)	
+									a[i].Name, v, v, v, i, av, av)	
 							}
 							m++
 						}
 					} else {
 						n.LogError("%s:  expected %T(%v|0x%x), actual %T(%v|0x%x)", 
-							a[i].Name, v, v, v, a[i].Val, a[i].Val, a[i].Val)	
+							a[i].Name, v, v, v, av, av, av)
 					}
 				}
 			}

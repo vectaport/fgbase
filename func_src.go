@@ -8,10 +8,10 @@ import (
 func srcFire (n *Node) {	 
 	x := n.Dsts[0] 		 
 	rw := n.Aux.(*bufio.ReadWriter)
-	var err error
 
 	// read data string
-	x.Val, err = rw.ReadString('\n')
+	xv, err := rw.ReadString('\n')
+	x.DstPut(xv)
 	if err != nil {
 		n.LogError("%v", err)
 		x.CloseData()

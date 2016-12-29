@@ -8,11 +8,9 @@ func eitherFire (n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	if a.SrcRdy(n) {
-		x.Val = a.Val
-		b.NoOut = true
+		x.DstPut(a.SrcGet())
 	} else {
-		x.Val = b.Val
-		a.NoOut = true
+		x.DstPut(b.SrcGet())
 	}
 }
 

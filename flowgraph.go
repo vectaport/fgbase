@@ -28,8 +28,9 @@ var StderrLog = log.New(os.Stderr, "", 0)
 var GlobalStats = false
 
 // Trace level constants.
+type TraceLevelType int
 const (
-	QQ = iota // ultra-quiet for minimal stats
+	QQ TraceLevelType = iota // ultra-quiet for minimal stats
 	Q         // quiet, default
 	V         // trace Node execution
 	VV        // trace channel IO
@@ -38,7 +39,7 @@ const (
 )
 
 // Map from string to enum for trace flag checking.
-var TraceLevels = map[string]int {
+var TraceLevels = map[string]TraceLevelType {
 	"QQ": QQ,
 	"Q": Q,
 	"V": V,
@@ -46,6 +47,19 @@ var TraceLevels = map[string]int {
 	"VVV": VVV,
 	"VVVV": VVVV,
 }
+
+// String method for TraceLevelType
+func (t TraceLevelType) String() string {
+	return []string{
+		"QQ",
+		"Q",
+		"V",
+		"VV",
+		"VVV",
+		"VVVV",
+	}[t]
+}
+
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q

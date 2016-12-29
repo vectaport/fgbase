@@ -17,9 +17,10 @@ func encryptFire (n *Node) {
         publicKey := s.RemotePublicKey
         nonce := s.Nonce
 
-	before := []byte(a.Val.(string))
+	av := a.SrcGet()
+	before := []byte(av.(string))
 	after := box.Seal(nil, before, &nonce, publicKey, privateKey)
-	x.Val = after
+	x.DstPut(after)
 
 }
 

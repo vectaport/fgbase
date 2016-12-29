@@ -26,13 +26,13 @@ func modFire(n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 
-	atmp,btmp,same := Promote(n, a.Val, b.Val)
+	atmp,btmp,same := Promote(n, a.SrcGet(), b.SrcGet())
 
 	if(!same) {
 		n.LogError("incompatible types for modulo (%v%%%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
-		x.Val = nil
+		x.DstPut(nil)
 	} else {
-		x.Val = modFire2(atmp, btmp)
+		x.DstPut(modFire2(atmp, btmp))
 	}
 }
 

@@ -9,9 +9,9 @@ func forkFire (n *Node) {
 	y := n.Dsts[1]
 	x.Val = a.Val; 
 	if IsSlice(a.Val) {
-		y.Val = CopySlice(a.Val)
+		y.DstPut(CopySlice(a.SrcGet()))
 	} else {
-		y.Val = a.Val
+		y.DstPut(a.SrcGet())
 	}
 }
 

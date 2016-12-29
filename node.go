@@ -216,6 +216,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 
 // traceValRdyDst lists Node output values or readiness.
 func (n *Node) traceValRdyDst(valOnly bool) string {
+
 	var newFmt string
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
@@ -226,7 +227,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		if (i!=0) { newFmt += "," }
 		if (valOnly) {
 			newFmt += fmt.Sprintf("%s=", dsti.Name)
-                        if dsti.NoOut {
+                        if !dsti.Flow {
 				newFmt += "_"
 			} else {
 				if (dstiv != nil) {
@@ -241,6 +242,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 					newFmt += "<nil>"
 				}
 			}
+
 		} else {
 			if true {
 				newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
@@ -347,8 +349,15 @@ func (n *Node) Fire() {
 	var newFmt string
 	if TraceLevel>Q { newFmt = n.traceValRdySrc(true) }
 	if (n.FireFunc!=nil) { 
-		n.FireFunc(n) 
-	} 
+		n.FireFunc(n)
+	} else {
+		for i := range n.Srcs {
+			n.Srcs[i].Flow = true
+		}
+		for i := range n.Dsts {
+			n.Dsts[i].Flow = true
+		}
+	}
 	if TraceLevel>Q { 
 		// newFmt += "\t"
 		newFmt += n.traceValRdyDst(true)

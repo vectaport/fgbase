@@ -9,14 +9,12 @@ func arbitFire (n *Node) {
 	x := n.Dsts[0]
 	if a.SrcRdy(n) && (!b.SrcRdy(n) || !n.Aux.(bool)) {
 		n.Aux = true // aLast = true
-		x.Val = a.Val
-		b.NoOut = true
+		x.DstPut(a.SrcGet())
 		if b.SrcRdy(n) {
 		}
 	} else if (b.SrcRdy(n)) {
 		n.Aux = false // aLast = false
-		x.Val = b.Val
-		a.NoOut = true
+		x.DstPut(b.SrcGet())
 		if a.SrcRdy(n) {
 		}
 	}

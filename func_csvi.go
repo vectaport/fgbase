@@ -58,7 +58,6 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 			// n.Tracef("record=%v, header=%v\n", record, header)
 			if j>=0 {
 				if record[j]=="*" {
-					x[i].NoOut = true
 					continue
 				}
 				var v interface{}
@@ -69,7 +68,7 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 				if !ok {
 						v = ParseDatum(record[j])
 				}
-				x[i].Val = v	
+				x[i].DstPut(v)
 			} else {
 				n.LogError("Named input missing from .csv file:  %s\n", x[i].Name)
 				os.Exit(1)

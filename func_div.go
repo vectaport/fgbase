@@ -32,20 +32,20 @@ func divFire(n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 
-	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
+	aTmp,bTmp,same := Promote(n, a.SrcGet(), b.SrcGet())
 
 	if(!same) {
 		n.LogError("incompatible types for division (%v/%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
-		x.Val = nil
+		x.DstPut(nil)
 		return
 	}
 	if ZeroTest(bTmp) {
 		n.LogError("divide by zero attempted")
-		x.Val = nil
+		x.DstPut(nil)
 		return
 	}
 	
-	x.Val = divFire2(aTmp, bTmp)
+	x.DstPut(divFire2(aTmp, bTmp))
 }
 
 // FuncDiv divides values and returns the quotient (x = a / b).

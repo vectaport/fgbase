@@ -22,12 +22,10 @@ func steervFire (n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	if (ZeroTest(a.Val)) {
-		x.Val = b.Val
-		y.NoOut = true
+	if ZeroTest(a.SrcGet()) {
+		x.DstPut(b.SrcGet())
 	} else {
-		y.Val = b.Val
-		x.NoOut = true
+		y.DstPut(b.SrcGet())
 	}
 }
 

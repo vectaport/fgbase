@@ -12,7 +12,7 @@ func writeFire (n *Node) {
 	var err error
 
 	// write data string
-	_, err = w.WriteString(fmt.Sprintf("%v\n", a.Val))
+	_, err = w.WriteString(fmt.Sprintf("%v\n", a.SrcGet()))
 	if err != nil {
 		n.LogError("%v", err)
 		close(a.Ack)

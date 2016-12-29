@@ -23,13 +23,13 @@ func lshFire(n *Node) {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 
-	aTmp,bTmp,same := Promote(n, a.Val, b.Val)
+	aTmp,bTmp,same := Promote(n, a.SrcGet(), b.SrcGet())
 
 	if(!same) {
 		n.LogError("incompatible types for left shift (%v<<%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
-		x.Val = nil
+		x.DstPut(nil)
 	} else {
-		x.Val = lshFire2(aTmp, bTmp)
+		x.DstPut(lshFire2(aTmp, bTmp))
 	}
 }
 

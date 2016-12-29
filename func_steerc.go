@@ -7,14 +7,11 @@ func steercFire (n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	x.Val = nil
-	y.Val = nil
-	if (ZeroTest(a.Val)) {
-		x.Val = a.Val
-		y.NoOut = true
+	av := a.SrcGet()
+	if (ZeroTest(av)) {
+		x.DstPut(av)
 	} else {
-		y.Val = a.Val
-		x.NoOut = true
+		y.DstPut(av)
 	}
 }
 

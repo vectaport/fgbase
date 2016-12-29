@@ -18,6 +18,7 @@ func dstFire (n *Node) {
 	var err error
 
 	// read ack
+	_ = a.SrcGet()
 	if s.Initialized  {
 		_, err = rw.ReadString('\n')
 		if err != nil {
@@ -31,7 +32,7 @@ func dstFire (n *Node) {
 	}
 	
 	// write data
-	_, err = rw.WriteString(fmt.Sprintf("%v\n", a.Val))
+	_, err = rw.WriteString(fmt.Sprintf("%v\n", a.SrcGet()))
 	if err != nil {
 		n.LogError("%v", err)
 		close(a.Ack)

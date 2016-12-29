@@ -7,8 +7,8 @@ import (
 func FuncReduce(a,x Edge, reducer func(n *Node, datum,collection interface{}) interface{}) Node {
 
 	var reduceFire = func (n *Node) {
-		n.Aux = reducer(n, a.Val, n.Aux)
-		x.Val = n.Aux
+		n.Aux = reducer(n, a.SrcGet(), n.Aux)
+		x.DstPut(n.Aux)
 	}
 
 

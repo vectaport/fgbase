@@ -5,7 +5,7 @@ import (
 
 func constFire(n *Node) {
 	x := n.Dsts[0]
-	x.Val = n.Aux
+	x.DstPut(n.Aux)
 }
 
 // FuncConst produces a constant value (x = c).  Can also
