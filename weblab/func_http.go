@@ -22,7 +22,7 @@ func FuncHTTP(x flowgraph.Edge, addr string, quitChan chan struct{}) flowgraph.N
 		func(w http.ResponseWriter, req *http.Request) {
 			fmt.Fprintf(w, ".")
 			x := node.Dsts[0]
-			x.Val = req.URL
+			x.DstPut(req.URL)
 			node.TraceValRdy()
 			if node.RdyAll() {
 				x.SendData(&node)

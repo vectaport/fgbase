@@ -17,7 +17,7 @@ func displayFire (n *flowgraph.Node) {
 	a := n.Srcs[0]
 
 	window := n.Aux.(displayStruct).window
-	image := a.Val.(*opencv.IplImage)
+	image := a.SrcGet().(*opencv.IplImage)
 	defer image.Release()
 
 	window.ShowImage(image)
@@ -28,7 +28,7 @@ func displayFire (n *flowgraph.Node) {
 			n.Aux.(displayStruct).quitChan <- nada
 		}
 	} else {
-		_ = opencv.WaitKey(1)
+		// _ = opencv.WaitKey(1)
 	}
 
 }

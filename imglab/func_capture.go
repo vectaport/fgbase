@@ -15,7 +15,7 @@ func captureFire (n *flowgraph.Node) {
 		if i2 == nil  {
 			n.Tracef("image capture returned nil")
 		}
-		x.Val = i2
+		x.DstPut(i2)
 	}
 
 }

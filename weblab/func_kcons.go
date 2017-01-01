@@ -9,7 +9,7 @@ func kconsFire (n *flowgraph.Node) {
 
 	x := n.Dsts[0]
 	partitionConsumer := n.Aux.(sarama.PartitionConsumer)
-	x.Val = <- partitionConsumer.Messages() 
+	x.DstPut( <- partitionConsumer.Messages() )
 
 }
 

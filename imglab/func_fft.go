@@ -10,13 +10,14 @@ func fftFire (n *flowgraph.Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
-	x.Val = a.Val
+	x.DstPut(a.SrcGet())
 	data,ok := x.Val.([]complex128)
 	if !ok {
 		n.LogError("type is not []complex128\n")
 		x.Val = nil
 	}
-	if b.Val.(bool) {
+	bv := b.SrcGet()
+	if bv.(bool) {
 		fft.InvFft(data)
 	} else {
 		fft.Fft(data)
