@@ -11,12 +11,12 @@ func srcFire (n *Node) {
 
 	// read data string
 	xv, err := rw.ReadString('\n')
-	x.DstPut(xv)
 	if err != nil {
 		n.LogError("%v", err)
 		x.CloseData()
 		return
 	}
+	x.DstPut(xv)
 
 	// write ack
 	_, err = rw.WriteString("\n")

@@ -18,7 +18,7 @@ func dstFire (n *Node) {
 	var err error
 
 	// read ack
-	_ = a.SrcGet()
+	a.Flow = true
 	if s.Initialized  {
 		_, err = rw.ReadString('\n')
 		if err != nil {
