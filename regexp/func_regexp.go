@@ -13,9 +13,9 @@ func regexpFire (n *flowgraph.Node) {
 	subsrc := n.Srcs[1]
 	dnstreq := n.Srcs[2]
 
-	oldmatch := n.Dsts[0]
+	// oldmatch := n.Dsts[0]
 	subdst := n.Dsts[1]
-	upstreq := n.Dsts[2]
+	// upstreq := n.Dsts[2]
 
 	st := n.Aux.(regexpStruct)
 
@@ -23,43 +23,29 @@ func regexpFire (n *flowgraph.Node) {
 
 
 		// match >0
-		match := dnstreq.Val.(Search)
+		match := dnstreq.SrcGet().(Search)
 		if match.State==Fail {
 			delete(st.prev, match.Orig)
-			subdst.NoOut = true
 		} else {
 			match.Curr = st.prev[match.Orig]
-			subdst.Val = match
+			subdst.DstPut(match)
 		}
 		
-		newmatch.NoOut = true
-		subsrc.NoOut = true
-		oldmatch.NoOut = true
-		upstreq.NoOut = true
 		return
 	}
 
 	if subsrc.SrcRdy(n) {
 
-		newmatch.Val = subsrc.Val
-			
-		newmatch.NoOut = true
-		dnstreq.NoOut = true
-		subdst.NoOut = true
-		upstreq.NoOut = true
+		newmatch.DstPut(subsrc.SrcGet())
 		return
+		
 	}
 
 	if newmatch.SrcRdy(n) {
 
-		match := newmatch.Val.(Search)
+		match := newmatch.SrcGet().(Search)
 		st.prev[match.Orig]=match.Curr
-		subdst.Val = match
-
-		subsrc.NoOut = true
-		dnstreq.NoOut = true
-		oldmatch.NoOut = true
-		upstreq.NoOut = true
+		subdst.DstPut(match)
 		return
 	}
 	

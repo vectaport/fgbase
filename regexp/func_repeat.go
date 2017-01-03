@@ -24,15 +24,7 @@ func repeatFire (n *flowgraph.Node) {
 
 	oldmatch := n.Dsts[0]
 	subdst := n.Dsts[1]
-	upstreq := n.Dsts[2]
-
-	newmatch.NoOut = true
-	subsrc.NoOut = true
-	dnstreq.NoOut = true
-	
-	oldmatch.NoOut = true
-	subdst.NoOut = true
-	upstreq.NoOut = true
+	// upstreq := n.Dsts[2]
 
 	st := n.Aux.(repeatStruct)
 	rmap := st.entries
@@ -41,8 +33,7 @@ func repeatFire (n *flowgraph.Node) {
 	if rdyv[2] /* dnstreq */ {
 
 		// match >0
-		match := dnstreq.Val.(Search)
-		dnstreq.NoOut = false
+		match := dnstreq.SrcGet().(Search)
 		if match.State==Done {
 			delete(rmap, match.Orig)
 		} else {
@@ -52,8 +43,7 @@ func repeatFire (n *flowgraph.Node) {
 				panic("unable to send new string downstream")
 			}
 			match.Curr = p[1:]
-			subdst.Val = match
-			subdst.NoOut = false
+			subdst.DstPut(match)
 		}
 		
 		return
@@ -61,22 +51,18 @@ func repeatFire (n *flowgraph.Node) {
 
 	if rdyv[1] /* subsrc */ {
 
-		match := subsrc.Val.(Search)
+		match := subsrc.SrcGet().(Search)
 		rs := rmap[match.Orig]
 		rs.prev = match.Curr
 		rmap[match.Orig] = rs
-		subsrc.NoOut = false
-		
-		// match >0
-		oldmatch.Val = subsrc.Val
-		oldmatch.NoOut = false
-			
+		oldmatch.DstPut(match)
 		return
+		
 	}
 
 	if rdyv[0] /* newmatch */ {
 
-		match := newmatch.Val.(Search)
+		match := newmatch.SrcGet().(Search)
 		rs := rmap[match.Orig]
 		if rs==nil {
 			rs = &repeatEntry{}
@@ -84,18 +70,15 @@ func repeatFire (n *flowgraph.Node) {
 		}
 		rs.prev = match.Curr
 		rmap[match.Orig] = rs
-		newmatch.NoOut = false
 
 		// if no matches are required, pass it on
 		if rs.min==0 {
-			oldmatch.Val = match
-			oldmatch.NoOut = false
+			oldmatch.DstPut(match)
 			return
 		}
 
 		// otherwise attempt a match
-		subdst.Val = match
-		subdst.NoOut = false
+		subdst.DstPut(match)
 		return
 
 

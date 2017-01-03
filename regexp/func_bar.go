@@ -10,34 +10,35 @@ func barFire (n *flowgraph.Node) {
 	x := n.Dsts[0]
 	sink := n.Aux.(bool)
 
-        as := a.Val.(Search).Curr
-	ast := a.Val.(Search).State
-        bs := b.Val.(Search).Curr
-	bst := b.Val.(Search).State
+	av := a.SrcGet()
+        as := av.(Search).Curr
+	ast := av.(Search).State
+	bv := b.SrcGet()
+        bs := bv.(Search).Curr
+	bst := bv.(Search).State
 	
         if ast==Done && bst==Done {
 		if sink {
-			x.NoOut = true
 			return
 		}
-                x.Val = Search{}
+                x.DstPut(Search{})
                 return
         }
 
         if ast==Done {
-	        x.Val = b.Val
+	        x.DstPut(bv)
 		return
         }
 
         if bst==Done {
-	        x.Val = a.Val
+	        x.DstPut(av)
 		return
         }
 
 	if len(as)>len(bs) {
-  		x.Val = a.Val
+  		x.DstPut(av)
         }
-        x.Val = b.Val
+        x.DstPut(bv)
 }
 
 // FuncBar waits for both inputs and returns the one that matches the shortest string.

@@ -15,54 +15,40 @@ func starFire (n *flowgraph.Node) {
 
 	oldmatch := n.Dsts[0]
 	subdst := n.Dsts[1]
-	upstreq := n.Dsts[2]
+	// upstreq := n.Dsts[2]
 
 	st := n.Aux.(starStruct)
 
 	if dnstreq.SrcRdy(n) {
 
-
 		// match >0
-		match := dnstreq.Val.(Search)
+		match := dnstreq.SrcGet().(Search)
 		if match.State==Fail {
 			delete(st.prev, match.Orig)
-			subdst.NoOut = true
 		} else {
 			match.Curr = st.prev[match.Orig]
-			subdst.Val = match
+			subdst.DstPut(match)
 		}
-		
-		newmatch.NoOut = true
-		subsrc.NoOut = true
-		oldmatch.NoOut = true
-		upstreq.NoOut = true
 		return
+		
 	}
 
 	if subsrc.SrcRdy(n) {
 
 		// match >0
-		newmatch.Val = subsrc.Val
-			
-		newmatch.NoOut = true
-		dnstreq.NoOut = true
-		subdst.NoOut = true
-		upstreq.NoOut = true
+		newmatch.DstPut(subsrc.SrcGet())
 		return
+		
 	}
 
 	if newmatch.SrcRdy(n) {
 
 		// match zero
-		match := newmatch.Val.(Search)
+		match := newmatch.SrcGet().(Search)
 		st.prev[match.Orig]=match.Curr
-		oldmatch.Val = match
-
-		subsrc.NoOut = true
-		dnstreq.NoOut = true
-		subdst.NoOut = true
-		upstreq.NoOut = true
+		oldmatch.DstPut(match)
 		return
+		
 	}
 	
 

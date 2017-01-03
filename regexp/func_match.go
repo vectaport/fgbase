@@ -23,16 +23,19 @@ func backslash(str string) func() (char byte, bquoted bool) {
 func matchFire (n *flowgraph.Node) {	 
 	a := n.Srcs[0] 		 
 	b := n.Srcs[1] 		 
-	x := n.Dsts[0] 		 
-	match := b.Val.(string)
+	x := n.Dsts[0]
 
-        if a.Val.(Search).State==Fail {
-                x.Val = a.Val
+	av := a.SrcGet()
+	bv := b.SrcGet()
+	match := bv.(string)
+
+        if av.(Search).State==Fail {
+                x.DstPut(av)
                 return
         }
 
-	orig := a.Val.(Search).Orig
-	curr := a.Val.(Search).Curr
+	orig := av.(Search).Orig
+	curr := av.(Search).Curr
 
 	bssf := backslash(curr)
 	bsmf := backslash(match)
@@ -49,11 +52,11 @@ func matchFire (n *flowgraph.Node) {
 		if scurr != mcurr && (mcurr != '.' || mbs) { matched = false; break } // match is over
         }
 	if matched {
-		x.Val = Search{Curr:curr[len(match):], Orig:orig, State:Live}
+		x.DstPut(Search{Curr:curr[len(match):], Orig:orig, State:Live})
 		return
 	}
 
-	x.Val = Search{Curr:curr, Orig:orig}
+	x.DstPut(Search{Curr:curr, Orig:orig})
 	return
 }
 
