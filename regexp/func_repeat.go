@@ -6,7 +6,6 @@ import (
 
 type repeatStruct struct {
 	entries map[string]*repeatEntry
-	rdy[3] bool
 }
 
 type repeatEntry struct {
@@ -28,15 +27,22 @@ func repeatFire (n *flowgraph.Node) {
 
 	st := n.Aux.(repeatStruct)
 	rmap := st.entries
-	rdyv := st.rdy
 
-	if rdyv[2] /* dnstreq */ {
+	if dnstreq.Flow /* dnstreq */ {
+
+		newmatch.Flow = false
+		subsrc.Flow = false
 
 		// match >0
 		match := dnstreq.SrcGet().(Search)
 		if match.State==Done {
 			delete(rmap, match.Orig)
 		} else {
+			if rmap[match.Orig]==nil {
+				n.Tracef("panic:  nil return from rmap for \"%v\"  (%v)\n", match, rmap)
+				panic("nil return from rmap")
+			}
+			
 			p := rmap[match.Orig].prev
 			if len(p)==0 {
 				n.Tracef("panic:  unable to send new string downstream\n");
@@ -49,8 +55,11 @@ func repeatFire (n *flowgraph.Node) {
 		return
 	}
 
-	if rdyv[1] /* subsrc */ {
+	if subsrc.Flow /* subsrc */ {
 
+		newmatch.Flow = false
+		dnstreq.Flow = false
+		
 		match := subsrc.SrcGet().(Search)
 		rs := rmap[match.Orig]
 		rs.prev = match.Curr
@@ -60,8 +69,11 @@ func repeatFire (n *flowgraph.Node) {
 		
 	}
 
-	if rdyv[0] /* newmatch */ {
+	if newmatch.Flow /* newmatch */ {
 
+		subsrc.Flow = false
+		dnstreq.Flow = false
+		
 		match := newmatch.SrcGet().(Search)
 		rs := rmap[match.Orig]
 		if rs==nil {
@@ -70,6 +82,7 @@ func repeatFire (n *flowgraph.Node) {
 		}
 		rs.prev = match.Curr
 		rmap[match.Orig] = rs
+		n.Tracef("rmap after adding \"%s\":  %v\n", match.Orig, rmap)
 
 		// if no matches are required, pass it on
 		if rs.min==0 {
@@ -89,12 +102,12 @@ func repeatFire (n *flowgraph.Node) {
 
 func repeatRdy (n *flowgraph.Node) bool {
 	if !n.Dsts[0].DstRdy(n) || !n.Dsts[1].DstRdy(n) || !n.Dsts[2].DstRdy(n) { return false }
-	st := n.Aux.(repeatStruct)
-	st.rdy[0] = n.Srcs[0].SrcRdy(n)
-	st.rdy[1] =  n.Srcs[1].SrcRdy(n)
-	st.rdy[2] = n.Srcs[2].SrcRdy(n)
-	n.Aux = st
-	return st.rdy[0] || st.rdy[1] || st.rdy[2]
+	rdy := false
+	for i := range n.Srcs {
+		n.Srcs[i].Flow = n.Srcs[i].SrcRdy(n)
+		rdy = rdy || n.Srcs[i].Flow
+	}
+	return rdy
 }
 
 // FuncRepeat repeats a match zero or more times

@@ -4,9 +4,9 @@ import (
 	"github.com/vectaport/flowgraph"
 )
 
-func backslash(str string) func() (char byte, bquoted bool) {
+func backslash(str string) func() (char byte, bslashed bool) {
 	s := str
-	return func() (char byte, bquoted bool) {
+	return func() (char byte, bslashed bool) {
 		if len(s)==0 {return 0x00,false}
 		c := s[0]
 		if c!='\\' || len(s)==1 {
@@ -27,7 +27,7 @@ func matchFire (n *flowgraph.Node) {
 
 	av := a.SrcGet()
 	bv := b.SrcGet()
-	match := bv.(string)
+	pattern := bv.(string)
 
         if av.(Search).State==Fail {
                 x.DstPut(av)
@@ -38,21 +38,33 @@ func matchFire (n *flowgraph.Node) {
 	curr := av.(Search).Curr
 
 	bssf := backslash(curr)
-	bsmf := backslash(match)
+	bspf := backslash(pattern)
 	
 	matched := true
 	for {
+
+		// pattern is done
+		pcurr,pbs := bspf()
+		if pcurr == 0x00 {
+			break
+		} 
+
+		// string is done
 		scurr,_ := bssf()
-		mcurr,mbs := bsmf()
+		if scurr == 0x00 {
+			matched = false
+			break
+		} 
+
+		// match is over
+		if scurr != pcurr && (pcurr != '.' || pbs) {
+			matched = false
+			break
+		}
 		
-		if mcurr == 0x00 { break } // match is done
-		
-		if scurr == 0x00 { matched = false; break } // string is done
-		
-		if scurr != mcurr && (mcurr != '.' || mbs) { matched = false; break } // match is over
         }
 	if matched {
-		x.DstPut(Search{Curr:curr[len(match):], Orig:orig, State:Live})
+		x.DstPut(Search{Curr:curr[len(pattern):], Orig:orig, State:Live})
 		return
 	}
 

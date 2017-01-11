@@ -7,14 +7,14 @@ import (
 
 type Mode int
 const (
-	Done Mode = iota
-	Live
+	Live Mode = iota
+	Done
 	Fail
 )
 
 var Modes = map[Mode]string {
-	Done: "Done",
 	Live: "Live",
+	Done: "Done",
 	Fail: "Fail",
 }
 
