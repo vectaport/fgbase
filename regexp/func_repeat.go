@@ -39,7 +39,7 @@ func repeatFire (n *flowgraph.Node) {
 			delete(rmap, match.Orig)
 		} else {
 			if rmap[match.Orig]==nil {
-				n.Tracef("panic:  nil return from rmap for \"%v\"  (%v)\n", match, rmap)
+				n.Tracef("panic:  nil return from rmap for \"%+v\"  (%v)\n", match, rmap)
 				panic("nil return from rmap")
 			}
 			
