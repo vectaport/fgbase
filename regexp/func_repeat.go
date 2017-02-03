@@ -6,11 +6,12 @@ import (
 
 type repeatStruct struct {
 	entries map[string]*repeatEntry
+	min, max int
 }
 
 type repeatEntry struct {
 	prev string
-	min, max, cnt int
+	cnt int
 }
 
 type repeatMap map[string]repeatEntry
@@ -27,8 +28,11 @@ func repeatFire (n *flowgraph.Node) {
 
 	st := n.Aux.(repeatStruct)
 	rmap := st.entries
+	rmin := st.min
+	// rmax := st.max
 
-	if dnstreq.Flow /* dnstreq */ {
+	// flow from downstream
+	if dnstreq.Flow  {
 
 		newmatch.Flow = false
 		subsrc.Flow = false
@@ -55,21 +59,36 @@ func repeatFire (n *flowgraph.Node) {
 		return
 	}
 
-	if subsrc.Flow /* subsrc */ {
+	// flow from subordinate regexp
+	if subsrc.Flow {
+	   	
 
 		newmatch.Flow = false
 		dnstreq.Flow = false
 		
 		match := subsrc.SrcGet().(Search)
+
+		n.Tracef("WHAT WE GOT FOR MATCH %+v\n", match)
 		rs := rmap[match.Orig]
-		rs.prev = match.Curr
-		rmap[match.Orig] = rs
+		if match.State == Live {
+			rs.prev = match.Curr
+			rs.cnt++
+			rmap[match.Orig] = rs
+
+			// if not enough yet, match the next 
+			if rs.cnt < rmin {
+				subdst.DstPut(match)
+				return
+			}
+
+		}
 		oldmatch.DstPut(match)
 		return
 		
 	}
 
-	if newmatch.Flow /* newmatch */ {
+	// incoming data flow
+	if newmatch.Flow {
 
 		subsrc.Flow = false
 		dnstreq.Flow = false
@@ -85,7 +104,7 @@ func repeatFire (n *flowgraph.Node) {
 		n.Tracef("rmap after adding \"%s\":  %v\n", match.Orig, rmap)
 
 		// if no matches are required, pass it on
-		if rs.min==0 {
+		if st.min==0 {
 			oldmatch.DstPut(match)
 			return
 		}
@@ -124,7 +143,7 @@ func repeatRdy (n *flowgraph.Node) bool {
 func FuncRepeat(newmatch, subsrc, dnstreq flowgraph.Edge, oldmatch, subdst, upstreq flowgraph.Edge, min, max int) flowgraph.Node {
 
 	node := flowgraph.MakeNode("repeat", []*flowgraph.Edge{&newmatch, &subsrc, &dnstreq}, []*flowgraph.Edge{&oldmatch, &subdst, &upstreq}, repeatRdy, repeatFire)
-	node.Aux = repeatStruct{entries:make(map[string]*repeatEntry)}
+	node.Aux = repeatStruct{entries:make(map[string]*repeatEntry), min:min, max:max}
 	return node
 
 }

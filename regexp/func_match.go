@@ -64,11 +64,11 @@ func matchFire (n *flowgraph.Node) {
 		
         }
 	if matched {
-		x.DstPut(Search{Curr:curr[len(pattern):], Orig:orig, State:Live})
+		x.DstPut(Search{Curr:curr[len(pattern):], Orig:orig})
 		return
 	}
 
-	x.DstPut(Search{Curr:curr, Orig:orig})
+	x.DstPut(Search{Curr:curr, Orig:orig, State:Fail})
 	return
 }
 
