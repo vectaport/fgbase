@@ -68,7 +68,6 @@ func repeatFire (n *flowgraph.Node) {
 		
 		match := subsrc.SrcGet().(Search)
 
-		n.Tracef("WHAT WE GOT FOR MATCH %+v\n", match)
 		rs := rmap[match.Orig]
 		if match.State == Live {
 			rs.prev = match.Curr
@@ -101,7 +100,6 @@ func repeatFire (n *flowgraph.Node) {
 		}
 		rs.prev = match.Curr
 		rmap[match.Orig] = rs
-		n.Tracef("rmap after adding \"%s\":  %v\n", match.Orig, rmap)
 
 		// if no matches are required, pass it on
 		if st.min==0 {
