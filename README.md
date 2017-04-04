@@ -5,11 +5,11 @@ Package of Go flowgraph primitives
 * [![GoDoc](https://godoc.org/github.com/vectaport/flowgraph?status.svg)](https://godoc.org/github.com/vectaport/flowgraph)
 * [Wiki](https://github.com/vectaport/flowgraph/wiki)
 
-Go (Golang) offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming across many cores and many Unix boxes.  But so much is possible with goroutines it requires the application or invention of extra concepts to construct scaleable and reliable systems that won't deadlock or be throttled by bottlenecks.
+Go (Golang) offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming across many cores and many Unix boxes.  But so much is possible with goroutines that constructing scaleable and reliable systems (that won't deadlock or be throttled by bottlenecks) requires the application or invention of additional concepts.
 
 Flowgraphs are a distinct model of concurrent programming that augment channels with ready-send handshake mechanisms to ensure that no data is sent before the receiver is ready.  [MPI](http://en.wikipedia.org/wiki/Message_Passing_Interface) (a framework for supercomputer computation) directly supports flowgraph computation, but doesn't address flow-based computation within a single Unix process.  Go with its goroutines (more efficient than threads according to Rob Pike) facilitates taking the MPI model down to whatever granularity the concurrent programmer wants.
 
-How to use goroutines, channels, and select to implement the flowgraph model is not completely obvious, and this framework is an attempt to illustrate one possible approach.  
+It is not immediately obvious how to use goroutines, channels, and select to implement the flowgraph model. This framework is an attempt to illustrate one possible approach.  
 
 Features of github.com/vectaport/flowgraph:
 
