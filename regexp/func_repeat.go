@@ -24,7 +24,7 @@ func repeatFire (n *flowgraph.Node) {
 
 	oldmatch := n.Dsts[0]
 	subdst := n.Dsts[1]
-	// upstreq := n.Dsts[2]
+	upstreq := n.Dsts[2]
 
 	st := n.Aux.(repeatStruct)
 	rmap := st.entries
@@ -32,7 +32,7 @@ func repeatFire (n *flowgraph.Node) {
 	// rmax := st.max
 
 	// flow from downstream
-	if dnstreq.Flow  {
+	if dnstreq.Flow  { // set in repeatRdy
 
 		newmatch.Flow = false
 		subsrc.Flow = false
@@ -41,6 +41,7 @@ func repeatFire (n *flowgraph.Node) {
 		match := dnstreq.SrcGet().(Search)
 		if match.State==Done {
 			delete(rmap, match.Orig)
+			upstreq.DstPut(match)
 		} else {
 			if rmap[match.Orig]==nil {
 				n.Tracef("panic:  nil return from rmap for \"%+v\"  (%v)\n", match, rmap)
@@ -60,7 +61,7 @@ func repeatFire (n *flowgraph.Node) {
 	}
 
 	// flow from subordinate regexp
-	if subsrc.Flow {
+	if subsrc.Flow {  // set in repeatRdy()
 	   	
 
 		newmatch.Flow = false
@@ -87,7 +88,7 @@ func repeatFire (n *flowgraph.Node) {
 	}
 
 	// incoming data flow
-	if newmatch.Flow {
+	if newmatch.Flow { // set in repeatRdy()
 
 		subsrc.Flow = false
 		dnstreq.Flow = false
@@ -100,7 +101,6 @@ func repeatFire (n *flowgraph.Node) {
 		}
 		rs.prev = match.Curr
 		rmap[match.Orig] = rs
-		n.Tracef("rmap after adding \"%s\":  %v\n", match.Orig, rmap)
 
 		// if no matches are required, pass it on
 		if st.min==0 {

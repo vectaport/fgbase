@@ -4,7 +4,7 @@ import (
 	"github.com/vectaport/flowgraph"
 )
 
-func backslash(str string) func() (char byte, bslashed bool) {
+func preprocess(str string) func() (char byte, bslashed bool) {
 	s := str
 	return func() (char byte, bslashed bool) {
 		if len(s)==0 {return 0x00,false}
@@ -37,24 +37,39 @@ func matchFire (n *flowgraph.Node) {
 	orig := av.(Search).Orig
 	curr := av.(Search).Curr
 
-	bssf := backslash(curr)
-	bspf := backslash(pattern)
+	stringFunc := preprocess(curr)
+	patternFunc := preprocess(pattern)
 	
 	matched := true
+	pcnt := 0
 	for {
 
-		// pattern is done
-		pcurr,pbs := bspf()
+		// if pattern is done
+		pcurr,pbs := patternFunc()
 		if pcurr == 0x00 {
 			break
 		} 
+		pcnt++
 
-		// string is done
-		scurr,_ := bssf()
+		// if string is done
+		scurr,_ := stringFunc()
 		if scurr == 0x00 {
 			matched = false
 			break
-		} 
+		}
+
+		// if pattern is a bracket list
+		if pcurr=='[' {
+			for {
+				ch,_ := patternFunc()
+				if ch == ']' {
+					break
+				}
+				if ch == scurr {
+					pcurr = ch
+				}
+			}
+		}
 
 		// match is over
 		if scurr != pcurr && (pcurr != '.' || pbs) {
@@ -64,7 +79,7 @@ func matchFire (n *flowgraph.Node) {
 		
         }
 	if matched {
-		x.DstPut(Search{Curr:curr[len(pattern):], Orig:orig})
+		x.DstPut(Search{Curr:curr[pcnt:], Orig:orig})
 		return
 	}
 
