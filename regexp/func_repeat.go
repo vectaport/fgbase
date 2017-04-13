@@ -77,11 +77,21 @@ func repeatFire (n *flowgraph.Node) {
 
 			// if not enough yet, match the next 
 			if rs.cnt < rmin {
-				subdst.DstPut(match)
+			        match.Curr = match.Curr[1:]
+				subdst.DstPut(match)  
 				return
 			}
 
 		}
+
+		// deal with a submatch not working
+		if len(match.Curr)>1 {
+			match.Curr = match.Curr[1:]
+			subdst.DstPut(match)
+			return
+		}
+
+		// match failed
 		oldmatch.DstPut(match)
 		return
 		
