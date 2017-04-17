@@ -82,11 +82,15 @@ func repeatFire (n *flowgraph.Node) {
 				return
 			}
 
+                        oldmatch.DstPut(match)
+			return
+
 		}
 
 		// deal with a submatch not working
 		if len(match.Curr)>1 {
 			match.Curr = match.Curr[1:]
+			match.State = Live
 			subdst.DstPut(match)
 			return
 		}
