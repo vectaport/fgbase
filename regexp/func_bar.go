@@ -17,22 +17,22 @@ func barFire (n *flowgraph.Node) {
         bs := bv.(Search).Curr
 	bst := bv.(Search).State
 	
-        if ast==Done && bst==Done {
+        if ast==Live {
+	        x.DstPut(av)
+		return
+        }
+
+        if bst==Live {
+	        x.DstPut(bv)
+		return
+        }
+
+        if ast==Done || bst==Done {
 		if sink {
 			return
 		}
                 x.DstPut(Search{})
                 return
-        }
-
-        if ast==Done {
-	        x.DstPut(bv)
-		return
-        }
-
-        if bst==Done {
-	        x.DstPut(av)
-		return
         }
 
 	if len(as)>len(bs) {

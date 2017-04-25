@@ -64,12 +64,20 @@ func repeatFire (n *flowgraph.Node) {
 	if subsrc.Flow {  // set in repeatRdy()
 	   	
 
+                /* THERE ARE TWO KINDS OF COUNTING:  #matches to make, and #copies of that string currently being search for */
+		/* DO I WANT BOTH? */
+		/* THE MAP SHOULDN'T BE ON THE Orig, but on the address of struct that holds Orig */
 		newmatch.Flow = false
 		dnstreq.Flow = false
 		
 		match := subsrc.SrcGet().(Search)
 
+                /* rs can go nil if a string appears twice, and is deleted the first after the second appearance */
 		rs := rmap[match.Orig]
+		if rs==nil {
+		        n.Tracef("DEBUG match.Orig is %v\n", match.Orig)
+			panic("for nil rs")
+		}
 		if match.State == Live {
 			rs.prev = match.Curr
 			rs.cnt++
