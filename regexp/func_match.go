@@ -58,6 +58,17 @@ func matchFire (n *flowgraph.Node) {
 			break
 		}
 
+                // capitalize if needed
+		ignoreCase := n.Aux.(bool)
+		if ignoreCase {
+		        if pcurr>='a' && pcurr<='z' {
+			        pcurr -= 32
+			}
+		        if scurr>='a' && scurr<='z' {
+			        scurr -= 32
+			}
+		}
+
 		// if pattern is a bracket list
 		if pcurr=='[' {
 			for {
@@ -88,9 +99,10 @@ func matchFire (n *flowgraph.Node) {
 }
 
 // FuncMatch advances a byte slice if it matches a string, otherwise returns the empty slice
-func FuncMatch(a,b flowgraph.Edge, x flowgraph.Edge) flowgraph.Node {
+func FuncMatch(a,b flowgraph.Edge, x flowgraph.Edge, ignoreCase bool) flowgraph.Node {
 	
 	node := flowgraph.MakeNode("match", []*flowgraph.Edge{&a, &b}, []*flowgraph.Edge{&x}, nil, matchFire)
+	node.Aux = ignoreCase
 	return node
 	
 }
