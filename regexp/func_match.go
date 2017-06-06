@@ -29,7 +29,7 @@ func matchFire (n *flowgraph.Node) {
 	bv := b.SrcGet()
 	pattern := bv.(string)
 
-        if av.(Search).State==Fail {
+        if av.(Search).State==Fail || av.(Search).State==Done {
                 x.DstPut(av)
                 return
         }

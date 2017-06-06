@@ -75,7 +75,7 @@ func repeatFire (n *flowgraph.Node) {
                 /* rs can go nil if a string appears twice, and is deleted the first after the second appearance */
 		rs := rmap[match.Orig]
 		if rs==nil {
-		        n.Tracef("DEBUG match.Orig is %v\n", match.Orig)
+		        n.Tracef("DEBUG match.Orig is %v, and size of rmap is %d\n", match.Orig, len(rmap))
 			panic("for nil rs")
 		}
 		if match.State == Live {
@@ -116,6 +116,13 @@ func repeatFire (n *flowgraph.Node) {
 		dnstreq.Flow = false
 		
 		match := newmatch.SrcGet().(Search)
+
+                // pass forward a Done search
+		if match.State == Done {
+			oldmatch.DstPut(match)
+			return
+		}
+
 		rs := rmap[match.Orig]
 		if rs==nil {
 			rs = &repeatEntry{}
