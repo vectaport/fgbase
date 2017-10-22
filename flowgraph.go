@@ -82,6 +82,9 @@ var TracePointer = false
 // Unique Node id.
 var NodeID int64
 
+// Unique Edged id.
+var EdgeID int64
+
 // Duration to run this flowgraph.
 var RunTime time.Duration = -1
 

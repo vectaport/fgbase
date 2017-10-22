@@ -7,6 +7,7 @@ package flowgraph
 	 "net"
 	 "reflect"
 	 "strconv"
+	 "sync/atomic"
 	 "time"
  )
 
@@ -37,7 +38,14 @@ package flowgraph
  // Initialize optional data value to start flow.
  func makeEdge(name string, initVal interface{}) Edge {
 	 var e Edge
-	 e.Name = name
+	 
+	 i := atomic.AddInt64(&EdgeID, 1)
+	 if name=="" {
+ 		 e.Name = "e" + strconv.Itoa(int(i-1))
+	 } else {
+	         e.Name = name
+	 }
+	 
 	 e.Val = initVal
 	 var dc []chan interface{}
 	 e.Data = &dc
@@ -457,8 +465,7 @@ func (e *Edge) SendAck(n *Node) {
 func MakeEdges(sz int) []Edge {
 	e := make([]Edge, sz)
 	for i:=0; i<sz; i++ {
-		nm := "e" + strconv.Itoa(int(i))
-		e[i] = MakeEdge(nm, nil)
+		e[i] = MakeEdge("", nil)
 	}
 	return e
 }

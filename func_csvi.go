@@ -1,6 +1,6 @@
 package flowgraph
 
-import (		
+import (
 	"encoding/csv"
 	"io"
 	"os"
@@ -8,26 +8,28 @@ import (
 
 type csvState struct {
 	csvreader *csv.Reader
-	header []int // index of input/output based on header
-	record []string
+	header    []int // index of input/output based on header
+	record    []string
 }
 
 func find(s string, v []string) int {
 	for i := range v {
-		if v[i]==s {
+		if v[i] == s {
 			return i
 		}
 	}
 	return -1
 }
 
-func csviRdy (n *Node) bool {
-	if n.Aux == nil { return false }
-	
+func csviRdy(n *Node) bool {
+	if n.Aux == nil {
+		return false
+	}
+
 	if n.DefaultRdyFunc() {
 		r := n.Aux.(csvState).csvreader
 		header := n.Aux.(csvState).header
-		record,err := r.Read()
+		record, err := r.Read()
 		if err == io.EOF {
 			n.Aux = nil
 			return false
@@ -44,29 +46,31 @@ func csviRdy (n *Node) bool {
 // them downstream.  enums is an optional map from field.enum to an empty interface.
 func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 
-	var fireFunc = func (n *Node) {	 
+	var fireFunc = func(n *Node) {
 		x := n.Dsts
-		
+
 		// process data record
 		record := n.Aux.(csvState).record
 		header := n.Aux.(csvState).header
 		l := len(x)
-		if l>len(record) { l = len(record) }
-		for i:=0; i<l; i++ {
+		if l > len(record) {
+			l = len(record)
+		}
+		for i := 0; i < l; i++ {
 			j := header[i]
 			// n.Tracef("i=%d, j=%d\n", i, j)
 			// n.Tracef("record=%v, header=%v\n", record, header)
-			if j>=0 {
-				if record[j]=="*" {
+			if j >= 0 {
+				if record[j] == "*" {
 					continue
 				}
 				var v interface{}
 				var ok bool
-				if enums!= nil {
-					v,ok = enums[record[j]]
+				if enums != nil {
+					v, ok = enums[record[j]]
 				}
 				if !ok {
-						v = ParseDatum(record[j])
+					v = ParseDatum(record[j])
 				}
 				x[i].DstPut(v)
 			} else {
@@ -90,13 +94,12 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 	var h []int
 	for i := range x {
 		ix := find(x[i].Name, headers)
-		if ix>= 0 {
+		if ix >= 0 {
 			h = append(h, ix)
 		}
 	}
-	node.Aux = csvState{csvreader:r2, header:h}
+	node.Aux = csvState{csvreader: r2, header: h}
 
 	return node
-	
+
 }
-	
