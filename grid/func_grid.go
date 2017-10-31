@@ -38,8 +38,8 @@ func gridFire (n *flowgraph.Node) {
 
 	if srcn.SrcRdy(n) && dsts.DstRdy(n) { dsts.DstPut(srcn.SrcGet()); as.Scnt++ }
 	if srce.SrcRdy(n) && dstw.DstRdy(n) { dstw.DstPut(srce.SrcGet()); as.Wcnt++ }
-	if srcs.SrcRdy(n) && dsts.DstRdy(n) { dstn.DstPut(srcs.SrcGet()); as.Ncnt++ }
-	if srcw.SrcRdy(n) && dstw.DstRdy(n) { dste.DstPut(srcw.SrcGet()); as.Ecnt++ }
+	if srcs.SrcRdy(n) && dstn.DstRdy(n) { dstn.DstPut(srcs.SrcGet()); as.Ncnt++ }
+	if srcw.SrcRdy(n) && dste.DstRdy(n) { dste.DstPut(srcw.SrcGet()); as.Ecnt++ }
 
         n.Aux = as
 	return

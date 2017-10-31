@@ -200,15 +200,10 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 					newFmt += "<nil>"
 				} else {
 					newFmt += fmt.Sprintf("%s", String(srci.Val))
-				        if !valOnly { newFmt += fmt.Sprintf("(k%v)", srci.RdyCnt) }
 				}
 			}
 		} else {
-		        if !valOnly {
-			        newFmt += fmt.Sprintf("(k%v)", srci.RdyCnt)
-			} else {
-			        newFmt += "_"
-			}
+		        newFmt += "_"
 		}
 	}
 	newFmt += ";"
@@ -245,7 +240,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			}
 
 		} else {
-			newFmt += fmt.Sprintf("%s=(k%v)", dsti.Name, dsti.RdyCnt)
+			newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
 		}
 	}
 	if !valOnly { newFmt += ">>" }
