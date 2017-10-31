@@ -192,7 +192,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 		srci := n.Srcs[i]
 		if (i!=0) { newFmt += "," }
 		newFmt += fmt.Sprintf("%s=", srci.Name)
-		if (srci.Rdy()) {
+		if (srci.RdyZero()) {
 			if IsSlice(srci.Val) {
 				newFmt +=StringSlice(srci.Val)
 			} else {
@@ -200,13 +200,14 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 					newFmt += "<nil>"
 				} else {
 					newFmt += fmt.Sprintf("%s", String(srci.Val))
+				        if !valOnly { newFmt += fmt.Sprintf("(k%v)", srci.RdyCnt) }
 				}
 			}
 		} else {
-			if true {
-				newFmt += "_"  // the empty string
+		        if !valOnly {
+			        newFmt += fmt.Sprintf("(k%v)", srci.RdyCnt)
 			} else {
-				newFmt += fmt.Sprintf("%+v", srci.Val)
+			        newFmt += "_"
 			}
 		}
 	}
@@ -244,11 +245,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			}
 
 		} else {
-			if true {
-				newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
-			} else {
-				newFmt += fmt.Sprintf("%s=%+v", dsti.Name, dsti.Val)
-			}
+			newFmt += fmt.Sprintf("%s=(k%v)", dsti.Name, dsti.RdyCnt)
 		}
 	}
 	if !valOnly { newFmt += ">>" }

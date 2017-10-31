@@ -205,7 +205,7 @@ package flowgraph
  }
 
  // Rdy tests if RdyCnt has returned to zero.
- func (e *Edge) Rdy() bool {
+ func (e *Edge) RdyZero() bool {
 	 return e.RdyCnt==0
  }
 
@@ -265,7 +265,7 @@ package flowgraph
 
  // SrcRdy tests if a source Edge is ready.
 func (e *Edge) SrcRdy(n *Node) bool {
-	if !e.Rdy() {
+	if !e.RdyZero() {
 		if !e.srcReadRdy(n) { 
 			return false 
 		}
@@ -284,14 +284,14 @@ func (e *Edge) SrcRdy(n *Node) bool {
 			e.srcReadHandle(n, false)
 		}
 		
-		return e.Rdy()
+		return e.RdyZero()
 	}
 	return true
 }
 
  // SrcWait waits for a source Edge to be ready.
 func (e *Edge) SrcWait(n *Node) {
-	if !e.Rdy() {
+	if !e.RdyZero() {
 
 		i := n.edgeToCase[e]
 		if n.cases[i].Chan!=reflect.ValueOf(nil) {
@@ -356,7 +356,7 @@ func (e *Edge) dstWriteRdy() bool {
 
 // DstRdy tests if a destination Edge is ready.
 func (e *Edge) DstRdy(n *Node) bool {
-	if !e.Rdy() {
+	if !e.RdyZero() {
 		if !e.dstReadRdy() { 
 			return e.dstWriteRdy()
 		}
@@ -377,7 +377,7 @@ func (e *Edge) DstRdy(n *Node) bool {
 		}
 	}
 			
-	f := e.Rdy()
+	f := e.RdyZero()
 	return f
 	
 }
