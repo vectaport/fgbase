@@ -79,6 +79,9 @@ var TraceTypes = false
 // Trace Node pointer.
 var TracePointer = false
 
+// Graphviz .dot output
+var DotOutput = false
+
 // Unique Node id.
 var NodeID int64
 
@@ -108,7 +111,7 @@ func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 
 // ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities,
 // while at the same time parsing all other flags.  Use the defaults argument to override
-// default settings for ncore, sec, trace, trsec, and chansz.  Use -help to see the standard set.
+// default settings for ncore, chanz, sec, trace, trsec, trtyp, and dot.  Use -help to see the standard set.
 func ConfigByFlag(defaults map[string]interface{}) {
 
 	var ncoreDef interface{} = runtime.NumCPU()-1
@@ -117,6 +120,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var chanszDef interface{} = 1
 	var trsecDef interface{} = false
 	var trtypDef interface{} = false
+	var dotDef interface{} = false
 
 	if defaults != nil {
 		if defaults["ncore"] != nil {
@@ -137,6 +141,9 @@ func ConfigByFlag(defaults map[string]interface{}) {
 		if defaults["trtyp"] != nil {
 			trtypDef = defaults["trtyp"]
 		}
+		if defaults["dot"] != nil {
+			dotDef = defaults["dot"]
+		}
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
@@ -145,6 +152,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
 	trtypPtr := flag.Bool("trtyp", trtypDef.(bool), "trace types")
+	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 
 	flag.Parse()
 
@@ -154,6 +162,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	ChannelSize = *chanszPtr
 	TraceSeconds = *trsecPtr
 	TraceTypes = *trtypPtr
+	DotOutput = *dotPtr
 }
 
 // When the flowgraph started running.

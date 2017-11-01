@@ -499,7 +499,13 @@ func clearUpstreamAcks(nodes []Node) {
 // RunAll calls Run for each Node, and times out after RunTime.
 func RunAll(nodes []Node) {
 
-	buildEdgeNodes(nodes)
+	buildEdgeNodes(nodes)  // build reflection capability
+
+        if DotOutput {
+	        OutputDot(nodes)
+	        return
+	}
+
 	extendChannelCaps(nodes)
 	clearUpstreamAcks(nodes)
 
@@ -551,4 +557,25 @@ func (n *Node) RemoveInputCase(e *Edge) {
 	if !e.IsConst() {
 		n.cases[n.edgeToCase[e]].Chan = reflect.ValueOf(nil) // don't read this again until after RdyAll
 	}
+}
+
+
+// Output .dot graphviz format
+func OutputDot(nodes []Node) {
+
+        fmt.Printf("digraph G {\n")
+
+	for _,iv := range nodes {
+		for _,jv := range iv.Dsts {
+		        for _,kv := range *jv.edgeNodes {
+			        if !kv.srcFlag {
+   	                                fmt.Printf("%s_%d", iv.Name, iv.ID)
+		                        fmt.Printf(" -> %s_%d\n", kv.node.Name, kv.node.ID)
+				}
+			}
+		}
+	}
+
+        fmt.Printf("}\n")
+	
 }
