@@ -503,6 +503,7 @@ func RunAll(nodes []Node) {
 
         if DotOutput {
 	        OutputDot(nodes)
+		TraceLevel = QQ
 	        return
 	}
 
