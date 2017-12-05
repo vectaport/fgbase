@@ -1,57 +1,56 @@
 package grid
 
 import (
+        "math/rand"
+	
 	"github.com/vectaport/flowgraph"
 )
 
+type compassDir int
+const (
+       nor = iota
+       eas
+       sou
+       wes
+)
+
 type auxStruct struct {
-        Ncnt, Ecnt, Scnt, Wcnt int
-	rdy []bool
+        Cnt [wes+1] int
+	rdy [wes+1] bool
+	dir [wes+1] compassDir
+}
+
+func randDir() compassDir {
+	return compassDir(rand.Intn(4))
 }
 
 func gridRdy (n *flowgraph.Node) bool {
-	srcn := n.Srcs[0] 		 
-	srce := n.Srcs[1] 		 
-	srcs := n.Srcs[2] 		 
-	srcw := n.Srcs[3]
-	dstn := n.Dsts[0] 		 
-	dste := n.Dsts[1] 		 
-	dsts := n.Dsts[2] 		 
-	dstw := n.Dsts[3]
-
         var as auxStruct
         if n.Aux == nil {
 	        as = auxStruct{}
-		as.rdy = make([]bool, 4)
 	} else {
 		as = n.Aux.(auxStruct)
 	}
 
-        as.rdy[0] = srcn.SrcRdy(n)
-	as.rdy[1] = srce.SrcRdy(n)
-	as.rdy[2] = srcs.SrcRdy(n)
-	as.rdy[3] = srcw.SrcRdy(n)
+        for i:= range as.rdy {
+	        newDir := randDir()
+	        as.rdy[i] = n.Srcs[i].SrcRdy(n) && n.Dsts[newDir].DstRdy(n)
+		as.dir[i] = newDir
+	}
+
         n.Aux = as
 	
-        return as.rdy[0]&&dsts.DstRdy(n) || as.rdy[1]&&dstw.DstRdy(n) || as.rdy[2]&&dstn.DstRdy(n) || as.rdy[3]&&dste.DstRdy(n)
+        return as.rdy[0] || as.rdy[1] || as.rdy[2] || as.rdy[3]
 }
 
 func gridFire (n *flowgraph.Node) {	 
-	srcn := n.Srcs[0] 		 
-	srce := n.Srcs[1] 		 
-	srcs := n.Srcs[2] 		 
-	srcw := n.Srcs[3] 		 
-	dstn := n.Dsts[0] 		 
-	dste := n.Dsts[1] 		 
-	dsts := n.Dsts[2] 		 
-	dstw := n.Dsts[3]
-
 	as := n.Aux.(auxStruct)
 
-	if as.rdy[0] && dsts.DstRdy(n) { dsts.DstPut(srcn.SrcGet()); as.Scnt++ }
-	if as.rdy[1] && dstw.DstRdy(n) { dstw.DstPut(srce.SrcGet()); as.Wcnt++ }
-	if as.rdy[2] && dstn.DstRdy(n) { dstn.DstPut(srcs.SrcGet()); as.Ncnt++ }
-	if as.rdy[3] && dste.DstRdy(n) { dste.DstPut(srcw.SrcGet()); as.Ecnt++ }
+	for i:= range as.rdy {
+		if as.rdy[i] {
+		        n.Dsts[as.dir[i]].DstPut(n.Srcs[i].SrcGet()); as.Cnt[as.dir[i]]++
+		}
+	}
 
         n.Aux = as
 	return

@@ -501,8 +501,12 @@ func RunAll(nodes []Node) {
 
 	buildEdgeNodes(nodes)  // build reflection capability
 
-        if DotOutput {
-	        OutputDot(nodes)
+        if GmlOutput||DotOutput {
+		if GmlOutput {
+		        OutputGml(nodes)
+		} else {
+		        OutputDot(nodes)
+		}
 		TraceLevel = QQ
 	        return
 	}
@@ -578,5 +582,30 @@ func OutputDot(nodes []Node) {
 	}
 
         fmt.Printf("}\n")
+	
+}
+
+// Output .gml graph modeling language format
+func OutputGml(nodes []Node) {
+
+        fmt.Printf("graph\n[\n")
+
+	for _,iv := range nodes {
+	        fmt.Printf("  node\n  [\n   id %s_%d\n  ]\n", iv.Name, iv.ID)
+	}
+	
+	for _,iv := range nodes {
+		for _,jv := range iv.Dsts {
+		        for _,kv := range *jv.edgeNodes {
+			        if !kv.srcFlag {
+   	                                fmt.Printf("  edge\n  [\n   source %s_%d\n", iv.Name, iv.ID)
+		                        fmt.Printf("   target %s_%d\n", kv.node.Name, kv.node.ID)
+		                        fmt.Printf("   label \"%s\"\n  ]\n", jv.Name)
+				}
+			}
+		}
+	}
+
+        fmt.Printf("]\n")
 	
 }
