@@ -2,8 +2,18 @@ package flowgraph_test
 
 import (
 	"github.com/vectaport/flowgraph"
+	"os"
 	"testing"
 )
+
+/*=====================================================================*/
+
+func TestMain(m *testing.M) {
+     flowgraph.ConfigByFlag(nil)
+     os.Exit(m.Run())
+}
+
+/*=====================================================================*/
 
 func TestNewEqual(t *testing.T) {
 	// Different allocations should not be equal.
@@ -20,3 +30,25 @@ func TestNewEqual(t *testing.T) {
 		t.Errorf(`graph != graph`)
 	}
 }
+
+/*=====================================================================*/
+
+type receiver struct {
+     cnt int
+}
+
+func (r receiver) Receive() (interface {}, error) {
+     i := r.cnt
+     r.cnt++
+     return i,nil
+}
+
+func TestIncoming(t *testing.T) {
+     
+     fg := flowgraph.New("test")
+     fg.InsertIncoming("incoming", receiver{})
+     fg.InsertSink("sink")
+     
+     fg.RunAll()
+}
+

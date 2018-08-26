@@ -219,8 +219,12 @@ type Flowgraph interface {
 
 	InsertIncoming(name string, receiver Receiver)
 	InsertOutgoing(name string, deliverer Deliverer)
+	
+	InsertSink(name string)
 
 	InsertAllOf(name string, transformer Transformer)
+
+	RunAll()
 }
 
 // implementation of Flowgraph
@@ -257,3 +261,15 @@ func (fg *graph) InsertOutgoing(name string, deliverer Deliverer) {
 func (fg *graph) InsertAllOf(name string, transformer Transformer) {
 	fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[1]}, name, transformer))
 }
+
+// InsertSink adds a output sink on the latest edge
+func (fg *graph) InsertSink(name string) {
+	fg.nodes = append(fg.nodes, FuncSink(fg.edges[len(fg.edges)-1]))
+}
+
+// RunAll runs the flowgraph
+func (fg *graph) RunAll() {
+     RunAll(fg.nodes)
+}
+
+
