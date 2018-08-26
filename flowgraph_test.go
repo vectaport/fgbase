@@ -9,8 +9,8 @@ import (
 /*=====================================================================*/
 
 func TestMain(m *testing.M) {
-     flowgraph.ConfigByFlag(nil)
-     os.Exit(m.Run())
+	flowgraph.ConfigByFlag(nil)
+	os.Exit(m.Run())
 }
 
 /*=====================================================================*/
@@ -34,21 +34,20 @@ func TestNewEqual(t *testing.T) {
 /*=====================================================================*/
 
 type receiver struct {
-     cnt int
+	cnt int
 }
 
-func (r receiver) Receive() (interface {}, error) {
-     i := r.cnt
-     r.cnt++
-     return i,nil
+func (r receiver) Receive() (interface{}, error) {
+	i := r.cnt
+	r.cnt++
+	return i, nil
 }
 
 func TestIncoming(t *testing.T) {
-     
-     fg := flowgraph.New("test")
-     fg.InsertIncoming("incoming", receiver{})
-     fg.InsertSink("sink")
-     
-     fg.RunAll()
-}
 
+	fg := flowgraph.New("test")
+	fg.InsertIncoming("incoming", receiver{})
+	fg.InsertSink("sink")
+
+	fg.RunAll()
+}

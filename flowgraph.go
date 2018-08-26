@@ -219,7 +219,7 @@ type Flowgraph interface {
 
 	InsertIncoming(name string, receiver Receiver)
 	InsertOutgoing(name string, deliverer Deliverer)
-	
+
 	InsertSink(name string)
 
 	InsertAllOf(name string, transformer Transformer)
@@ -269,7 +269,5 @@ func (fg *graph) InsertSink(name string) {
 
 // RunAll runs the flowgraph
 func (fg *graph) RunAll() {
-     RunAll(fg.nodes)
+	RunAll(fg.nodes)
 }
-
-
