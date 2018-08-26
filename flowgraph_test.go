@@ -1,7 +1,7 @@
 package flowgraph_test
 
 import (
-        "github.com/vectaport/flowgraph"
+	"github.com/vectaport/flowgraph"
 	"testing"
 )
 
@@ -20,4 +20,3 @@ func TestNewEqual(t *testing.T) {
 		t.Errorf(`graph != graph`)
 	}
 }
-

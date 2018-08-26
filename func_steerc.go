@@ -1,21 +1,20 @@
 package flowgraph
 
-import (
-)
+import ()
 
-func steercFire (n *Node) {
+func steercFire(n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
 	av := a.SrcGet()
-	if (ZeroTest(av)) {
+	if ZeroTest(av) {
 		x.DstPut(av)
 	} else {
 		y.DstPut(av)
 	}
 }
 
-func steercRdy (n *Node) bool {
+func steercRdy(n *Node) bool {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]

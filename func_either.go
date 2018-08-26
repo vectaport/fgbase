@@ -1,9 +1,8 @@
 package flowgraph
 
-import (
-)
+import ()
 
-func eitherFire (n *Node) {
+func eitherFire(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -14,7 +13,7 @@ func eitherFire (n *Node) {
 	}
 }
 
-func eitherRdy (n *Node) bool {
+func eitherRdy(n *Node) bool {
 	return (n.Srcs[0].SrcRdy(n) || n.Srcs[1].SrcRdy(n)) && n.Dsts[0].DstRdy(n)
 }
 

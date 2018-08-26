@@ -1,12 +1,12 @@
 package flowgraph
 
-import (		
+import (
 	"bufio"
 	"io"
-)      			
+)
 
-func srcFire (n *Node) {	 
-	x := n.Dsts[0] 		 
+func srcFire(n *Node) {
+	x := n.Dsts[0]
 	rw := n.Aux.(*bufio.ReadWriter)
 
 	// read data string
@@ -34,8 +34,7 @@ func FuncSrc(x Edge, rw io.ReadWriter) Node {
 	node := MakeNode("src", nil, []*Edge{&x}, nil, srcFire)
 	reader := bufio.NewReader(rw)
 	writer := bufio.NewWriter(rw)
- 	node.Aux = bufio.NewReadWriter(reader, writer)
+	node.Aux = bufio.NewReadWriter(reader, writer)
 	return node
-	
+
 }
-	

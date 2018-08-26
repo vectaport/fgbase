@@ -1,13 +1,13 @@
 package flowgraph
 
-import (		
+import (
 	"bufio"
 	"fmt"
 	"io"
-)      			
+)
 
-func writeFire (n *Node) {	 
-	a := n.Srcs[0] 		 
+func writeFire(n *Node) {
+	a := n.Srcs[0]
 	w := n.Aux.(*bufio.Writer)
 	var err error
 
@@ -29,6 +29,5 @@ func FuncWrite(a Edge, w io.Writer) Node {
 	node := MakeNode("write", []*Edge{&a}, nil, nil, writeFire)
 	node.Aux = bufio.NewWriter(w)
 	return node
-	
+
 }
-	

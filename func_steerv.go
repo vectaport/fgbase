@@ -1,14 +1,13 @@
 package flowgraph
 
-import (
-)
+import ()
 
-func steervRdy (n *Node) bool {
+func steervRdy(n *Node) bool {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	if a.SrcRdy(n)&&b.SrcRdy(n) {
+	if a.SrcRdy(n) && b.SrcRdy(n) {
 		if ZeroTest(a.Val) {
 			return x.DstRdy(n)
 		}
@@ -17,7 +16,7 @@ func steervRdy (n *Node) bool {
 	return false
 }
 
-func steervFire (n *Node) {
+func steervFire(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]

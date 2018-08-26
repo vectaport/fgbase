@@ -1,13 +1,12 @@
 package flowgraph
 
-import (
-)
+import ()
 
-func forkFire (n *Node) { 
+func forkFire(n *Node) {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
-	x.Val = a.Val; 
+	x.Val = a.Val
 	if IsSlice(a.Val) {
 		y.DstPut(CopySlice(a.SrcGet()))
 	} else {
@@ -21,6 +20,5 @@ func FuncFork(a, x, y Edge) Node {
 
 	node := MakeNode("fork", []*Edge{&a}, []*Edge{&x, &y}, nil, forkFire)
 	return node
-	
+
 }
-	

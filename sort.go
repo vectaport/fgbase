@@ -1,11 +1,10 @@
-package flowgraph 
+package flowgraph
 
 import (
 	"sort"
 )
 
-
-// These are sort.min, sort.medianOfThree, sort.swapRange, and sort.doPivot, borrowed 
+// These are sort.min, sort.medianOfThree, sort.swapRange, and sort.doPivot, borrowed
 // under the GO-LICENSE from go 1.4.2.  Required to reuse sort.doPivot.
 
 func min(a, b int) int {
@@ -102,4 +101,3 @@ func doPivot(data sort.Interface, lo, hi int) (midlo, midhi int) {
 
 	return lo + b - a, hi - (d - c)
 }
-

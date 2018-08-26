@@ -1,9 +1,8 @@
 package flowgraph
 
-import (
-)
+import ()
 
-func arbitFire (n *Node) {
+func arbitFire(n *Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -12,7 +11,7 @@ func arbitFire (n *Node) {
 		x.DstPut(a.SrcGet())
 		if b.SrcRdy(n) {
 		}
-	} else if (b.SrcRdy(n)) {
+	} else if b.SrcRdy(n) {
 		n.Aux = false // aLast = false
 		x.DstPut(b.SrcGet())
 		if a.SrcRdy(n) {
@@ -20,7 +19,7 @@ func arbitFire (n *Node) {
 	}
 }
 
-func arbitRdy (n *Node) bool {
+func arbitRdy(n *Node) bool {
 	return (n.Srcs[0].SrcRdy(n) || n.Srcs[1].SrcRdy(n)) && n.Dsts[0].DstRdy(n)
 }
 

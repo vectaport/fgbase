@@ -204,11 +204,11 @@ type Transformer interface {
 }
 
 type Receiver interface {
-     Receive() (interface{}, error)
+	Receive() (interface{}, error)
 }
 
 type Deliverer interface {
-     Deliver(interface{}) error
+	Deliver(interface{}) error
 }
 
 /*=====================================================================*/
@@ -225,9 +225,9 @@ type Flowgraph interface {
 
 // implementation of Flowgraph
 type graph struct {
-	name    string
-	nodes   []Node
-	edges   []Edge
+	name  string
+	nodes []Node
+	edges []Edge
 }
 
 func (fg graph) Name() string {
@@ -241,20 +241,19 @@ func New(nm string) Flowgraph {
 
 // InsertIncoming adds a single input source to a flowgraph that uses a Receiver
 func (fg *graph) InsertIncoming(name string, receiver Receiver) {
-     e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
-     fg.edges = append(fg.edges, e)
-     fg.nodes = append(fg.nodes, FuncIncoming(e, receiver))
+	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+	fg.edges = append(fg.edges, e)
+	fg.nodes = append(fg.nodes, FuncIncoming(e, receiver))
 }
 
 // InsertOutgoing adds a single output source to a flowgraph that uses a Deliverer
 func (fg *graph) InsertOutgoing(name string, deliverer Deliverer) {
-     e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
-     fg.edges = append(fg.edges, e)
-     fg.nodes = append(fg.nodes, FuncOutgoing(e, deliverer))
+	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+	fg.edges = append(fg.edges, e)
+	fg.nodes = append(fg.nodes, FuncOutgoing(e, deliverer))
 }
 
 // InsertAllOf adds a transform that waits for all inputs before producing outputs
 func (fg *graph) InsertAllOf(name string, transformer Transformer) {
-     fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[1]}, name, transformer))
+	fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[1]}, name, transformer))
 }
-

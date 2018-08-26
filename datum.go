@@ -10,46 +10,93 @@ import (
 func ZeroTest(a interface{}) bool {
 
 	switch a.(type) {
-        case int8: { return a.(int8)==0 }
-        case uint8: { return a.(uint8)==0 }
-        case int16: { return a.(int16)==0 }
-        case uint16: { return a.(uint16)==0 }
-        case int32: { return a.(int32)==0 }
-        case uint32: { return a.(uint32)==0 }
-	case int64: { return a.(int64)==0 }
-        case uint64: { return a.(uint64)==0 }
-	case int: { return a.(int)==0 }
-	case uint: { return a.(uint)==0 }
-	case float32: { return a.(float32)==0.0 }
-	case float64: { return a.(float64)==0.0 }
-	case complex64: { return a.(complex64)==0.0+0.0i }
-	case complex128: { return a.(complex128)==0.0+0.0i }
-	default: { return false }
+	case int8:
+		{
+			return a.(int8) == 0
+		}
+	case uint8:
+		{
+			return a.(uint8) == 0
+		}
+	case int16:
+		{
+			return a.(int16) == 0
+		}
+	case uint16:
+		{
+			return a.(uint16) == 0
+		}
+	case int32:
+		{
+			return a.(int32) == 0
+		}
+	case uint32:
+		{
+			return a.(uint32) == 0
+		}
+	case int64:
+		{
+			return a.(int64) == 0
+		}
+	case uint64:
+		{
+			return a.(uint64) == 0
+		}
+	case int:
+		{
+			return a.(int) == 0
+		}
+	case uint:
+		{
+			return a.(uint) == 0
+		}
+	case float32:
+		{
+			return a.(float32) == 0.0
+		}
+	case float64:
+		{
+			return a.(float64) == 0.0
+		}
+	case complex64:
+		{
+			return a.(complex64) == 0.0+0.0i
+		}
+	case complex128:
+		{
+			return a.(complex128) == 0.0+0.0i
+		}
+	default:
+		{
+			return false
+		}
 	}
 }
 
 // EqualsTest returns true if two empty interfaces have the same numeric or string value.
-func EqualsTest(n *Node, a,b interface{}) bool {
+func EqualsTest(n *Node, a, b interface{}) bool {
 
-	a2,b2,same := Promote(n, a, b)
-	if !same { return false }
+	a2, b2, same := Promote(n, a, b)
+	if !same {
+		return false
+	}
 
-	return a2==b2
+	return a2 == b2
 }
 
 // IsInt returns true if empty interface (interface{}) is an int.
-func IsInt (d interface{}) bool {
-	return reflect.ValueOf(d).Kind()==reflect.Int
+func IsInt(d interface{}) bool {
+	return reflect.ValueOf(d).Kind() == reflect.Int
 }
 
 // IsSlice returns true if empty interface (interface{}) is a slice.
-func IsSlice (d interface{}) bool {
-	return reflect.ValueOf(d).Kind()==reflect.Slice
+func IsSlice(d interface{}) bool {
+	return reflect.ValueOf(d).Kind() == reflect.Slice
 }
 
 // IsStruct returns true if empty interface (interface{}) is a struct.
-func IsStruct (d interface{}) bool {
-	return reflect.ValueOf(d).Kind()==reflect.Struct
+func IsStruct(d interface{}) bool {
+	return reflect.ValueOf(d).Kind() == reflect.Struct
 }
 
 // Index returns the nth element of an empty interface (interface{}) that is a slice.
@@ -59,7 +106,7 @@ func Index(d interface{}, i int) interface{} {
 
 // Len returns the length of an empty interface (interface{}) if it is a slice.
 func Len(d interface{}) int {
-	if IsSlice(d) { 
+	if IsSlice(d) {
 		return reflect.ValueOf(d).Len()
 	}
 	return 0
@@ -74,22 +121,24 @@ func CopySlice(d interface{}) interface{} {
 	return r
 }
 
-// String returns a string representation of a interface{} with 
+// String returns a string representation of a interface{} with
 // ellipse shortened slices if TraceLevel<VVVV.
 func String(d interface{}) string {
-       
+
 	if IsSlice(d) {
 		return StringSlice(d)
 	}
-        if dd,ok := d.([]interface{}); ok {
+	if dd, ok := d.([]interface{}); ok {
 		var s string
 		for i := range dd {
-			if i!= 0 { s+="|" }
+			if i != 0 {
+				s += "|"
+			}
 			s += String(dd[i])
 		}
 		return s
 	}
-	if dd,ok := d.(nodeWrap); ok {
+	if dd, ok := d.(nodeWrap); ok {
 		return String(dd.datum)
 	}
 	if IsStruct(d) {
@@ -98,41 +147,48 @@ func String(d interface{}) string {
 
 	var s string
 	switch d.(type) {
-	case bool, int8, int16, int32, int64, int: {
-		s = fmt.Sprintf("%v", d)
-	}
-	case uint8, uint16, uint32, uint64, uint: {
-		w := 2
-		switch d.(type) {
-		case uint16: {
-			w = 4
+	case bool, int8, int16, int32, int64, int:
+		{
+			s = fmt.Sprintf("%v", d)
 		}
-		case uint32: {
-			w = 8
+	case uint8, uint16, uint32, uint64, uint:
+		{
+			w := 2
+			switch d.(type) {
+			case uint16:
+				{
+					w = 4
+				}
+			case uint32:
+				{
+					w = 8
+				}
+			case uint64, uint:
+				{
+					w = 16
+				}
+			}
+			s = fmt.Sprintf("0x%0"+strconv.Itoa(w)+"x", d)
 		}
-		case uint64, uint: {
-			w = 16
+	case float32, float64:
+		{
+			s = fmt.Sprintf("%.4g", d)
 		}
+	case complex64, complex128:
+		{
+			s = fmt.Sprintf("%.4g", d)
 		}
-		s = fmt.Sprintf("0x%0"+strconv.Itoa(w)+"x", d)
-	}
-	case float32, float64: {
-		s = fmt.Sprintf("%.4g", d)
-	}
-	case complex64, complex128: {
-		s = fmt.Sprintf("%.4g", d)
-	}
-	case string: {
-		s = fmt.Sprintf("%q", d)
-	}
+	case string:
+		{
+			s = fmt.Sprintf("%q", d)
+		}
 	}
 
-	
-	if !TraceTypes && s!="" {
+	if !TraceTypes && s != "" {
 		return s
 
 	}
-	if s=="" {
+	if s == "" {
 		s = fmt.Sprintf("%v", d)
 	}
 	if IsInt(d) && !TraceTypes {
@@ -146,16 +202,22 @@ func String(d interface{}) string {
 func StringSlice(d interface{}) string {
 	m := 8
 	l := Len(d)
-	if l < m || TraceLevel==VVVV { m = l }
+	if l < m || TraceLevel == VVVV {
+		m = l
+	}
 	dv := reflect.ValueOf(d)
 	dt := reflect.TypeOf(d)
 	dts := dt.String()
 	s := fmt.Sprintf("[:%d]%s{", dv.Len(), dts[2:len(dts)])
-	for i := 0; i<m; i++ {
-		if i!=0 {s += " "}
-		s += fmt.Sprintf("%s", String(Index(d,i)))
+	for i := 0; i < m; i++ {
+		if i != 0 {
+			s += " "
+		}
+		s += fmt.Sprintf("%s", String(Index(d, i)))
 	}
-	if m<l && TraceLevel<VVVV {s += " ..."}
+	if m < l && TraceLevel < VVVV {
+		s += " ..."
+	}
 	s += "}"
 	return s
 }
@@ -169,16 +231,18 @@ func isShadowSlice(d interface{}, nth int) bool {
 
 	dv := reflect.ValueOf(d)
 	l := dv.NumField()
-	if nth>=l {
+	if nth >= l {
 		return false
 	}
 	shadow := dv.Type().Field(nth)
 
 	// search for shadowing struct
-	for j :=0; j<l; j++ {
-		if j==nth { continue }
+	for j := 0; j < l; j++ {
+		if j == nth {
+			continue
+		}
 		slice := dv.Type().Field(j)
-		if shadow.Type.String()== slice.Type.String() && shadow.Name=="Shadow"+slice.Name {
+		if shadow.Type.String() == slice.Type.String() && shadow.Name == "Shadow"+slice.Name {
 			return true
 		}
 	}
@@ -186,9 +250,8 @@ func isShadowSlice(d interface{}, nth int) bool {
 	return false
 }
 
-
 // shadowSlice returns the index of a struct field that is a slice that
-// is being shadowed by the nth field of the struct (with a "Shadow" prefix and matching type).  
+// is being shadowed by the nth field of the struct (with a "Shadow" prefix and matching type).
 // -1 returned if not found
 func shadowSlice(d interface{}, nth int) int {
 	if !IsStruct(d) {
@@ -197,23 +260,24 @@ func shadowSlice(d interface{}, nth int) int {
 
 	dv := reflect.ValueOf(d)
 	l := dv.NumField()
-	if nth>=l {
+	if nth >= l {
 		return -1
 	}
 	slice := dv.Type().Field(nth)
 
 	// search for shadowed struct
-	for j :=0; j<l; j++ {
-		if j==nth { continue }
+	for j := 0; j < l; j++ {
+		if j == nth {
+			continue
+		}
 		shadow := dv.Type().Field(j)
-		if shadow.Type.String()== slice.Type.String() && shadow.Name=="Shadow"+slice.Name {
+		if shadow.Type.String() == slice.Type.String() && shadow.Name == "Shadow"+slice.Name {
 			return j
 		}
 	}
 
 	return -1
 }
-
 
 // shadowString returns a struct-like string for a shadows slice, where the index of a changed
 // value proceeds the value and a colon.
@@ -224,7 +288,7 @@ func shadowString(d interface{}, sliceIndex, shadowIndex int) string {
 
 	dv := reflect.ValueOf(d)
 	n := dv.NumField()
-	if sliceIndex>=n || shadowIndex>=n {
+	if sliceIndex >= n || shadowIndex >= n {
 		return ""
 	}
 
@@ -236,7 +300,7 @@ func shadowString(d interface{}, sliceIndex, shadowIndex int) string {
 	s := fmt.Sprintf("[:%d]%v{", l, st[2:])
 
 	var first = true
-	for i := 0; i<l; i++ {
+	for i := 0; i < l; i++ {
 		if !EqualsTest(nil, Index(slice, i), Index(shadow, i)) {
 			if !first {
 				s += ", "
@@ -250,8 +314,7 @@ func shadowString(d interface{}, sliceIndex, shadowIndex int) string {
 	return s
 }
 
-
-// StringStruct returns a string representation of a struct with 
+// StringStruct returns a string representation of a struct with
 // ellipse shortened slices if TraceLevel<VVVV.
 func StringStruct(d interface{}) string {
 	dv := reflect.ValueOf(d)
@@ -261,29 +324,29 @@ func StringStruct(d interface{}) string {
 		s = fmt.Sprintf("%T", d)
 	}
 	s += "{"
-	if false && reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d) {
+	if false && reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(), d) {
 		s += "}"
 		return s
 	}
-	if s,ok := d.(fmt.Stringer); ok {
+	if s, ok := d.(fmt.Stringer); ok {
 		return s.String()
 	}
 	flg := false
-	for i := 0; i<l; i++ {
+	for i := 0; i < l; i++ {
 		ft := dv.Type().Field(i)
-		if ft.Name[0]>='A' && ft.Name[0]<='Z' {
+		if ft.Name[0] >= 'A' && ft.Name[0] <= 'Z' {
 			if isShadowSlice(d, i) {
 				continue
 			}
-			if flg { 
-				s += " " 
+			if flg {
+				s += " "
 			} else {
 				flg = true
 			}
 			s += ft.Name
 			s += ":"
 			j := shadowSlice(d, i)
-			if j<0 {
+			if j < 0 {
 				s += String(dv.Field(i).Interface())
 			} else {
 				s += shadowString(d, i, j)
@@ -301,57 +364,89 @@ func ParseDatum(s string) interface{} {
 	// trim trailing whitespace or comments
 	var s2 string
 	for i := range s {
-		if s[i]=='#' { break }
-		if len(s)>i+1 && s[i:i+2]=="//" { break }
-		if s[i]==' ' || s[i]=='\t' { break }
-		s2 += s[i:i+1]
+		if s[i] == '#' {
+			break
+		}
+		if len(s) > i+1 && s[i:i+2] == "//" {
+			break
+		}
+		if s[i] == ' ' || s[i] == '\t' {
+			break
+		}
+		s2 += s[i : i+1]
 	}
 	s = s2
 
-	if s=="{}" {
+	if s == "{}" {
 		return struct{}{}
 	}
-	
-	if len(s)>2 && s[0:2]=="0x" {
+
+	if len(s) > 2 && s[0:2] == "0x" {
 		s = s[2:]
-		if len(s)<=2 {
-			u8,err := strconv.ParseUint(s, 16, 8)
-			if err==nil { v = uint8(u8); return v }
+		if len(s) <= 2 {
+			u8, err := strconv.ParseUint(s, 16, 8)
+			if err == nil {
+				v = uint8(u8)
+				return v
+			}
 		}
-		if len(s)<=4 {
-			u16,err := strconv.ParseUint(s, 16, 16)
-			if err==nil { v = uint16(u16); return v }
+		if len(s) <= 4 {
+			u16, err := strconv.ParseUint(s, 16, 16)
+			if err == nil {
+				v = uint16(u16)
+				return v
+			}
 		}
-		if len(s)<=8 {
-			u32,err := strconv.ParseUint(s, 16, 32)
-			if err==nil { v = uint32(u32); return v }
+		if len(s) <= 8 {
+			u32, err := strconv.ParseUint(s, 16, 32)
+			if err == nil {
+				v = uint32(u32)
+				return v
+			}
 		}
-		u64,err := strconv.ParseUint(s, 16, 64)
-		if err==nil { v = u64;  return v }
+		u64, err := strconv.ParseUint(s, 16, 64)
+		if err == nil {
+			v = u64
+			return v
+		}
 	}
-	i32,err := strconv.ParseInt(s, 10, 32)
-	if err==nil { v = int(i32); return v }
-	i64,err := strconv.ParseInt(s, 10, 64)
-	if err==nil { v = i64;  return v }
-	f32,err := strconv.ParseFloat(s, 32)
-	if err==nil { v = f32; return v }
-	f64,err := strconv.ParseFloat(s, 64)
-	if err==nil { v = f64; return v }
-	if s=="true"||s=="false" { 
-		b,err := strconv.ParseBool(s) 
-		if err==nil { v = b; return v }
+	i32, err := strconv.ParseInt(s, 10, 32)
+	if err == nil {
+		v = int(i32)
+		return v
+	}
+	i64, err := strconv.ParseInt(s, 10, 64)
+	if err == nil {
+		v = i64
+		return v
+	}
+	f32, err := strconv.ParseFloat(s, 32)
+	if err == nil {
+		v = f32
+		return v
+	}
+	f64, err := strconv.ParseFloat(s, 64)
+	if err == nil {
+		v = f64
+		return v
+	}
+	if s == "true" || s == "false" {
+		b, err := strconv.ParseBool(s)
+		if err == nil {
+			v = b
+			return v
+		}
 	}
 	v = s
 	return v
 }
 
-
 // IsNada tests if a interface{} (an empty interface) is a struct{} (an empty struct)
 func IsNada(d interface{}) bool {
-	return reflect.TypeOf(d)==reflect.TypeOf(struct{}{})
+	return reflect.TypeOf(d) == reflect.TypeOf(struct{}{})
 }
 
 // IsZero returns true if a interface{} has a golang zero value
 func IsZero(d interface{}) bool {
-	return reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(),d)
+	return reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(), d)
 }

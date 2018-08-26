@@ -1,7 +1,6 @@
 package flowgraph
 
-import (
-)
+import ()
 
 func constFire(n *Node) {
 	x := n.Dsts[0]
@@ -12,7 +11,7 @@ func constFire(n *Node) {
 // be done with an Edge made const.
 func FuncConst(x Edge, c interface{}) Node {
 
-	node:=MakeNode("const", nil, []*Edge{&x}, nil, constFire)
+	node := MakeNode("const", nil, []*Edge{&x}, nil, constFire)
 	node.Aux = c
 	return node
 }

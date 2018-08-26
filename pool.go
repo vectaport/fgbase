@@ -4,12 +4,12 @@ import (
 	"sync"
 )
 
-// Pool of Node's 
+// Pool of Node's
 type Pool struct {
-	nodes []Node  
-	size int
-	free int      
-	mu sync.Mutex
+	nodes []Node
+	size  int
+	free  int
+	mu    sync.Mutex
 }
 
 // Nodes returns the Pool's slice of Node.
@@ -25,7 +25,7 @@ func (p *Pool) Size() int { return p.size }
 func (p *Pool) Mutex() *sync.Mutex { return &p.mu }
 
 // Free increments the number of free Node's in the Pool.
-func (p *Pool) Free(n *Node, incr int) bool { 
+func (p *Pool) Free(n *Node, incr int) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -39,11 +39,11 @@ func (p *Pool) Free(n *Node, incr int) bool {
 }
 
 // Alloc decrements the number of free Node's in the Pool.
-func (p *Pool) Alloc (n *Node, decr int) bool {
+func (p *Pool) Alloc(n *Node, decr int) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
-	if p.free>=decr {
+
+	if p.free >= decr {
 		p.free -= decr
 		p.Trace(n)
 		return true
@@ -54,43 +54,50 @@ func (p *Pool) Alloc (n *Node, decr int) bool {
 // Trace logs the current number of free Pool Node's using "*"
 // (or "X" every ten if Pool larger than 128).
 func (p *Pool) Trace(n *Node) {
-	if TraceLevel>=V {
-		delta,c := 1,"*"
+	if TraceLevel >= V {
+		delta, c := 1, "*"
 		if p.size > 128 {
 			delta = 10
 			c = "X"
 		}
-		n.Tracef("\tpool \t%d\t%s\n", p.free, func() string {var s string; for i:=0; i<p.free; i +=delta { s += c }; return s}())
+		n.Tracef("\tpool \t%d\t%s\n", p.free, func() string {
+			var s string
+			for i := 0; i < p.free; i += delta {
+				s += c
+			}
+			return s
+		}())
 	}
 }
-
-
 
 // MakePool returns a Pool of Nodes that share both
 // data channels and the source ack channel.
 func MakePool(
-	size int, 
-	name string, 
+	size int,
+	name string,
 	srcs, dsts []Edge,
-	ready NodeRdy, 
+	ready NodeRdy,
 	fire NodeFire,
-        recurse, spread bool) *Pool {
+	recurse, spread bool) *Pool {
 
 	var p Pool
 	p.size = size
 	p.nodes = MakeNodes(size)
 	p.free = size
-	for i:=0; i<size; i++ {
+	for i := 0; i < size; i++ {
 		var srcs2, dsts2 []Edge
 		if !spread {
-			for j := 0; j<len(srcs); j++ { srcs2 = append(srcs2, srcs[j]) }
+			for j := 0; j < len(srcs); j++ {
+				srcs2 = append(srcs2, srcs[j])
+			}
 		} else {
 			srcs2 = append(srcs2, srcs[i])
 		}
-		for j := 0; j<len(dsts); j++ { dsts2 = append(dsts2, dsts[j]) }
+		for j := 0; j < len(dsts); j++ {
+			dsts2 = append(dsts2, dsts[j])
+		}
 		p.nodes[i] = makeNodeForPool(name, srcs2, dsts2, ready, fire, recurse)
 	}
 	return &p
 
 }
-

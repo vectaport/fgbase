@@ -1,7 +1,6 @@
 package flowgraph
 
-import (
-)
+import ()
 
 func rdyFire(n *Node) {
 	a := n.Srcs[0]
