@@ -4,6 +4,7 @@ package flowgraph
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -11,13 +12,15 @@ import (
 	"time"
 )
 
+/*=====================================================================*/
+
 func check(e error) {
 	if e != nil {
 		StderrLog.Printf("ERROR:  %v\n", e)
 		os.Exit(1)
 	}
 }
-		
+
 // Log for tracing flowgraph execution.
 var StdoutLog = log.New(os.Stdout, "", 0)
 
@@ -29,22 +32,23 @@ var GlobalStats = false
 
 // Trace level constants.
 type TraceLevelType int
+
 const (
-	QQ TraceLevelType = iota // ultra-quiet for minimal stats
-	Q         // quiet, default
-	V         // trace Node execution
-	VV        // trace channel IO
-	VVV       // trace state before select
-	VVVV      // full-length array dumps
+	QQ   TraceLevelType = iota // ultra-quiet for minimal stats
+	Q                          // quiet, default
+	V                          // trace Node execution
+	VV                         // trace channel IO
+	VVV                        // trace state before select
+	VVVV                       // full-length array dumps
 )
 
 // Map from string to enum for trace flag checking.
-var TraceLevels = map[string]TraceLevelType {
-	"QQ": QQ,
-	"Q": Q,
-	"V": V,
-	"VV": VV,
-	"VVV": VVV,
+var TraceLevels = map[string]TraceLevelType{
+	"QQ":   QQ,
+	"Q":    Q,
+	"V":    V,
+	"VV":   VV,
+	"VVV":  VVV,
 	"VVVV": VVVV,
 }
 
@@ -59,7 +63,6 @@ func (t TraceLevelType) String() string {
 		"VVVV",
 	}[t]
 }
-
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
@@ -102,14 +105,14 @@ var ChannelSize = 1
 
 // node channel wrapper
 type nodeWrap struct {
-	node *Node
+	node  *Node
 	datum interface{}
-	ack2 chan struct{}
+	ack2  chan struct{}
 }
 
 // MakeGraph returns a slice of Edge and a slice of Node.
-func MakeGraph(sze, szn int) ([]Edge,[]Node) {
-	return MakeEdges(sze),MakeNodes(szn)
+func MakeGraph(sze, szn int) ([]Edge, []Node) {
+	return MakeEdges(sze), MakeNodes(szn)
 }
 
 // ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities,
@@ -117,7 +120,7 @@ func MakeGraph(sze, szn int) ([]Edge,[]Node) {
 // default settings for ncore, chanz, sec, trace, trsec, trtyp, dot, and gml.  Use -help to see the standard set.
 func ConfigByFlag(defaults map[string]interface{}) {
 
-	var ncoreDef interface{} = runtime.NumCPU()-1
+	var ncoreDef interface{} = runtime.NumCPU() - 1
 	var secDef interface{} = 1
 	var traceDef interface{} = "V"
 	var chanszDef interface{} = 1
@@ -165,7 +168,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	flag.Parse()
 
 	runtime.GOMAXPROCS(*ncorePtr)
-	RunTime = time.Duration(*secPtr)*time.Second
+	RunTime = time.Duration(*secPtr) * time.Second
 	TraceLevel = TraceLevels[*tracePtr]
 	ChannelSize = *chanszPtr
 	TraceSeconds = *trsecPtr
@@ -179,7 +182,9 @@ var StartTime time.Time
 
 // TimeSinceStart returns time since start of running flowgraph.
 func TimeSinceStart() float64 {
-	if IsZero(StartTime) { return -1 }
+	if IsZero(StartTime) {
+		return -1
+	}
 	return time.Since(StartTime).Seconds()
 }
 
@@ -191,3 +196,65 @@ func StringsToMap(strings []string) map[string]int {
 	}
 	return m
 }
+
+/*=====================================================================*/
+
+type Transformer interface {
+	Transform(c ...interface{}) []interface{}
+}
+
+type Receiver interface {
+     Receive() (interface{}, error)
+}
+
+type Deliverer interface {
+     Deliver(interface{}) error
+}
+
+/*=====================================================================*/
+
+// default interface for a flowgraph
+type Flowgraph interface {
+	Name() string
+
+	InsertIncoming(name string, receiver Receiver)
+	InsertOutgoing(name string, deliverer Deliverer)
+
+	InsertAllOf(name string, transformer Transformer)
+}
+
+// implementation of Flowgraph
+type graph struct {
+	name    string
+	nodes   []Node
+	edges   []Edge
+}
+
+func (fg graph) Name() string {
+	return fg.Name()
+}
+
+// New returns a named flowgraph
+func New(nm string) Flowgraph {
+	return &graph{nm, nil, nil}
+}
+
+// InsertIncoming adds a single input source to a flowgraph that uses a Receiver
+func (fg *graph) InsertIncoming(name string, receiver Receiver) {
+     e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+     fg.edges = append(fg.edges, e)
+     fg.nodes = append(fg.nodes, FuncIncoming(e, receiver))
+}
+
+// InsertOutgoing adds a single output source to a flowgraph that uses a Deliverer
+func (fg *graph) InsertOutgoing(name string, deliverer Deliverer) {
+     e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+     fg.edges = append(fg.edges, e)
+     fg.nodes = append(fg.nodes, FuncOutgoing(e, deliverer))
+}
+
+// InsertAllOf adds a transform that waits for all inputs before producing outputs
+func (fg *graph) InsertAllOf(name string, transformer Transformer) {
+     fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[1]}, name, transformer))
+}
+

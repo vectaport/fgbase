@@ -21,26 +21,3 @@ func TestNewEqual(t *testing.T) {
 	}
 }
 
-func TestAddInput(t *testing.T) {
-	// Different allocations should not be equal.
-	fg := flowgraph.New("abc")
-	fg.AddInput("input1")
-	if fg.InputName(0)!="input1" {
-		t.Errorf(`AddInput followed by InputName doesn't work`)
-	}
-}
-
-func TestAddOutput(t *testing.T) {
-	// Different allocations should not be equal.
-	fg := flowgraph.New("abc")
-	fg.AddOutput("output1")
-	if fg.OutputName(0)!="output1" {
-		t.Errorf(`AddOutput followed by OutputName doesn't work`)
-	}
-}
-
-
-
-
-
-       
