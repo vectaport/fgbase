@@ -203,12 +203,12 @@ type Transformer interface {
 	Transform(c ...interface{}) []interface{}
 }
 
-type Receiver interface {
-	Receive() (interface{}, error)
+type Getter interface {
+	Get() (interface{}, error)
 }
 
-type Deliverer interface {
-	Deliver(interface{}) error
+type Putter interface {
+	Put(interface{}) error
 }
 
 /*=====================================================================*/
@@ -217,9 +217,10 @@ type Deliverer interface {
 type Flowgraph interface {
 	Name() string
 
-	InsertIncoming(name string, receiver Receiver)
-	InsertOutgoing(name string, deliverer Deliverer)
+	InsertIncoming(name string, getter Getter)
+	InsertOutgoing(name string, putter Putter)
 
+	InsertConst(name string, v interface{})
 	InsertSink(name string)
 
 	InsertAllOf(name string, transformer Transformer)
@@ -243,23 +244,28 @@ func New(nm string) Flowgraph {
 	return &graph{nm, nil, nil}
 }
 
-// InsertIncoming adds a single input source to a flowgraph that uses a Receiver
-func (fg *graph) InsertIncoming(name string, receiver Receiver) {
+// InsertIncoming adds a single input source to a flowgraph that uses a Getter
+func (fg *graph) InsertIncoming(name string, getter Getter) {
 	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
 	fg.edges = append(fg.edges, e)
-	fg.nodes = append(fg.nodes, FuncIncoming(e, receiver))
+	fg.nodes = append(fg.nodes, FuncIncoming(e, getter))
 }
 
-// InsertOutgoing adds a single output source to a flowgraph that uses a Deliverer
-func (fg *graph) InsertOutgoing(name string, deliverer Deliverer) {
-	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
-	fg.edges = append(fg.edges, e)
-	fg.nodes = append(fg.nodes, FuncOutgoing(e, deliverer))
+// InsertOutgoing adds a single output source to a flowgraph that uses a Putter
+func (fg *graph) InsertOutgoing(name string, putter Putter) {
+	fg.nodes = append(fg.nodes, FuncOutgoing(fg.edges[len(fg.edges)-1], putter))
 }
 
 // InsertAllOf adds a transform that waits for all inputs before producing outputs
 func (fg *graph) InsertAllOf(name string, transformer Transformer) {
 	fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[1]}, name, transformer))
+}
+
+// InsertConst adds an input constant as an incoming source.
+func (fg *graph) InsertConst(name string, v interface{}) {
+	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+	fg.edges = append(fg.edges, e)
+	fg.nodes = append(fg.nodes, FuncConst(e, v))
 }
 
 // InsertSink adds a output sink on the latest edge

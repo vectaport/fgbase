@@ -4,13 +4,13 @@ import ()
 
 func incomingFire(n *Node) {
 	x := n.Dsts[0]
-	r := n.Aux.(Receiver)
-	v, _ := r.Receive()
+	r := n.Aux.(Getter)
+	v, _ := r.Get()
 	x.DstPut(v)
 }
 
-// FuncIncoming imports one input value using a Receiver and feeds it to the flowgraph
-func FuncIncoming(x Edge, receiver Receiver) Node {
+// FuncIncoming imports one input value using a Getter and feeds it to the flowgraph
+func FuncIncoming(x Edge, receiver Getter) Node {
 
 	node := MakeNode("incoming", nil, []*Edge{&x}, nil, incomingFire)
 	node.Aux = receiver

@@ -1,6 +1,7 @@
 package flowgraph_test
 
 import (
+	"fmt"
 	"github.com/vectaport/flowgraph"
 	"os"
 	"testing"
@@ -16,6 +17,9 @@ func TestMain(m *testing.M) {
 /*=====================================================================*/
 
 func TestNewEqual(t *testing.T) {
+
+	fmt.Printf("BEGIN:  TestNewEqual\n")
+
 	// Different allocations should not be equal.
 	if flowgraph.New("abc") == flowgraph.New("abc") {
 		t.Errorf(`New("abc") == New("abc")`)
@@ -29,25 +33,55 @@ func TestNewEqual(t *testing.T) {
 	if g != g {
 		t.Errorf(`graph != graph`)
 	}
+
+	fmt.Printf("END:    TestNewEqual\n")
 }
 
 /*=====================================================================*/
 
-type receiver struct {
+type getter struct {
 	cnt int
 }
 
-func (r receiver) Receive() (interface{}, error) {
-	i := r.cnt
-	r.cnt++
+func (g *getter) Get() (interface{}, error) {
+	i := g.cnt
+	g.cnt++
 	return i, nil
 }
 
 func TestIncoming(t *testing.T) {
 
+	fmt.Printf("BEGIN:  TestIncoming")
+
 	fg := flowgraph.New("test")
-	fg.InsertIncoming("incoming", receiver{})
+	fg.InsertIncoming("incoming", &getter{})
 	fg.InsertSink("sink")
 
 	fg.RunAll()
+
+	fmt.Printf("END:    TestIncoming\n")
+}
+
+/*=====================================================================*/
+
+type putter struct {
+	sum int
+}
+
+func (p *putter) Put(v interface{}) error {
+	p.sum += v.(int)
+	return nil
+}
+
+func TestOutgoing(t *testing.T) {
+
+	fmt.Printf("BEGIN:  TestOutgoing")
+
+	fg := flowgraph.New("test")
+	fg.InsertConst("one", 1)
+	fg.InsertOutgoing("outgoing", &putter{})
+
+	fg.RunAll()
+
+	fmt.Printf("END:    TestOutgoing\n")
 }
