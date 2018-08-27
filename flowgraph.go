@@ -199,16 +199,16 @@ func StringsToMap(strings []string) map[string]int {
 
 /*=====================================================================*/
 
-type Transformer interface {
-	Transform(c ...interface{}) []interface{}
-}
-
 type Getter interface {
 	Get() (interface{}, error)
 }
 
 type Putter interface {
 	Put(interface{}) error
+}
+
+type Transformer interface {
+	Transform(c ...interface{}) ([]interface{}, error)
 }
 
 /*=====================================================================*/
@@ -258,7 +258,7 @@ func (fg *graph) InsertOutgoing(name string, putter Putter) {
 
 // InsertAllOf adds a transform that waits for all inputs before producing outputs
 func (fg *graph) InsertAllOf(name string, transformer Transformer) {
-	fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[1]}, name, transformer))
+	fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[len(fg.edges)-1]}, name, transformer))
 }
 
 // InsertConst adds an input constant as an incoming source.

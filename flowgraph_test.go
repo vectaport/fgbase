@@ -10,7 +10,7 @@ import (
 /*=====================================================================*/
 
 func TestMain(m *testing.M) {
-	flowgraph.ConfigByFlag(nil)
+	flowgraph.ConfigByFlag(map[string]interface{}{"trace": "Q"})
 	os.Exit(m.Run())
 }
 
@@ -49,17 +49,17 @@ func (g *getter) Get() (interface{}, error) {
 	return i, nil
 }
 
-func TestIncoming(t *testing.T) {
+func TestInsertIncoming(t *testing.T) {
 
-	fmt.Printf("BEGIN:  TestIncoming")
+	fmt.Printf("BEGIN:  TestInsertIncoming")
 
-	fg := flowgraph.New("test")
+	fg := flowgraph.New("TestInsertIncoming")
 	fg.InsertIncoming("incoming", &getter{})
 	fg.InsertSink("sink")
 
 	fg.RunAll()
 
-	fmt.Printf("END:    TestIncoming\n")
+	fmt.Printf("END:    TestInsertIncoming\n")
 }
 
 /*=====================================================================*/
@@ -73,15 +73,39 @@ func (p *putter) Put(v interface{}) error {
 	return nil
 }
 
-func TestOutgoing(t *testing.T) {
+func TestInsertOutgoing(t *testing.T) {
 
-	fmt.Printf("BEGIN:  TestOutgoing")
+	fmt.Printf("BEGIN:  TestInsertOutgoing")
 
-	fg := flowgraph.New("test")
+	fg := flowgraph.New("TestInsertOutgoing")
 	fg.InsertConst("one", 1)
 	fg.InsertOutgoing("outgoing", &putter{})
 
 	fg.RunAll()
 
-	fmt.Printf("END:    TestOutgoing\n")
+	fmt.Printf("END:    TestInsertOutgoing\n")
+}
+
+/*=====================================================================*/
+
+type transformer struct {
+}
+
+func (t *transformer) Transform(v ...interface{}) ([]interface{}, error) {
+	xv := v[0].(int) * 2
+	return []interface{}{xv}, nil
+}
+
+func TestInsertAllOf(t *testing.T) {
+
+	fmt.Printf("BEGIN:  TestInsertTransformer")
+
+	fg := flowgraph.New("TestInsertTransformer")
+	fg.InsertConst("one", 1)
+	fg.InsertAllOf("double", &transformer{})
+	fg.InsertSink("sink")
+
+	fg.RunAll()
+
+	fmt.Printf("END:    TestInsertTransformer\n")
 }

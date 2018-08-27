@@ -4,8 +4,10 @@ import ()
 
 func allOfFire(n *Node) {
 	a := n.Srcs[0]
-	d := n.Aux.(Putter)
-	_ = d.Put(a.SrcGet())
+	x := n.Dsts[0]
+	t := n.Aux.(Transformer)
+	vs, _ := t.Transform(a.SrcGet())
+	x.DstPut(vs[0])
 }
 
 // FuncAllOf waits for all inputs to be ready before transforming them into all outputs
