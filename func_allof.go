@@ -3,11 +3,16 @@ package flowgraph
 import ()
 
 func allOfFire(n *Node) {
-	a := n.Srcs[0]
-	x := n.Dsts[0]
+        var a []interface{}
+        a = make([]interface{}, len(n.Srcs))
 	t := n.Aux.(Transformer)
-	vs, _ := t.Transform(a.SrcGet())
-	x.DstPut(vs[0])
+	for i, _ := range a {
+		a[i] = n.Srcs[i].SrcGet()
+	}
+	x, _ := t.Transform(a...)
+	for i, _ := range x {
+		n.Dsts[i].DstPut(x[i])
+	}
 }
 
 // FuncAllOf waits for all inputs to be ready before transforming them into all outputs
