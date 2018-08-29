@@ -1,11 +1,19 @@
 package flowgraph
 
-import ()
+import (
+	"io"
+)
 
 func incomingFire(n *Node) {
 	x := n.Dsts[0]
 	r := n.Aux.(Getter)
-	v, _ := r.Get()
+	v, err := r.Get(n.Owner)
+	if err != nil {
+		if err != io.EOF {
+			n.LogError(err.Error())
+		}
+		return
+	}
 	x.DstPut(v)
 }
 

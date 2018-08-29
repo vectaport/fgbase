@@ -43,7 +43,7 @@ type getter struct {
 	cnt int
 }
 
-func (g *getter) Get() (interface{}, error) {
+func (g *getter) Get(pipe flowgraph.Pipe) (interface{}, error) {
 	i := g.cnt
 	g.cnt++
 	return i, nil
@@ -68,7 +68,7 @@ type putter struct {
 	sum int
 }
 
-func (p *putter) Put(v interface{}) error {
+func (p *putter) Put(pipe flowgraph.Pipe, v interface{}) error {
 	p.sum += v.(int)
 	return nil
 }
@@ -91,7 +91,7 @@ func TestInsertOutgoing(t *testing.T) {
 type transformer struct {
 }
 
-func (t *transformer) Transform(v ...interface{}) ([]interface{}, error) {
+func (t *transformer) Transform(pipe flowgraph.Pipe, v ...interface{}) ([]interface{}, error) {
 	xv := v[0].(int) * 2
 	return []interface{}{xv}, nil
 }
@@ -108,4 +108,29 @@ func TestInsertAllOf(t *testing.T) {
 	fg.RunAll()
 
 	fmt.Printf("END:    TestInsertTransformer\n")
+}
+
+/*=====================================================================*/
+
+func TestInsertArray(t *testing.T) {
+
+	fmt.Printf("BEGIN:  TestInsertArray")
+
+	arr := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	fg := flowgraph.New("TestInsertArray")
+	fg.InsertArray("array", arr)
+	fg.InsertSink("sink")
+
+	fg.RunAll()
+
+	s := fg.FindPipe("sink").Auxiliary().(flowgraph.SinkStats)
+	if s.Cnt != len(arr) {
+		t.Fatalf("SinkStats.Cnt != len(arr)\n")
+	}
+	if s.Sum != 45 {
+		t.Fatalf("SinkStats.Sum != sum(arr)\n")
+	}
+
+	fmt.Printf("END:    TestInsertArray\n")
 }

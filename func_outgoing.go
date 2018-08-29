@@ -5,7 +5,11 @@ import ()
 func outgoingFire(n *Node) {
 	a := n.Srcs[0]
 	d := n.Aux.(Putter)
-	_ = d.Put(a.SrcGet())
+	err := d.Put(n.Owner, a.SrcGet())
+	if err != nil {
+		n.LogError(err.Error())
+	}
+
 }
 
 // FuncOutgoing accepts one output value from the flowgraph and exports it using a Putter

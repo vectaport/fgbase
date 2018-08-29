@@ -14,6 +14,161 @@ import (
 
 /*=====================================================================*/
 
+type Getter interface {
+	Get(p Pipe) (interface{}, error)
+}
+
+type Putter interface {
+	Put(p Pipe, v interface{}) error
+}
+
+type Transformer interface {
+	Transform(p Pipe, c ...interface{}) ([]interface{}, error)
+}
+
+/*=====================================================================*/
+
+// Flowgraph interface
+type Flowgraph interface {
+	Name() string
+
+	FindPipe(name string) Pipe
+	FindConnector(name string) Connector
+
+	Pipe(i int) Pipe
+	Connector(i int) Connector
+
+	NumPipe() int
+	NumConnector() int
+
+	InsertIncoming(name string, getter Getter)
+	InsertOutgoing(name string, putter Putter)
+
+	InsertConst(name string, v interface{})
+	InsertArray(name string, arr []interface{})
+	InsertSink(name string)
+
+	InsertAllOf(name string, transformer Transformer)
+
+	RunAll()
+}
+
+// implementation of Flowgraph
+type graph struct {
+	name  string
+	nodes []Node
+	edges []Edge
+}
+
+// New returns a named flowgraph
+func New(nm string) Flowgraph {
+	return &graph{nm, nil, nil}
+}
+
+// Name returns the name of a Flowgraph
+func (fg *graph) Name() string {
+	return fg.Name()
+}
+
+// Pipe returns the nth pipe in a Flowgraph
+func (fg *graph) Pipe(n int) Pipe {
+	return pipe{&fg.nodes[n]}
+}
+
+// Connector returns the nth connector in a Flowgraph
+func (fg *graph) Connector(n int) Connector {
+	return conn{&fg.edges[n]}
+}
+
+// FindPipe finds a Pipe by name
+func (fg *graph) FindPipe(name string) Pipe {
+	// simple search for now
+	for i, v := range fg.nodes {
+		if fg.nodes[i].Name == name {
+			return pipe{&v}
+		}
+	}
+	return nil
+}
+
+// FindConnector finds a Connector by name
+func (fg *graph) FindConnector(name string) Connector {
+	// simple search for now
+	for i, v := range fg.edges {
+		if fg.edges[i].Name == name {
+			return conn{&v}
+		}
+	}
+	return nil
+}
+
+// NumPipe returns the number of pipes in this graph
+func (fg *graph) NumPipe() int {
+	return len(fg.nodes)
+}
+
+// NumConnector returns the number of pipes in this graph
+func (fg *graph) NumConnector() int {
+	return len(fg.edges)
+}
+
+// InsertIncoming adds a single input source to a flowgraph that uses a Getter
+func (fg *graph) InsertIncoming(name string, getter Getter) {
+	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+	fg.edges = append(fg.edges, e)
+	node := FuncIncoming(e, getter)
+	fg.nodes = append(fg.nodes, node)
+	node.Owner = pipe{&node}
+}
+
+// InsertOutgoing adds a single output source to a flowgraph that uses a Putter
+func (fg *graph) InsertOutgoing(name string, putter Putter) {
+	node := FuncOutgoing(fg.edges[len(fg.edges)-1], putter)
+	fg.nodes = append(fg.nodes, node)
+	fg.nodes[len(fg.nodes)-1].Owner = pipe{&node}
+}
+
+// InsertAllOf adds a transform that waits for all inputs before producing outputs
+func (fg *graph) InsertAllOf(name string, transformer Transformer) {
+	node := FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[len(fg.edges)-1]},
+		name, transformer)
+	fg.nodes = append(fg.nodes, node)
+	node.Owner = pipe{&node}
+}
+
+// InsertConst adds an input constant as an incoming source.
+func (fg *graph) InsertConst(name string, v interface{}) {
+	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+	fg.edges = append(fg.edges, e)
+	node := FuncConst(e, v)
+	fg.nodes = append(fg.nodes, node)
+	node.Owner = pipe{&node}
+}
+
+// InsertArray adds an array as an incoming source.
+func (fg *graph) InsertArray(name string, arr []interface{}) {
+	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
+	fg.edges = append(fg.edges, e)
+	node := FuncArray(e, arr)
+	fg.nodes = append(fg.nodes, node)
+	node.Owner = pipe{&node}
+}
+
+// InsertSink adds a output sink on the latest edge
+func (fg *graph) InsertSink(name string) {
+	i := len(fg.edges) - 1
+	node := FuncSink(fg.edges[i])
+	fg.nodes = append(fg.nodes, node)
+	node.Owner = pipe{&node}
+}
+
+// RunAll runs the flowgraph
+func (fg *graph) RunAll() {
+	RunAll(fg.nodes)
+}
+
+/*=====================================================================*/
+
 func check(e error) {
 	if e != nil {
 		StderrLog.Printf("ERROR:  %v\n", e)
@@ -195,85 +350,4 @@ func StringsToMap(strings []string) map[string]int {
 		m[strings[i]] = i
 	}
 	return m
-}
-
-/*=====================================================================*/
-
-type Getter interface {
-	Get() (interface{}, error)
-}
-
-type Putter interface {
-	Put(interface{}) error
-}
-
-type Transformer interface {
-	Transform(c ...interface{}) ([]interface{}, error)
-}
-
-/*=====================================================================*/
-
-// default interface for a flowgraph
-type Flowgraph interface {
-	Name() string
-
-	InsertIncoming(name string, getter Getter)
-	InsertOutgoing(name string, putter Putter)
-
-	InsertConst(name string, v interface{})
-	InsertSink(name string)
-
-	InsertAllOf(name string, transformer Transformer)
-
-	RunAll()
-}
-
-// implementation of Flowgraph
-type graph struct {
-	name  string
-	nodes []Node
-	edges []Edge
-}
-
-func (fg graph) Name() string {
-	return fg.Name()
-}
-
-// New returns a named flowgraph
-func New(nm string) Flowgraph {
-	return &graph{nm, nil, nil}
-}
-
-// InsertIncoming adds a single input source to a flowgraph that uses a Getter
-func (fg *graph) InsertIncoming(name string, getter Getter) {
-	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
-	fg.edges = append(fg.edges, e)
-	fg.nodes = append(fg.nodes, FuncIncoming(e, getter))
-}
-
-// InsertOutgoing adds a single output source to a flowgraph that uses a Putter
-func (fg *graph) InsertOutgoing(name string, putter Putter) {
-	fg.nodes = append(fg.nodes, FuncOutgoing(fg.edges[len(fg.edges)-1], putter))
-}
-
-// InsertAllOf adds a transform that waits for all inputs before producing outputs
-func (fg *graph) InsertAllOf(name string, transformer Transformer) {
-	fg.nodes = append(fg.nodes, FuncAllOf([]Edge{fg.edges[0]}, []Edge{fg.edges[len(fg.edges)-1]}, name, transformer))
-}
-
-// InsertConst adds an input constant as an incoming source.
-func (fg *graph) InsertConst(name string, v interface{}) {
-	e := makeEdge(fmt.Sprintf("e%d", len(fg.edges)), nil)
-	fg.edges = append(fg.edges, e)
-	fg.nodes = append(fg.nodes, FuncConst(e, v))
-}
-
-// InsertSink adds a output sink on the latest edge
-func (fg *graph) InsertSink(name string) {
-	fg.nodes = append(fg.nodes, FuncSink(fg.edges[len(fg.edges)-1]))
-}
-
-// RunAll runs the flowgraph
-func (fg *graph) RunAll() {
-	RunAll(fg.nodes)
 }

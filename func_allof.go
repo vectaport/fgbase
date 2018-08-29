@@ -3,13 +3,13 @@ package flowgraph
 import ()
 
 func allOfFire(n *Node) {
-        var a []interface{}
-        a = make([]interface{}, len(n.Srcs))
+	var a []interface{}
+	a = make([]interface{}, len(n.Srcs))
 	t := n.Aux.(Transformer)
 	for i, _ := range a {
 		a[i] = n.Srcs[i].SrcGet()
 	}
-	x, _ := t.Transform(a...)
+	x, _ := t.Transform(n.Owner, a...)
 	for i, _ := range x {
 		n.Dsts[i].DstPut(x[i])
 	}
