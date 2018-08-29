@@ -57,7 +57,7 @@ func TestInsertIncoming(t *testing.T) {
 	fg.InsertIncoming("incoming", &getter{})
 	fg.InsertSink("sink")
 
-	fg.RunAll()
+	fg.Run()
 
 	fmt.Printf("END:    TestInsertIncoming\n")
 }
@@ -81,7 +81,7 @@ func TestInsertOutgoing(t *testing.T) {
 	fg.InsertConst("one", 1)
 	fg.InsertOutgoing("outgoing", &putter{})
 
-	fg.RunAll()
+	fg.Run()
 
 	fmt.Printf("END:    TestInsertOutgoing\n")
 }
@@ -105,7 +105,7 @@ func TestInsertAllOf(t *testing.T) {
 	fg.InsertAllOf("double", &transformer{})
 	fg.InsertSink("sink")
 
-	fg.RunAll()
+	fg.Run()
 
 	fmt.Printf("END:    TestInsertTransformer\n")
 }
@@ -122,7 +122,7 @@ func TestInsertArray(t *testing.T) {
 	fg.InsertArray("array", arr)
 	fg.InsertSink("sink")
 
-	fg.RunAll()
+	fg.Run()
 
 	s := fg.FindPipe("sink").Auxiliary().(flowgraph.SinkStats)
 	if s.Cnt != len(arr) {

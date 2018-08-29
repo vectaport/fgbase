@@ -4,12 +4,23 @@ import ()
 
 // Pipe interface
 type Pipe interface {
+	// Tracef for debug trace printing.  Use atomic log mechanism.
 	Tracef(format string, v ...interface{})
+
+	// LogError for logging of error messages.  Use atomic log mechanism.
 	LogError(format string, v ...interface{})
 
+	// Name returns the pipe name
 	Name() string
+
+	// Source returns the nth incoming connector
 	Source(n int) Connector
+
+	// Destination returns the nth outgoing connector
 	Destination(n int) Connector
+
+	// Auxiliary returns auxiliary storage for this pipe used by
+	// the underlying implementation for storing state
 	Auxiliary() interface{}
 }
 
@@ -43,7 +54,8 @@ func (p pipe) Destination(n int) Connector {
 	return conn{p.node.Dsts[n]}
 }
 
-// Auxiliary returns the auxiliary storage for this pipe
+// Auxiliary returns auxiliary storage for this pipe used by
+// the underlying implementation for storing state
 func (p pipe) Auxiliary() interface{} {
 	return p.node.Aux
 }

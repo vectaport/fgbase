@@ -4,9 +4,17 @@ import ()
 
 // Connector interface
 type Connector interface {
+
+	// Name returns the connector name
 	Name() string
+
+	// Value returns the connector's current value
 	Value() interface{}
+
+	// Source returns the nth downstream pipe for this connector
 	Source(i int) Pipe
+
+	// Destination returns the nth upstream pipe for this connector
 	Destination(i int) Pipe
 }
 
