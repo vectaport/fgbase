@@ -1,4 +1,4 @@
-# flowgraph
+# fgbase
 Package of Go flowgraph primitives
 ----------------------------------
 
