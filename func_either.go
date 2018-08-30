@@ -1,4 +1,4 @@
-package flowgraph
+package fgbase
 
 import ()
 
