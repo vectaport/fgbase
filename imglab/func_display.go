@@ -6,13 +6,11 @@ import (
 )
 
 type displayStruct struct {
-	window *opencv.Window
+	window   *opencv.Window
 	quitChan chan struct{}
 }
 
-	
-func displayFire (n *fgbase.Node) {
-
+func displayFire(n *fgbase.Node) {
 
 	a := n.Srcs[0]
 
@@ -39,4 +37,3 @@ func FuncDisplay(a fgbase.Edge, quitChan chan struct{}) fgbase.Node {
 	node.Aux = displayStruct{opencv.NewWindow("display"), quitChan}
 	return node
 }
-

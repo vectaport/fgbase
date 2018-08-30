@@ -20,7 +20,7 @@ type Node struct {
 	Aux      interface{} // auxiliary empty interface to hold state
 	RdyState int         // state of latest readiness
 
-	Owner    interface{} // owning pipe interface
+	Owner interface{} // owning pipe interface
 
 	cases         []reflect.SelectCase // select cases to read from Edge's
 	caseToEdgeDir map[int]edgeDir      // map from index of selected case to associated Edge

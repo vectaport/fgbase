@@ -5,14 +5,14 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func captureFire (n *fgbase.Node) {
+func captureFire(n *fgbase.Node) {
 
 	x := n.Dsts[0]
 	cap := n.Aux.(*opencv.Capture)
 	if cap.GrabFrame() {
 		i1 := cap.RetrieveFrame(1)
 		i2 := i1.Clone()
-		if i2 == nil  {
+		if i2 == nil {
 			n.Tracef("image capture returned nil")
 		}
 		x.DstPut(i2)
@@ -31,4 +31,3 @@ func FuncCapture(x fgbase.Edge) fgbase.Node {
 
 	return node
 }
-

@@ -5,13 +5,12 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-
-func fftFire (n *fgbase.Node) {
+func fftFire(n *fgbase.Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	x.DstPut(a.SrcGet())
-	data,ok := x.Val.([]complex128)
+	data, ok := x.Val.([]complex128)
 	if !ok {
 		n.LogError("type is not []complex128\n")
 		x.Val = nil

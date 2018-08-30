@@ -19,8 +19,8 @@ func TestCapture(t *testing.T) {
 		wait = 1
 	}
 
-	e,n := fgbase.MakeGraph(1,2)
- 
+	e, n := fgbase.MakeGraph(1, 2)
+
 	n[0] = FuncCapture(e[0])
 	n[1] = FuncDisplay(e[0], quitChan)
 
@@ -28,8 +28,7 @@ func TestCapture(t *testing.T) {
 	fgbase.RunAll(n, time.Duration(wait*time.Second))
 
 	if !test {
-		<- quitChan
+		<-quitChan
 	}
 
 }
-

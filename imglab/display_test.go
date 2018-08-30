@@ -13,9 +13,9 @@ var images = []string{"airplane.jpg", "fruits.jpg", "pic1.png", "pic3.png", "pic
 
 func tbi(x fgbase.Edge) fgbase.Node {
 
-	node := fgbase.MakeNode("tbi", nil, []*fgbase.Edge{&x}, nil, 
-		func (n *fgbase.Node) { 
-			filename := "../../../lazywei/go-opencv/images/"+images[n.Cnt%int64(len(images))]
+	node := fgbase.MakeNode("tbi", nil, []*fgbase.Edge{&x}, nil,
+		func(n *fgbase.Node) {
+			filename := "../../../lazywei/go-opencv/images/" + images[n.Cnt%int64(len(images))]
 			n.Tracef("Loading %s\n", filename)
 			x.Val = opencv.LoadImage(filename)
 		})
@@ -29,13 +29,13 @@ func TestDisplay(t *testing.T) {
 	var quitChan chan struct{}
 	var wait time.Duration
 	if !test {
-		quitChan =make(chan struct{})
+		quitChan = make(chan struct{})
 	} else {
 		wait = 1
 	}
 
-	e,n := fgbase.MakeGraph(1,2)
- 
+	e, n := fgbase.MakeGraph(1, 2)
+
 	n[0] = tbi(e[0])
 	n[1] = FuncDisplay(e[0], quitChan)
 
@@ -43,7 +43,6 @@ func TestDisplay(t *testing.T) {
 	fgbase.RunAll(n, time.Duration(wait*time.Second))
 
 	if !test {
-		<- quitChan
+		<-quitChan
 	}
 }
-

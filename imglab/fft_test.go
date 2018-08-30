@@ -13,12 +13,12 @@ func tbiFFTFire(n *fgbase.Node) {
 }
 
 func tbiFFT(x fgbase.Edge) fgbase.Node {
-	node:=fgbase.MakeNode("tbi", nil, []*fgbase.Edge{&x}, nil, tbiFFTFire)
+	node := fgbase.MakeNode("tbi", nil, []*fgbase.Edge{&x}, nil, tbiFFTFire)
 	return node
 }
 
 func tboFFT(a fgbase.Edge) fgbase.Node {
-	node:=fgbase.MakeNode("tbo", []*fgbase.Edge{&a}, nil, nil, nil)
+	node := fgbase.MakeNode("tbo", []*fgbase.Edge{&a}, nil, nil, nil)
 	return node
 }
 
@@ -26,7 +26,7 @@ func TestFFT(t *testing.T) {
 
 	fgbase.TraceLevel = fgbase.V
 
-	e,n := fgbase.MakeGraph(3,3)
+	e, n := fgbase.MakeGraph(3, 3)
 
 	e[1].Const(false)
 
@@ -37,4 +37,3 @@ func TestFFT(t *testing.T) {
 	fgbase.RunAll(n, time.Second)
 
 }
-

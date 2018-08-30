@@ -5,11 +5,11 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func kconsFire (n *fgbase.Node) {
+func kconsFire(n *fgbase.Node) {
 
 	x := n.Dsts[0]
 	partitionConsumer := n.Aux.(sarama.PartitionConsumer)
-	x.DstPut( <- partitionConsumer.Messages() )
+	x.DstPut(<-partitionConsumer.Messages())
 
 }
 
@@ -27,7 +27,7 @@ func FuncKcons(x fgbase.Edge, topic string) fgbase.Node {
 		node.Tracef("%v\n", err)
 	}
 
-	node.RunFunc = func (n *fgbase.Node) {
+	node.RunFunc = func(n *fgbase.Node) {
 		defer func() {
 			partitionConsumer.AsyncClose()
 			if err := consumer.Close(); err != nil {
@@ -42,4 +42,3 @@ func FuncKcons(x fgbase.Edge, topic string) fgbase.Node {
 
 	return node
 }
-

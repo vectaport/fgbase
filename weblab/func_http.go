@@ -1,13 +1,15 @@
 package weblab
 
-import (		
+import (
 	"fmt"
 	"net/http"
 
 	"github.com/vectaport/fgbase"
-)      			
+)
 
-type handler struct {subhandle func(http.ResponseWriter, *http.Request)}
+type handler struct {
+	subhandle func(http.ResponseWriter, *http.Request)
+}
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.subhandle(w, r)
@@ -30,7 +32,7 @@ func FuncHTTP(x fgbase.Edge, addr string, quitChan chan struct{}) fgbase.Node {
 		},
 	}
 
-	node.RunFunc = func (n *fgbase.Node) { 
+	node.RunFunc = func(n *fgbase.Node) {
 		n.LogError("%v", http.ListenAndServe(addr, h))
 		var nada struct{}
 		quitChan <- nada
@@ -38,4 +40,3 @@ func FuncHTTP(x fgbase.Edge, addr string, quitChan chan struct{}) fgbase.Node {
 
 	return node
 }
-	

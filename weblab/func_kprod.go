@@ -1,13 +1,13 @@
 package weblab
 
 import (
-	"fmt" 
+	"fmt"
 
 	"github.com/shopify/sarama"
 	"github.com/vectaport/fgbase"
 )
 
-func kprodFire (n *fgbase.Node) {
+func kprodFire(n *fgbase.Node) {
 
 	a := n.Srcs[0]
 	producer := n.Aux.(sarama.AsyncProducer)
@@ -26,7 +26,7 @@ func FuncKprod(a fgbase.Edge) fgbase.Node {
 
 	node.Aux = producer
 
-	node.RunFunc = func (n *fgbase.Node) {
+	node.RunFunc = func(n *fgbase.Node) {
 		defer func() {
 			producer.AsyncClose()
 		}()
@@ -35,4 +35,3 @@ func FuncKprod(a fgbase.Edge) fgbase.Node {
 
 	return node
 }
-
