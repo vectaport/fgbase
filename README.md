@@ -11,22 +11,22 @@ Flowgraphs are a distinct model of concurrent programming that augment channels 
 
 It is not immediately obvious how to use goroutines, channels, and select to implement the flowgraph model. This framework is an attempt to illustrate one possible approach.  
 
-Features of github.com/vectaport/flowgraph:
+Features of github.com/vectaport/fgbase:
 
-* flowgraph.Edge augments a channel with a ready-send acknowledge protocol
+* fgbase.Edge augments a channel with a ready-send acknowledge protocol
  * ready-send can guarantee that unbuffered writes never lead to deadlock
-* flowgraph.Node augments a goroutine with an empty interface data protocol
+* fgbase.Node augments a goroutine with an empty interface data protocol
  * an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things
-* test benches at [github.com/vectaport/flowgraph_test](http://github.com/vectaport/flowgraph_test)
+* test benches at [github.com/vectaport/fgbase_test](http://github.com/vectaport/fgbase_test)
 
-The flowgraph package can be used to (manually) render flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compilable Golang code.  [_ipl_](http://ipl.sf.net) is an implementation of a flowgraph language suggested by [Karl Fant](http://karlfant.net).
+The fgbase package can be used to (manually) render flowgraphs drawn and simulated in [github.com/vectaport/ipl](http://github.com/vectaport/ipl-1.1) into compilable Golang code.  [_ipl_](http://ipl.sf.net) is an implementation of a flowgraph language suggested by [Karl Fant](http://karlfant.net).
 
 Wiki Topics:
 
-* [Flowgraph Coordination](http://github.com/vectaport/flowgraph/wiki/Flowgraph%20Coordination) -- how flowgraphs coordinate flow.
-* [Trace Levels](http://github.com/vectaport/flowgraph/wiki/Trace%20Levels) -- levels of available trace/debug info.
-* [Flowgraph Extension](http://github.com/vectaport/flowgraph/wiki/Flowgraph%20Extension) -- how to extend flowgraphs across the net.
-* [Conditional Iteration](http://github.com/vectaport/flowgraph/wiki/Conditional%20Iteration) -- the flowgraph looping construct.
-* [Recursive Flowgraphs](http://github.com/vectaport/flowgraph/wiki/Recursive%20Flowgraphs) -- dynamic flowgraph recursion with a fixed size pool.
-* [Why an Ack?](https://github.com/vectaport/flowgraph/wiki/Why-an-Ack%3F) -- discussion of the usefulness of back pressure.
-* [MapReduce Flowgraph](http://github.com/vectaport/flowgraph/wiki/MapReduce%20Flowgraph) -- a flowgraph-based map/reduce example.
+* [Flowgraph Coordination](http://github.com/vectaport/fgbase/wiki/Flowgraph%20Coordination) -- how flowgraphs coordinate flow.
+* [Trace Levels](http://github.com/vectaport/fgbase/wiki/Trace%20Levels) -- levels of available trace/debug info.
+* [Flowgraph Extension](http://github.com/vectaport/fgbase/wiki/Flowgraph%20Extension) -- how to extend flowgraphs across the net.
+* [Conditional Iteration](http://github.com/vectaport/fgbase/wiki/Conditional%20Iteration) -- the flowgraph looping construct.
+* [Recursive Flowgraphs](http://github.com/vectaport/fgbase/wiki/Recursive%20Flowgraphs) -- dynamic flowgraph recursion with a fixed size pool.
+* [Why an Ack?](https://github.com/vectaport/fgbase/wiki/Why-an-Ack%3F) -- discussion of the usefulness of back pressure.
+* [MapReduce Flowgraph](http://github.com/vectaport/fgbase/wiki/MapReduce%20Flowgraph) -- a flowgraph-based map/reduce example.
