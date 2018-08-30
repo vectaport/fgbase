@@ -1,7 +1,7 @@
 package regexp
 
 import (
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 func preprocess(str string) func() (char byte, bslashed bool) {
@@ -20,7 +20,7 @@ func preprocess(str string) func() (char byte, bslashed bool) {
 	}
 }
 
-func matchFire (n *flowgraph.Node) {	 
+func matchFire (n *fgbase.Node) {	 
 	a := n.Srcs[0] 		 
 	b := n.Srcs[1] 		 
 	x := n.Dsts[0]
@@ -99,9 +99,9 @@ func matchFire (n *flowgraph.Node) {
 }
 
 // FuncMatch advances a byte slice if it matches a string, otherwise returns the empty slice
-func FuncMatch(a,b flowgraph.Edge, x flowgraph.Edge, ignoreCase bool) flowgraph.Node {
+func FuncMatch(a,b fgbase.Edge, x fgbase.Edge, ignoreCase bool) fgbase.Node {
 	
-	node := flowgraph.MakeNode("match", []*flowgraph.Edge{&a, &b}, []*flowgraph.Edge{&x}, nil, matchFire)
+	node := fgbase.MakeNode("match", []*fgbase.Edge{&a, &b}, []*fgbase.Edge{&x}, nil, matchFire)
 	node.Aux = ignoreCase
 	return node
 	

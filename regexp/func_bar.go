@@ -1,10 +1,10 @@
 package regexp
 
 import (		
-       "github.com/vectaport/flowgraph"
+       "github.com/vectaport/fgbase"
 )      			
 
-func barFire (n *flowgraph.Node) {	 
+func barFire (n *fgbase.Node) {	 
 	a := n.Srcs[0] 		 
 	b := n.Srcs[1] 		 
 	x := n.Dsts[0]
@@ -43,9 +43,9 @@ func barFire (n *flowgraph.Node) {
 
 // FuncBar waits for both inputs and returns the one that matches the shortest string.
 // Returns nil if no match at all.
-func FuncBar(a,b flowgraph.Edge, x flowgraph.Edge, sink bool) flowgraph.Node {
+func FuncBar(a,b fgbase.Edge, x fgbase.Edge, sink bool) fgbase.Node {
 	
-	node := flowgraph.MakeNode("bar", []*flowgraph.Edge{&a, &b}, []*flowgraph.Edge{&x}, nil, barFire)
+	node := fgbase.MakeNode("bar", []*fgbase.Edge{&a, &b}, []*fgbase.Edge{&x}, nil, barFire)
 	node.Aux = sink
 	return node
 	

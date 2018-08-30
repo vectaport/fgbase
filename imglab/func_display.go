@@ -2,7 +2,7 @@ package imglab
 
 import (
 	"github.com/lazywei/go-opencv/opencv"
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 type displayStruct struct {
@@ -11,7 +11,7 @@ type displayStruct struct {
 }
 
 	
-func displayFire (n *flowgraph.Node) {
+func displayFire (n *fgbase.Node) {
 
 
 	a := n.Srcs[0]
@@ -34,8 +34,8 @@ func displayFire (n *flowgraph.Node) {
 }
 
 // FuncDisplay displays an opencv image.
-func FuncDisplay(a flowgraph.Edge, quitChan chan struct{}) flowgraph.Node {
-	node := flowgraph.MakeNode("display", []*flowgraph.Edge{&a}, nil, nil, displayFire)
+func FuncDisplay(a fgbase.Edge, quitChan chan struct{}) fgbase.Node {
+	node := fgbase.MakeNode("display", []*fgbase.Edge{&a}, nil, nil, displayFire)
 	node.Aux = displayStruct{opencv.NewWindow("display"), quitChan}
 	return node
 }

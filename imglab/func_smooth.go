@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/lazywei/go-opencv/opencv"
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 
-func smoothFire (n *flowgraph.Node) {
+func smoothFire (n *fgbase.Node) {
 
 	a := n.Srcs[0]
 	x := n.Dsts[0]	
@@ -20,7 +20,7 @@ func smoothFire (n *flowgraph.Node) {
 		img1 := img0.Clone()
 		opencv.Smooth(img0, img1, opencv.CV_BLUR, 3, 3, 0, 0)
 
-		if flowgraph.TraceLevel > flowgraph.Q {
+		if fgbase.TraceLevel > fgbase.Q {
 			for i:=0; i<3; i++ {
 				var s = "BEFORE: "
 				for j:=0; j<3; j++ {
@@ -46,8 +46,8 @@ func smoothFire (n *flowgraph.Node) {
 }
 
 // FuncSmooth smoothes an opencv image.
-func FuncSmooth(a, x flowgraph.Edge) flowgraph.Node {
-	node := flowgraph.MakeNode("smooth", []*flowgraph.Edge{&a}, []*flowgraph.Edge{&x}, nil, smoothFire)
+func FuncSmooth(a, x fgbase.Edge) fgbase.Node {
+	node := fgbase.MakeNode("smooth", []*fgbase.Edge{&a}, []*fgbase.Edge{&x}, nil, smoothFire)
 	return node
 }
 

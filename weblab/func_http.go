@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )      			
 
 type handler struct {subhandle func(http.ResponseWriter, *http.Request)}
@@ -14,9 +14,9 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // FuncHTTP creates an http server and passes requests downstream.
-func FuncHTTP(x flowgraph.Edge, addr string, quitChan chan struct{}) flowgraph.Node {
+func FuncHTTP(x fgbase.Edge, addr string, quitChan chan struct{}) fgbase.Node {
 
-	node := flowgraph.MakeNode("http", nil, []*flowgraph.Edge{&x}, nil, nil)
+	node := fgbase.MakeNode("http", nil, []*fgbase.Edge{&x}, nil, nil)
 
 	var h = &handler{
 		func(w http.ResponseWriter, req *http.Request) {
@@ -30,7 +30,7 @@ func FuncHTTP(x flowgraph.Edge, addr string, quitChan chan struct{}) flowgraph.N
 		},
 	}
 
-	node.RunFunc = func (n *flowgraph.Node) { 
+	node.RunFunc = func (n *fgbase.Node) { 
 		n.LogError("%v", http.ListenAndServe(addr, h))
 		var nada struct{}
 		quitChan <- nada

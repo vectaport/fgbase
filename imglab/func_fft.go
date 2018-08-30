@@ -2,11 +2,11 @@ package imglab
 
 import (
 	"github.com/ledyba/go-fft/fft"
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 
-func fftFire (n *flowgraph.Node) {
+func fftFire (n *fgbase.Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -25,9 +25,9 @@ func fftFire (n *flowgraph.Node) {
 }
 
 // FuncFFT does an FFT on a slice of complex128 (x=fft(data: a, inverse: b)).
-func FuncFFT(a, b, x flowgraph.Edge) flowgraph.Node {
+func FuncFFT(a, b, x fgbase.Edge) fgbase.Node {
 
-	node := flowgraph.MakeNode("fft", []*flowgraph.Edge{&a, &b}, []*flowgraph.Edge{&x}, nil, fftFire)
+	node := fgbase.MakeNode("fft", []*fgbase.Edge{&a, &b}, []*fgbase.Edge{&x}, nil, fftFire)
 	return node
 
 }

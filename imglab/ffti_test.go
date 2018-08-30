@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 const infitesimal=1.e-15
 
-func tbiFFTIFire(n *flowgraph.Node) {
+func tbiFFTIFire(n *fgbase.Node) {
 	x := n.Dsts[0]
 	const sz = 128
 	var vec = make([]complex128, sz, sz)
@@ -27,12 +27,12 @@ func tbiFFTIFire(n *flowgraph.Node) {
 	x.Val = vec
 }
 
-func tbiFFTI(x flowgraph.Edge) flowgraph.Node {
-	node:=flowgraph.MakeNode("tbi", nil, []*flowgraph.Edge{&x}, nil, tbiFFTIFire)
+func tbiFFTI(x fgbase.Edge) fgbase.Node {
+	node:=fgbase.MakeNode("tbi", nil, []*fgbase.Edge{&x}, nil, tbiFFTIFire)
 	return node
 }
 
-func tboFFTIFire(n *flowgraph.Node) {
+func tboFFTIFire(n *fgbase.Node) {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	av := a.Val.([]complex128)
@@ -52,33 +52,33 @@ func tboFFTIFire(n *flowgraph.Node) {
 	n.Tracef("!SAME:  different sizes\n")
 }
 
-func tboFFTI(a, b flowgraph.Edge) flowgraph.Node {
-	node:=flowgraph.MakeNode("tbo", []*flowgraph.Edge{&a, &b}, nil, nil, tboFFTIFire)
+func tboFFTI(a, b fgbase.Edge) fgbase.Node {
+	node:=fgbase.MakeNode("tbo", []*fgbase.Edge{&a, &b}, nil, nil, tboFFTIFire)
 	return node
 }
 
 func TestFFTI(t *testing.T) {
 
-	flowgraph.TraceLevel = flowgraph.V
+	fgbase.TraceLevel = fgbase.V
 	
-	e,n := flowgraph.MakeGraph(9,7)
+	e,n := fgbase.MakeGraph(9,7)
 
 	e[7].Const(false)
 	e[8].Const(true)
 
 	n[0] = tbiFFTI(e[0])
 
-	n[1] = flowgraph.FuncFork(e[0], e[1], e[2])
+	n[1] = fgbase.FuncFork(e[0], e[1], e[2])
 
 	n[2] = FuncFFT(e[1], e[7], e[3])
-	n[3] = flowgraph.FuncPass(e[2], e[4])
+	n[3] = fgbase.FuncPass(e[2], e[4])
 
 	n[4] = FuncFFT(e[3], e[8], e[5])
-	n[5] = flowgraph.FuncPass(e[4], e[6])
+	n[5] = fgbase.FuncPass(e[4], e[6])
 
 	n[6] = tboFFTI(e[5], e[6])
 
-	flowgraph.RunAll(n, time.Second)
+	fgbase.RunAll(n, time.Second)
 
 }
 

@@ -2,10 +2,10 @@ package imglab
 
 import (
 	"github.com/lazywei/go-opencv/opencv"
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
-func captureFire (n *flowgraph.Node) {
+func captureFire (n *fgbase.Node) {
 
 	x := n.Dsts[0]
 	cap := n.Aux.(*opencv.Capture)
@@ -21,8 +21,8 @@ func captureFire (n *flowgraph.Node) {
 }
 
 // FuncCapture captures an opencv image.
-func FuncCapture(x flowgraph.Edge) flowgraph.Node {
-	node := flowgraph.MakeNode("capture", nil, []*flowgraph.Edge{&x}, nil, captureFire)
+func FuncCapture(x fgbase.Edge) fgbase.Node {
+	node := fgbase.MakeNode("capture", nil, []*fgbase.Edge{&x}, nil, captureFire)
 
 	node.Aux = opencv.NewCameraCapture(0)
 	if node.Aux == nil {

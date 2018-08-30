@@ -4,29 +4,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
-func tbiFFTFire(n *flowgraph.Node) {
+func tbiFFTFire(n *fgbase.Node) {
 	x := n.Dsts[0]
 	x.Val = make([]complex128, 32, 32)
 }
 
-func tbiFFT(x flowgraph.Edge) flowgraph.Node {
-	node:=flowgraph.MakeNode("tbi", nil, []*flowgraph.Edge{&x}, nil, tbiFFTFire)
+func tbiFFT(x fgbase.Edge) fgbase.Node {
+	node:=fgbase.MakeNode("tbi", nil, []*fgbase.Edge{&x}, nil, tbiFFTFire)
 	return node
 }
 
-func tboFFT(a flowgraph.Edge) flowgraph.Node {
-	node:=flowgraph.MakeNode("tbo", []*flowgraph.Edge{&a}, nil, nil, nil)
+func tboFFT(a fgbase.Edge) fgbase.Node {
+	node:=fgbase.MakeNode("tbo", []*fgbase.Edge{&a}, nil, nil, nil)
 	return node
 }
 
 func TestFFT(t *testing.T) {
 
-	flowgraph.TraceLevel = flowgraph.V
+	fgbase.TraceLevel = fgbase.V
 
-	e,n := flowgraph.MakeGraph(3,3)
+	e,n := fgbase.MakeGraph(3,3)
 
 	e[1].Const(false)
 
@@ -34,7 +34,7 @@ func TestFFT(t *testing.T) {
 	n[1] = FuncFFT(e[0], e[1], e[2])
 	n[2] = tboFFT(e[2])
 
-	flowgraph.RunAll(n, time.Second)
+	fgbase.RunAll(n, time.Second)
 
 }
 

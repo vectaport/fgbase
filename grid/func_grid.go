@@ -3,7 +3,7 @@ package grid
 import (
         "math/rand"
 	
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 type compassDir int
@@ -24,7 +24,7 @@ func randDir() compassDir {
 	return compassDir(rand.Intn(4))
 }
 
-func gridRdy (n *flowgraph.Node) bool {
+func gridRdy (n *fgbase.Node) bool {
         var as auxStruct
         if n.Aux == nil {
 	        as = auxStruct{}
@@ -43,7 +43,7 @@ func gridRdy (n *flowgraph.Node) bool {
         return as.rdy[0] || as.rdy[1] || as.rdy[2] || as.rdy[3]
 }
 
-func gridFire (n *flowgraph.Node) {	 
+func gridFire (n *fgbase.Node) {	 
 	as := n.Aux.(auxStruct)
 
 	for i:= range as.rdy {
@@ -57,9 +57,9 @@ func gridFire (n *flowgraph.Node) {
 }
 
 // FuncGrid coordinates with its neighbors
-func FuncGrid(srcn,srce,srcs,srcw flowgraph.Edge, dstn,dste,dsts,dstw flowgraph.Edge) flowgraph.Node {
+func FuncGrid(srcn,srce,srcs,srcw fgbase.Edge, dstn,dste,dsts,dstw fgbase.Edge) fgbase.Node {
 	
-	node := flowgraph.MakeNode("grid", []*flowgraph.Edge{&srcn, &srce, &srcs, &srcw}, []*flowgraph.Edge{&dstn, &dste, &dsts, &dstw},
+	node := fgbase.MakeNode("grid", []*fgbase.Edge{&srcn, &srce, &srcs, &srcw}, []*fgbase.Edge{&dstn, &dste, &dsts, &dstw},
 		gridRdy, gridFire)
 	return node
 	

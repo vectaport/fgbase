@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 func TestCapture(t *testing.T) {
@@ -19,13 +19,13 @@ func TestCapture(t *testing.T) {
 		wait = 1
 	}
 
-	e,n := flowgraph.MakeGraph(1,2)
+	e,n := fgbase.MakeGraph(1,2)
  
 	n[0] = FuncCapture(e[0])
 	n[1] = FuncDisplay(e[0], quitChan)
 
-	flowgraph.TraceLevel = flowgraph.V
-	flowgraph.RunAll(n, time.Duration(wait*time.Second))
+	fgbase.TraceLevel = fgbase.V
+	fgbase.RunAll(n, time.Duration(wait*time.Second))
 
 	if !test {
 		<- quitChan

@@ -1,8 +1,8 @@
-// Package regexp builds regular expressions out of scalable flowgraphs
+// Package regexp builds regular expressions out of scalable fgbases
 package regexp
 
 import (
-//	"github.com/vectaport/flowgraph"
+//	"github.com/vectaport/fgbase"
 	"sync/atomic"
 )
 

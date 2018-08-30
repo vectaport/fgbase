@@ -4,10 +4,10 @@ import (
 	"fmt" 
 
 	"github.com/shopify/sarama"
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
-func kprodFire (n *flowgraph.Node) {
+func kprodFire (n *fgbase.Node) {
 
 	a := n.Srcs[0]
 	producer := n.Aux.(sarama.AsyncProducer)
@@ -16,8 +16,8 @@ func kprodFire (n *flowgraph.Node) {
 }
 
 // FuncKprod wraps a Kafka producer.
-func FuncKprod(a flowgraph.Edge) flowgraph.Node {
-	node := flowgraph.MakeNode("kprod", []*flowgraph.Edge{&a}, nil, nil, kprodFire)
+func FuncKprod(a fgbase.Edge) fgbase.Node {
+	node := fgbase.MakeNode("kprod", []*fgbase.Edge{&a}, nil, nil, kprodFire)
 
 	producer, err := sarama.NewAsyncProducer([]string{"localhost:9092"}, nil)
 	if err != nil {
@@ -26,7 +26,7 @@ func FuncKprod(a flowgraph.Edge) flowgraph.Node {
 
 	node.Aux = producer
 
-	node.RunFunc = func (n *flowgraph.Node) {
+	node.RunFunc = func (n *fgbase.Node) {
 		defer func() {
 			producer.AsyncClose()
 		}()

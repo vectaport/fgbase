@@ -1,7 +1,7 @@
 package regexp
 
 import (
-	"github.com/vectaport/flowgraph"
+	"github.com/vectaport/fgbase"
 )
 
 type repeatStruct struct {
@@ -16,7 +16,7 @@ type repeatEntry struct {
 
 type repeatMap map[string]repeatEntry
 
-func repeatFire (n *flowgraph.Node) {
+func repeatFire (n *fgbase.Node) {
 
 	newmatch := n.Srcs[0]
 	subsrc := n.Srcs[1]
@@ -147,7 +147,7 @@ func repeatFire (n *flowgraph.Node) {
 
 }
 
-func repeatRdy (n *flowgraph.Node) bool {
+func repeatRdy (n *fgbase.Node) bool {
 	if !n.Dsts[0].DstRdy(n) || !n.Dsts[1].DstRdy(n) || !n.Dsts[2].DstRdy(n) { return false }
 	rdy := false
 	for i := range n.Srcs {
@@ -168,9 +168,9 @@ func repeatRdy (n *flowgraph.Node) bool {
 // oldmatch -- continue match (remainder string)
 // subdst   -- match done, successful (remainder string) or not (nil)
 // upstreq  -- send upstream request for new remainder string
-func FuncRepeat(newmatch, subsrc, dnstreq flowgraph.Edge, oldmatch, subdst, upstreq flowgraph.Edge, min, max int) flowgraph.Node {
+func FuncRepeat(newmatch, subsrc, dnstreq fgbase.Edge, oldmatch, subdst, upstreq fgbase.Edge, min, max int) fgbase.Node {
 
-	node := flowgraph.MakeNode("repeat", []*flowgraph.Edge{&newmatch, &subsrc, &dnstreq}, []*flowgraph.Edge{&oldmatch, &subdst, &upstreq}, repeatRdy, repeatFire)
+	node := fgbase.MakeNode("repeat", []*fgbase.Edge{&newmatch, &subsrc, &dnstreq}, []*fgbase.Edge{&oldmatch, &subdst, &upstreq}, repeatRdy, repeatFire)
 	node.Aux = repeatStruct{entries:make(map[string]*repeatEntry), min:min, max:max}
 	return node
 
