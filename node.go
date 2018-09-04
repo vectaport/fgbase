@@ -414,13 +414,15 @@ func (n *Node) Fire() {
 }
 
 // SendAll writes all data and acks after new result is computed.
-func (n *Node) SendAll() {
+func (n *Node) SendAll() bool {
+        sent := false
 	for i := range n.Srcs {
-		n.Srcs[i].SendAck(n)
+		sent = n.Srcs[i].SendAck(n) || sent
 	}
 	for i := range n.Dsts {
-		n.Dsts[i].SendData(n)
+		sent = n.Dsts[i].SendData(n) || sent
 	}
+	return sent
 }
 
 // RecvOne reads one data or ack and decrements RdyCnt.
@@ -453,8 +455,9 @@ func (n *Node) DefaultRunFunc() {
 				n.traceValRdy(false)
 			}
 			n.Fire()
-			n.SendAll()
+			_ = n.SendAll()
 			n.restoreDataChannels()
+			// if !sent { break } // wait for external event
 		}
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break

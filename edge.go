@@ -391,7 +391,8 @@ func (e *Edge) DstRdy(n *Node) bool {
 }
 
 // SendData writes to the Data channel
-func (e *Edge) SendData(n *Node) {
+func (e *Edge) SendData(n *Node) bool {
+        sendOK := false
 	if e.Data != nil {
 		if e.Flow {
 			for i := range *e.Data {
@@ -446,13 +447,16 @@ func (e *Edge) SendData(n *Node) {
 			}
 
 			e.Val = nil
+			sendOK = true
 		}
 	}
 	e.Flow = false
+	return sendOK
 }
 
 // SendAck writes struct{} to the Ack channel
-func (e *Edge) SendAck(n *Node) {
+func (e *Edge) SendAck(n *Node) bool {
+        sendOK := false
 	if e.Ack != nil {
 		if e.Flow {
 			if e.Ack2 != nil {
@@ -468,9 +472,11 @@ func (e *Edge) SendAck(n *Node) {
 				e.Ack <- struct{}{}
 			}
 			e.RdyCnt++
+			sendOK = true
 		}
 	}
 	e.Flow = false
+	return sendOK
 }
 
 // MakeEdges returns a slice of Edge.
