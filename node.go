@@ -27,6 +27,8 @@ type Node struct {
 	flag          uintptr              // flags for package internal use
 	srcByName     map[string]*Edge     // map of upstream Edge's by name
 	dstByName     map[string]*Edge     // map of downstream Edge's by name
+	srcNames      []string             // source names
+	dstNames      []string             // destination names
 }
 
 type edgeDir struct {
@@ -51,8 +53,7 @@ type NodeFire func(*Node)
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-
-func newNode(name string, ready NodeRdy, fire NodeFire ) Node {
+func newNode(name string, ready NodeRdy, fire NodeFire) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i - 1
@@ -66,8 +67,8 @@ func newNode(name string, ready NodeRdy, fire NodeFire ) Node {
 }
 
 func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, pool, recurse bool) Node {
-        n := newNode(name, ready, fire)
-	
+	n := newNode(name, ready, fire)
+
 	if pool {
 		n.flag = n.flag | flagPool
 	}
@@ -77,18 +78,18 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 
 	n.Srcs = srcs
 	n.Dsts = dsts
-	
+
 	// n.Init()
 
 	return n
-	
+
 }
 
 // Init initializes node internals after edges have been added
 func (n *Node) Init() {
 	var cnt = 0
-        pool := (n.flag & flagPool)==flagPool
-	recurse := (n.flag & flagRecurse)==flagRecurse
+	pool := (n.flag & flagPool) == flagPool
+	recurse := (n.flag & flagRecurse) == flagRecurse
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
 		srci.RdyCnt = func() int {
@@ -552,8 +553,8 @@ func clearUpstreamAcks(nodes []Node) {
 // RunAll calls Run for each Node, and times out after RunTime.
 func RunAll(nodes []Node) {
 
-	for i,_ := range nodes {
-	    nodes[i].Init()
+	for i, _ := range nodes {
+		nodes[i].Init()
 	}
 
 	buildEdgeNodes(nodes) // build reflection capability
@@ -668,10 +669,50 @@ func OutputGml(nodes []Node) {
 
 // FindSrc returns incoming edge by name
 func (n *Node) FindSrc(name string) *Edge {
-     return n.srcByName[name]
+	v := n.srcByName[name]
+	if v != nil {
+		return v
+	}
+	for i := range n.srcNames {
+		if name == n.srcNames[i] {
+			return n.Srcs[i]
+		}
+	}
+	return nil
+
 }
 
-// FindDst returns outgoing edge by name
+// FindDst returns incoming edge by name
 func (n *Node) FindDst(name string) *Edge {
-     return n.dstByName[name]
+	v := n.dstByName[name]
+	if v != nil {
+		return v
+	}
+	for i := range n.dstNames {
+		if name == n.dstNames[i] {
+			return n.Dsts[i]
+		}
+	}
+	return nil
+
+}
+
+// SetSrcNames names the incoming edges
+func (n *Node) SetSrcNames(name ...string) {
+	n.srcNames = name
+}
+
+// SetDstNames names the incoming edges
+func (n *Node) SetDstNames(name ...string) {
+	n.dstNames = name
+}
+
+// SrcNames returns the names of the incoming edges
+func (n *Node) SrcNames() []string {
+	return n.srcNames
+}
+
+// DstNames returns the names of the outgoing edges
+func (n *Node) DstNames() [] string {
+	return n.dstNames
 }
