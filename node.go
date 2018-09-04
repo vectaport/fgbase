@@ -132,8 +132,6 @@ func (n *Node) Init() {
 			cnt = cnt + 1
 		}
 	}
-	n.Tracef("FROM INIT:  len(n.cases) %d\n", len(n.cases))
-	n.Tracef("FROM INIT:  this node is %v\n", n)
 }
 
 // makeNodeForPool returns a new Node with copies of source and destination Edge's.
@@ -667,6 +665,16 @@ func OutputGml(nodes []Node) {
 
 }
 
+// SrcCnt returns the number of source edges.
+func (n *Node) SrcCnt() int {
+     return len(n.Srcs)
+}
+
+// DstCnt returns the number of destination edges.
+func (n *Node) DstCnt() int {
+     return len(n.Dsts)
+}
+
 // FindSrc returns incoming edge by name
 func (n *Node) FindSrc(name string) *Edge {
 	v := n.srcByName[name]
@@ -702,7 +710,7 @@ func (n *Node) SetSrcNames(name ...string) {
 	n.srcNames = name
 }
 
-// SetDstNames names the incoming edges
+// SetDstNames names the outgoing edges
 func (n *Node) SetDstNames(name ...string) {
 	n.dstNames = name
 }
