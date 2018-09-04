@@ -20,13 +20,13 @@ type Node struct {
 	Aux      interface{} // auxiliary empty interface to hold state
 	RdyState int         // state of latest readiness
 
-	Owner interface{} // owning pipe interface
-
 	cases         []reflect.SelectCase // select cases to read from Edge's
 	caseToEdgeDir map[int]edgeDir      // map from index of selected case to associated Edge
 	edgeToCase    map[*Edge]int        // map from *Edge to index of associated select case
 	dataBackup    []reflect.Value      // backup data channels for inputs
 	flag          uintptr              // flags for package internal use
+	srcByName     map[string]*Edge     // map of upstream Edge's by name
+	dstByName     map[string]*Edge     // map of downstream Edge's by name
 }
 
 type edgeDir struct {
@@ -36,6 +36,7 @@ type edgeDir struct {
 
 const (
 	flagPool = uintptr(1 << iota)
+	flagRecurse
 	flagRecursed
 )
 
@@ -50,22 +51,44 @@ type NodeFire func(*Node)
 // NodeRun is the function signature for an alternate Node event loop.
 type NodeRun func(*Node)
 
-func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, pool, recurse bool) Node {
+
+func newNode(name string, ready NodeRdy, fire NodeFire ) Node {
 	var n Node
 	i := atomic.AddInt64(&NodeID, 1)
 	n.ID = i - 1
 	n.Name = name
 	n.Cnt = -1
-	n.Srcs = srcs
-	n.Dsts = dsts
 	n.RdyFunc = ready
 	n.FireFunc = fire
 	n.caseToEdgeDir = make(map[int]edgeDir)
 	n.edgeToCase = make(map[*Edge]int)
+	return n
+}
+
+func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, pool, recurse bool) Node {
+        n := newNode(name, ready, fire)
+	
 	if pool {
 		n.flag = n.flag | flagPool
 	}
+	if recurse {
+		n.flag = n.flag | flagRecurse
+	}
+
+	n.Srcs = srcs
+	n.Dsts = dsts
+	
+	// n.Init()
+
+	return n
+	
+}
+
+// Init initializes node internals after edges have been added
+func (n *Node) Init() {
 	var cnt = 0
+        pool := (n.flag & flagPool)==flagPool
+	recurse := (n.flag & flagRecurse)==flagRecurse
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
 		srci.RdyCnt = func() int {
@@ -96,7 +119,6 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 	}
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
-		// dsti.RdyCnt = func (b bool) int {if b { return 0 }; return len(*dsti.Data) } (dsti.Val==nil)
 		dsti.RdyCnt = 0
 
 		if dsti.Ack != nil {
@@ -109,8 +131,8 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 			cnt = cnt + 1
 		}
 	}
-
-	return n
+	n.Tracef("FROM INIT:  len(n.cases) %d\n", len(n.cases))
+	n.Tracef("FROM INIT:  this node is %v\n", n)
 }
 
 // makeNodeForPool returns a new Node with copies of source and destination Edge's.
@@ -530,6 +552,10 @@ func clearUpstreamAcks(nodes []Node) {
 // RunAll calls Run for each Node, and times out after RunTime.
 func RunAll(nodes []Node) {
 
+	for i,_ := range nodes {
+	    nodes[i].Init()
+	}
+
 	buildEdgeNodes(nodes) // build reflection capability
 
 	if GmlOutput || DotOutput {
@@ -638,4 +664,14 @@ func OutputGml(nodes []Node) {
 
 	fmt.Printf("]\n")
 
+}
+
+// FindSrc returns incoming edge by name
+func (n *Node) FindSrc(name string) *Edge {
+     return n.srcByName[name]
+}
+
+// FindDst returns outgoing edge by name
+func (n *Node) FindDst(name string) *Edge {
+     return n.dstByName[name]
 }
