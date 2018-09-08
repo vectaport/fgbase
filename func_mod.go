@@ -54,7 +54,7 @@ func modFire2(a, b interface{}) interface{} {
 	}
 }
 
-func modFire(n *Node) {
+func modFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -67,6 +67,7 @@ func modFire(n *Node) {
 	} else {
 		x.DstPut(modFire2(atmp, btmp))
 	}
+	return nil
 }
 
 // FuncMod is the module operator (x = a % b).

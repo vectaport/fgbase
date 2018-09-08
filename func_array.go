@@ -1,19 +1,24 @@
 package fgbase
 
-import ()
+import (
+	"io"
+)
 
 type arrayStruct struct {
 	arr []interface{}
 	cur int
 }
 
-func arrayFire(n *Node) {
+func arrayFire(n *Node) error {
 	x := n.Dsts[0]
 	as := n.Aux.(arrayStruct)
 	if as.cur < len(as.arr) {
 		x.DstPut(as.arr[as.cur])
-		n.Aux = arrayStruct{as.arr, as.cur + 1}
+	} else if as.cur == len(as.arr) {
+		x.DstPut(io.EOF)
 	}
+	n.Aux = arrayStruct{as.arr, as.cur + 1}
+	return nil
 }
 
 // FuncArray streams the contents of an array then stops

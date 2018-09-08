@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-func srcFire(n *Node) {
+func srcFire(n *Node) error {
 	x := n.Dsts[0]
 	rw := n.Aux.(*bufio.ReadWriter)
 
@@ -14,7 +14,7 @@ func srcFire(n *Node) {
 	if err != nil {
 		n.LogError("%v", err)
 		x.CloseData()
-		return
+		return nil
 	}
 	x.DstPut(xv)
 
@@ -23,9 +23,10 @@ func srcFire(n *Node) {
 	if err != nil {
 		n.LogError("%v", err)
 		x.CloseData()
-		return
+		return nil
 	}
 	rw.Flush()
+	return nil
 }
 
 // FuncSrc reads a data value and writes a '\n' acknowledgement.

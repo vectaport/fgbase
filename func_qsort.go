@@ -28,7 +28,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 
 	var p *Pool
 
-	qsortFire := func(n *Node) {
+	qsortFire := func(n *Node) error {
 
 		a := n.Srcs[0]
 		x := n.Dsts[0]
@@ -61,7 +61,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 		d, ok := av.(RecursiveSort)
 		if !ok {
 			n.LogError("not of type RecursiveSort (%T)\n", a.Val)
-			return
+			return nil
 		}
 
 		n.Tracef("Original(%p) sorted %t, Sliced sorted %t, depth=%d, id=%d, len=%d, poolsz=%d\n",
@@ -76,7 +76,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 			sort.Sort(d)
 			x.DstPut(n.NodeWrap(d, x.Ack))
 			x.SendData(n)
-			return
+			return nil
 		}
 
 		mlo, mhi := doPivot(d, 0, l)
@@ -105,6 +105,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 		}
 
 		x.Val = []interface{}{lo, hi} // for tracing as lo|hi.
+		return nil
 
 	}
 

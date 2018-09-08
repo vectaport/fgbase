@@ -4,7 +4,7 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func barFire(n *fgbase.Node) {
+func barFire(n *fgbase.Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -19,26 +19,27 @@ func barFire(n *fgbase.Node) {
 
 	if ast == Live {
 		x.DstPut(av)
-		return
+		return nil
 	}
 
 	if bst == Live {
 		x.DstPut(bv)
-		return
+		return nil
 	}
 
 	if ast == Done || bst == Done {
 		if sink {
-			return
+			return nil
 		}
 		x.DstPut(Search{})
-		return
+		return nil
 	}
 
 	if len(as) > len(bs) {
 		x.DstPut(av)
 	}
 	x.DstPut(bv)
+	return nil
 }
 
 // FuncBar waits for both inputs and returns the one that matches the shortest string.

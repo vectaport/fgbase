@@ -70,7 +70,7 @@ func subFire2(a, b interface{}) interface{} {
 	}
 }
 
-func subFire(n *Node) {
+func subFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -84,6 +84,7 @@ func subFire(n *Node) {
 
 		x.DstPut(subFire2(atmp, btmp))
 	}
+	return nil
 }
 
 // FuncSub subtracts values and returns the difference (x = a - b).

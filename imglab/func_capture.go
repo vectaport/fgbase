@@ -5,7 +5,7 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func captureFire(n *fgbase.Node) {
+func captureFire(n *fgbase.Node) error {
 
 	x := n.Dsts[0]
 	cap := n.Aux.(*opencv.Capture)
@@ -17,6 +17,7 @@ func captureFire(n *fgbase.Node) {
 		}
 		x.DstPut(i2)
 	}
+	return nil
 
 }
 

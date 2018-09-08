@@ -26,11 +26,12 @@ func FuncKprod(a fgbase.Edge) fgbase.Node {
 
 	node.Aux = producer
 
-	node.RunFunc = func(n *fgbase.Node) {
+	node.RunFunc = func(n *fgbase.Node) error {
 		defer func() {
 			producer.AsyncClose()
 		}()
 		n.DefaultRunFunc()
+		return nil
 	}
 
 	return node

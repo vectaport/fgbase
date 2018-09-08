@@ -16,7 +16,7 @@ type repeatEntry struct {
 
 type repeatMap map[string]repeatEntry
 
-func repeatFire(n *fgbase.Node) {
+func repeatFire(n *fgbase.Node) error {
 
 	newmatch := n.Srcs[0]
 	subsrc := n.Srcs[1]
@@ -57,7 +57,7 @@ func repeatFire(n *fgbase.Node) {
 			subdst.DstPut(match)
 		}
 
-		return
+		return nil
 	}
 
 	// flow from subordinate regexp
@@ -86,11 +86,11 @@ func repeatFire(n *fgbase.Node) {
 			if rs.cnt < rmin {
 				match.Curr = match.Curr[1:]
 				subdst.DstPut(match)
-				return
+				return nil
 			}
 
 			oldmatch.DstPut(match)
-			return
+			return nil
 
 		}
 
@@ -99,12 +99,12 @@ func repeatFire(n *fgbase.Node) {
 			match.Curr = match.Curr[1:]
 			match.State = Live
 			subdst.DstPut(match)
-			return
+			return nil
 		}
 
 		// match failed
 		oldmatch.DstPut(match)
-		return
+		return nil
 
 	}
 
@@ -119,7 +119,7 @@ func repeatFire(n *fgbase.Node) {
 		// pass forward a Done search
 		if match.State == Done {
 			oldmatch.DstPut(match)
-			return
+			return nil
 		}
 
 		rs := rmap[match.Orig]
@@ -133,14 +133,15 @@ func repeatFire(n *fgbase.Node) {
 		// if no matches are required, pass it on
 		if st.min == 0 {
 			oldmatch.DstPut(match)
-			return
+			return nil
 		}
 
 		// otherwise attempt a match
 		subdst.DstPut(match)
-		return
+		return nil
 
 	}
+	return nil
 
 }
 

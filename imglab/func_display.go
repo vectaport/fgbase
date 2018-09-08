@@ -10,7 +10,7 @@ type displayStruct struct {
 	quitChan chan struct{}
 }
 
-func displayFire(n *fgbase.Node) {
+func displayFire(n *fgbase.Node) error {
 
 	a := n.Srcs[0]
 
@@ -28,6 +28,7 @@ func displayFire(n *fgbase.Node) {
 	} else {
 		// _ = opencv.WaitKey(1)
 	}
+	return nil
 
 }
 

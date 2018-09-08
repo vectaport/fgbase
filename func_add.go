@@ -75,7 +75,7 @@ func addFire2(a, b interface{}) interface{} {
 }
 
 // Addition primitive
-func addFire(n *Node) {
+func addFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -89,6 +89,7 @@ func addFire(n *Node) {
 	} else {
 		x.DstPut(addFire2(atmp, btmp))
 	}
+	return nil
 }
 
 // FuncAdd adds values and returns the sum (x = a + b).

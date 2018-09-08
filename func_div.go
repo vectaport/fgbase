@@ -71,7 +71,7 @@ func divFire2(a, b interface{}) interface{} {
 }
 
 // Division primitive
-func divFire(n *Node) {
+func divFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -82,15 +82,16 @@ func divFire(n *Node) {
 	if !same {
 		n.LogError("incompatible types for division (%v/%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))
 		x.DstPut(nil)
-		return
+		return nil
 	}
 	if ZeroTest(bTmp) {
 		n.LogError("divide by zero attempted")
 		x.DstPut(nil)
-		return
+		return nil
 	}
 
 	x.DstPut(divFire2(aTmp, bTmp))
+	return nil
 }
 
 // FuncDiv divides values and returns the quotient (x = a / b).

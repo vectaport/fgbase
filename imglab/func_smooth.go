@@ -7,7 +7,7 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func smoothFire(n *fgbase.Node) {
+func smoothFire(n *fgbase.Node) error {
 
 	a := n.Srcs[0]
 	x := n.Dsts[0]
@@ -41,6 +41,7 @@ func smoothFire(n *fgbase.Node) {
 	} else {
 		x.Val = nil
 	}
+	return nil
 
 }
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func printFire(n *Node) {
+func printFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	form := n.Aux.(string)
@@ -14,7 +14,7 @@ func printFire(n *Node) {
 	_, _ = fmt.Printf(form, v)
 
 	x.DstPut(v)
-
+	return nil
 }
 
 // FuncPrint prints a data value using fmt.Printf

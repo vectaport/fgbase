@@ -2,7 +2,7 @@ package fgbase
 
 import ()
 
-func eitherFire(n *Node) {
+func eitherFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -11,6 +11,7 @@ func eitherFire(n *Node) {
 	} else {
 		x.DstPut(b.SrcGet())
 	}
+	return nil
 }
 
 func eitherRdy(n *Node) bool {

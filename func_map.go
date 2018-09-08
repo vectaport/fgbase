@@ -2,11 +2,12 @@ package fgbase
 
 import ()
 
-func mapFire(n *Node) {
+func mapFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts
 	i := n.Aux.(int)
 	x[i].DstPut(n.NodeWrap(a.SrcGet(), x[i].Ack))
+	return nil
 }
 
 // FuncMap maps a value to one of n reducers.

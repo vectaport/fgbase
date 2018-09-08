@@ -22,7 +22,7 @@ func preprocess(str string) func() (char byte, bslashed bool) {
 	}
 }
 
-func matchFire(n *fgbase.Node) {
+func matchFire(n *fgbase.Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -33,7 +33,7 @@ func matchFire(n *fgbase.Node) {
 
 	if av.(Search).State == Fail || av.(Search).State == Done {
 		x.DstPut(av)
-		return
+		return nil
 	}
 
 	orig := av.(Search).Orig
@@ -93,11 +93,11 @@ func matchFire(n *fgbase.Node) {
 	}
 	if matched {
 		x.DstPut(Search{Curr: curr[pcnt:], Orig: orig})
-		return
+		return nil
 	}
 
 	x.DstPut(Search{Curr: curr, Orig: orig, State: Fail})
-	return
+	return nil
 }
 
 // FuncMatch advances a byte slice if it matches a string, otherwise returns the empty slice

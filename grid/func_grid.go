@@ -44,7 +44,7 @@ func gridRdy(n *fgbase.Node) bool {
 	return as.rdy[0] || as.rdy[1] || as.rdy[2] || as.rdy[3]
 }
 
-func gridFire(n *fgbase.Node) {
+func gridFire(n *fgbase.Node) error {
 	as := n.Aux.(auxStruct)
 
 	for i := range as.rdy {
@@ -55,7 +55,7 @@ func gridFire(n *fgbase.Node) {
 	}
 
 	n.Aux = as
-	return
+	return nil
 }
 
 // FuncGrid coordinates with its neighbors

@@ -9,7 +9,7 @@ type enc struct {
 	Nonce                            [24]byte
 }
 
-func encryptFire(n *Node) {
+func encryptFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	s := n.Aux.(*enc)
@@ -22,6 +22,7 @@ func encryptFire(n *Node) {
 	after := box.Seal(nil, before, &nonce, publicKey, privateKey)
 	x.DstPut(after)
 
+	return nil
 }
 
 // FuncEncrypt encrypts a buffer of byte data

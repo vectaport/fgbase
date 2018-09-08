@@ -2,7 +2,7 @@ package fgbase
 
 import ()
 
-func forkFire(n *Node) {
+func forkFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
@@ -12,6 +12,7 @@ func forkFire(n *Node) {
 	} else {
 		y.DstPut(a.SrcGet())
 	}
+	return nil
 }
 
 // FuncFork sends a value two ways (x = a; y = a).

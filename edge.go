@@ -251,9 +251,9 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 			attrs += fmt.Sprintf(",Ack2=%p", e.Ack2)
 		}
 		if e.Val == nil {
-			n.Tracef("<nil> AAA<- %s.Data%s\n", e.Name, attrs)
+			n.Tracef("<nil> <- %s.Data%s\n", e.Name, attrs)
 		} else {
-			n.Tracef("%s BBB<- %s.Data%s\n", String(e.Val), e.Name, attrs)
+			n.Tracef("%s <- %s.Data%s\n", String(e.Val), e.Name, attrs)
 		}
 	}
 	if e.RdyCnt < 0 {
@@ -345,7 +345,7 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 		if true || len(*e.Data) > 1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
-		n.Tracef("CCC<- %s %s\n", nm, selectStr)
+		n.Tracef("<- %s %s\n", nm, selectStr)
 	}
 	if e.RdyCnt < 0 {
 		panic("Edge.dstReadHandle:  Edge RdyCnt less than zero")
@@ -392,7 +392,7 @@ func (e *Edge) DstRdy(n *Node) bool {
 
 // SendData writes to the Data channel
 func (e *Edge) SendData(n *Node) bool {
-        sendOK := false
+	sendOK := false
 	if e.Data != nil {
 		if e.Flow {
 			for i := range *e.Data {
@@ -440,9 +440,9 @@ func (e *Edge) SendData(n *Node) bool {
 				}
 
 				if ev == nil {
-					n.Tracef("%s DDD<- <nil>%s\n", nm, attrs)
+					n.Tracef("%s <- <nil>%s\n", nm, attrs)
 				} else {
-					n.Tracef("%s EEE<- %s%s\n", nm, String(ev), attrs)
+					n.Tracef("%s <- %s%s\n", nm, String(ev), attrs)
 				}
 			}
 
@@ -456,7 +456,7 @@ func (e *Edge) SendData(n *Node) bool {
 
 // SendAck writes struct{} to the Ack channel
 func (e *Edge) SendAck(n *Node) bool {
-        sendOK := false
+	sendOK := false
 	if e.Ack != nil {
 		if e.Flow {
 			if e.Ack2 != nil {
@@ -467,7 +467,7 @@ func (e *Edge) SendAck(n *Node) bool {
 				e.Ack2 = nil
 			} else {
 				if TraceLevel >= VV {
-					n.Tracef("%s.Ack FFF<-\n", e.Name)
+					n.Tracef("%s.Ack <-\n", e.Name)
 				}
 				e.Ack <- struct{}{}
 			}

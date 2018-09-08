@@ -2,7 +2,7 @@ package fgbase
 
 import ()
 
-func arbitFire(n *Node) {
+func arbitFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -17,6 +17,7 @@ func arbitFire(n *Node) {
 		if a.SrcRdy(n) {
 		}
 	}
+	return nil
 }
 
 func arbitRdy(n *Node) bool {

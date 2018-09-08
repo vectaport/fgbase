@@ -9,7 +9,7 @@ type dec struct {
 	Nonce                            [24]byte
 }
 
-func decryptFire(n *Node) {
+func decryptFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	s := n.Aux.(*dec)
@@ -22,6 +22,7 @@ func decryptFire(n *Node) {
 	after, ok := box.Open(nil, before, &nonce, publicKey, privateKey)
 	_ = ok
 	x.DstPut(string(after))
+	return nil
 }
 
 // FuncDecrypt decrypts a buffer of byte data

@@ -11,7 +11,7 @@ type irw struct {
 	RW          *bufio.ReadWriter
 }
 
-func dstFire(n *Node) {
+func dstFire(n *Node) error {
 	a := n.Srcs[0]
 	s := n.Aux.(*irw)
 	rw := s.RW
@@ -25,7 +25,7 @@ func dstFire(n *Node) {
 			n.LogError("%v", err)
 			close(a.Ack)
 			a.Ack = nil
-			return
+			return nil
 		}
 	} else {
 		s.Initialized = true
@@ -37,9 +37,10 @@ func dstFire(n *Node) {
 		n.LogError("%v", err)
 		close(a.Ack)
 		a.Ack = nil
-		return
+		return nil
 	}
 	rw.Flush()
+	return nil
 }
 
 // FuncDst writes data and waits for an acknowledging '\n'.

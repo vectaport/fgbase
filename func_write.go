@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func writeFire(n *Node) {
+func writeFire(n *Node) error {
 	a := n.Srcs[0]
 	w := n.Aux.(*bufio.Writer)
 	var err error
@@ -17,9 +17,10 @@ func writeFire(n *Node) {
 		n.LogError("%v", err)
 		close(a.Ack)
 		a.Ack = nil
-		return
+		return nil
 	}
 	w.Flush()
+	return nil
 
 }
 

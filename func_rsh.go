@@ -35,7 +35,7 @@ func rshFire2(a, b interface{}) interface{} {
 }
 
 // Right shift primitive
-func rshFire(n *Node) {
+func rshFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -49,6 +49,7 @@ func rshFire(n *Node) {
 	} else {
 		x.DstPut(rshFire2(aTmp, bTmp))
 	}
+	return nil
 }
 
 // FuncRsh right shifts a value(x = a >> b).

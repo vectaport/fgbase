@@ -46,7 +46,7 @@ func csviRdy(n *Node) bool {
 // them downstream.  enums is an optional map from field.enum to an empty interface.
 func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 
-	var fireFunc = func(n *Node) {
+	var fireFunc = func(n *Node) error {
 		x := n.Dsts
 
 		// process data record
@@ -78,6 +78,7 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 				os.Exit(1)
 			}
 		}
+		return nil
 	}
 
 	var xp []*Edge

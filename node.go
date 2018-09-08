@@ -48,10 +48,10 @@ type NodeRdy func(*Node) bool
 // NodeFire is the function signature for executing a Node.
 // Any error message should be written using Node.LogError and
 // nil written to any output Edge.
-type NodeFire func(*Node)
+type NodeFire func(*Node) error
 
 // NodeRun is the function signature for an alternate Node event loop.
-type NodeRun func(*Node)
+type NodeRun func(*Node) error
 
 func newNode(name string, ready NodeRdy, fire NodeFire) Node {
 	var n Node
@@ -415,7 +415,7 @@ func (n *Node) Fire() {
 
 // SendAll writes all data and acks after new result is computed.
 func (n *Node) SendAll() bool {
-        sent := false
+	sent := false
 	for i := range n.Srcs {
 		sent = n.Srcs[i].SendAck(n) || sent
 	}
@@ -455,9 +455,11 @@ func (n *Node) DefaultRunFunc() {
 				n.traceValRdy(false)
 			}
 			n.Fire()
-			_ = n.SendAll()
+			sent := n.SendAll()
 			n.restoreDataChannels()
-			// if !sent { break } // wait for external event
+			if !sent {
+				break
+			} // wait for external event
 		}
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
@@ -670,12 +672,12 @@ func OutputGml(nodes []Node) {
 
 // SrcCnt returns the number of source edges.
 func (n *Node) SrcCnt() int {
-     return len(n.Srcs)
+	return len(n.Srcs)
 }
 
 // DstCnt returns the number of destination edges.
 func (n *Node) DstCnt() int {
-     return len(n.Dsts)
+	return len(n.Dsts)
 }
 
 // FindSrc returns incoming edge by name
@@ -724,6 +726,6 @@ func (n *Node) SrcNames() []string {
 }
 
 // DstNames returns the names of the outgoing edges
-func (n *Node) DstNames() [] string {
+func (n *Node) DstNames() []string {
 	return n.dstNames
 }

@@ -2,7 +2,7 @@ package fgbase
 
 import ()
 
-func steercFire(n *Node) {
+func steercFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts[0]
 	y := n.Dsts[1]
@@ -12,6 +12,7 @@ func steercFire(n *Node) {
 	} else {
 		y.DstPut(av)
 	}
+	return nil
 }
 
 func steercRdy(n *Node) bool {

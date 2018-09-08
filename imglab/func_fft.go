@@ -5,7 +5,7 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func fftFire(n *fgbase.Node) {
+func fftFire(n *fgbase.Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -21,6 +21,7 @@ func fftFire(n *fgbase.Node) {
 	} else {
 		fft.Fft(data)
 	}
+	return nil
 }
 
 // FuncFFT does an FFT on a slice of complex128 (x=fft(data: a, inverse: b)).

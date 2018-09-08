@@ -16,7 +16,7 @@ func steervRdy(n *Node) bool {
 	return false
 }
 
-func steervFire(n *Node) {
+func steervFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -26,6 +26,7 @@ func steervFire(n *Node) {
 	} else {
 		y.DstPut(b.SrcGet())
 	}
+	return nil
 }
 
 // FuncSteerv steers the second value by the first (if a==0 { x = b } else { y = b }).

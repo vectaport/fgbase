@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func readFire(n *Node) {
+func readFire(n *Node) error {
 	x := n.Dsts[0]
 	r := n.Aux.(*bufio.Reader)
 
@@ -21,6 +21,7 @@ func readFire(n *Node) {
 		x.CloseData()
 	}
 
+	return nil
 }
 
 // FuncRead reads a data value from a Reader

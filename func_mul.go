@@ -71,7 +71,7 @@ func mulFire2(a, b interface{}) interface{} {
 }
 
 // Multiplication primitive
-func mulFire(n *Node) {
+func mulFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -85,6 +85,7 @@ func mulFire(n *Node) {
 	} else {
 		x.DstPut(mulFire2(aTmp, bTmp))
 	}
+	return nil
 }
 
 // FuncMul multiplies values and returns the product (x = a * b).

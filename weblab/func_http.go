@@ -32,10 +32,11 @@ func FuncHTTP(x fgbase.Edge, addr string, quitChan chan struct{}) fgbase.Node {
 		},
 	}
 
-	node.RunFunc = func(n *fgbase.Node) {
+	node.RunFunc = func(n *fgbase.Node) error {
 		n.LogError("%v", http.ListenAndServe(addr, h))
 		var nada struct{}
 		quitChan <- nada
+		return nil
 	}
 
 	return node

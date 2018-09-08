@@ -2,9 +2,10 @@ package fgbase
 
 import ()
 
-func constFire(n *Node) {
+func constFire(n *Node) error {
 	x := n.Dsts[0]
 	x.DstPut(n.Aux)
+	return nil
 }
 
 // FuncConst produces a constant value (x = c).  Can also

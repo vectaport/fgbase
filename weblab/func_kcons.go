@@ -27,7 +27,7 @@ func FuncKcons(x fgbase.Edge, topic string) fgbase.Node {
 		node.Tracef("%v\n", err)
 	}
 
-	node.RunFunc = func(n *fgbase.Node) {
+	node.RunFunc = func(n *fgbase.Node) error {
 		defer func() {
 			partitionConsumer.AsyncClose()
 			if err := consumer.Close(); err != nil {
@@ -36,6 +36,7 @@ func FuncKcons(x fgbase.Edge, topic string) fgbase.Node {
 
 		}()
 		n.DefaultRunFunc()
+		return nil
 	}
 
 	node.Aux = partitionConsumer

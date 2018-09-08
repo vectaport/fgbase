@@ -2,12 +2,13 @@ package fgbase
 
 import ()
 
-func rdyFire(n *Node) {
+func rdyFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 	b.Flow = true
 	x.DstPut(a.SrcGet())
+	return nil
 }
 
 // FuncRdy waits for two values before passing on the first (b; x = a).

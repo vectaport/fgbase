@@ -1,15 +1,20 @@
 package fgbase
 
-import ()
+import (
+)
 
 type SinkStats struct {
 	Cnt int
 	Sum int
 }
 
-func sinkFire(n *Node) {
+func sinkFire(n *Node) error {
 	a := n.Srcs[0]
 	v := a.SrcGet()
+
+	if v, ok := v.(error); ok && v.Error()=="EOF" {
+		return v
+	}
 
 	s := n.Aux.(SinkStats)
 	if v, ok := v.(int); ok {
@@ -17,6 +22,7 @@ func sinkFire(n *Node) {
 	} else {
 		n.Aux = SinkStats{s.Cnt + 1, 0}
 	}
+	return nil
 }
 
 // FuncSink sinks a single value.

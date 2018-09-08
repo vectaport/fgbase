@@ -35,7 +35,7 @@ func lshFire2(a, b interface{}) interface{} {
 }
 
 // Left shift primitive
-func lshFire(n *Node) {
+func lshFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -49,6 +49,7 @@ func lshFire(n *Node) {
 	} else {
 		x.DstPut(lshFire2(aTmp, bTmp))
 	}
+	return nil
 }
 
 // FuncLsh left shifts a value(x = a << b).

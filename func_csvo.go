@@ -54,7 +54,7 @@ func csvoRdy(n *Node) bool {
 // input from upstream.  enums is an optional map from field.enum to an empty interface.
 func FuncCSVO(a []Edge, r io.Reader, enums map[string]interface{}) Node {
 
-	var fireFunc = func(n *Node) {
+	var fireFunc = func(n *Node) error {
 		a := n.Srcs
 
 		r := n.Aux.(csvState).csvreader
@@ -127,6 +127,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]interface{}) Node {
 		}
 
 		n.Aux = csvState{csvreader: r, header: header}
+		return nil
 
 	}
 

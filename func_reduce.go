@@ -11,18 +11,20 @@ func FuncReduce(a, x Edge, reducer func(n *Node, datum, collection interface{}) 
 		return a.SrcRdy(n) || x.DstRdy(n)
 	}
 
-	var reduceFreerunFire = func(n *Node) {
+	var reduceFreerunFire = func(n *Node) error {
 		if a.SrcRdy(n) {
 			n.Aux = reducer(n, a.SrcGet(), n.Aux)
 		}
 		if x.DstRdy(n) {
 			x.DstPut(n.Aux)
 		}
+		return nil
 	}
 
-	var reduceSteppedFire = func(n *Node) {
+	var reduceSteppedFire = func(n *Node) error {
 		n.Aux = reducer(n, a.SrcGet(), n.Aux)
 		x.DstPut(n.Aux)
+		return nil
 	}
 
 	var reduceRdy func(n *Node) bool = nil
@@ -30,7 +32,7 @@ func FuncReduce(a, x Edge, reducer func(n *Node, datum, collection interface{}) 
 		reduceRdy = reduceFreerunRdy
 	}
 
-	var reduceFire func(n *Node) = reduceSteppedFire
+	var reduceFire func(n *Node) error = reduceSteppedFire
 	if freerun {
 		reduceFire = reduceFreerunFire
 	}
