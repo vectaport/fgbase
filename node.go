@@ -382,14 +382,15 @@ func (n *Node) RdyAll() bool {
 }
 
 // Fire executes Node using function pointer.
-func (n *Node) Fire() {
+func (n *Node) Fire() error {
+        var err error = nil
 	n.incrFireCnt()
 	var newFmt string
 	if TraceLevel > Q {
 		newFmt = n.traceValRdySrc(true)
 	}
 	if n.FireFunc != nil {
-		n.FireFunc(n)
+		err = n.FireFunc(n)
 	} else {
 		for i := range n.Srcs {
 			n.Srcs[i].Flow = true
@@ -411,6 +412,7 @@ func (n *Node) Fire() {
 		newFmt += "\n"
 		StdoutLog.Printf(newFmt)
 	}
+	return err
 }
 
 // SendAll writes all data and acks after new result is computed.
@@ -448,23 +450,29 @@ func (n *Node) RecvOne() (recvOK bool) {
 }
 
 // DefaultRunFunc is the default run func.
-func (n *Node) DefaultRunFunc() {
+func (n *Node) DefaultRunFunc() error {
+        var err error = nil
 	for {
 		for n.RdyAll() {
 			if TraceLevel >= VVV {
 				n.traceValRdy(false)
 			}
-			n.Fire()
+			err = n.Fire()
 			sent := n.SendAll()
 			n.restoreDataChannels()
 			if !sent {
 				break
 			} // wait for external event
+			
+			if err != nil {
+			   return err
+			   }
 		}
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
 		}
 	}
+	return nil
 }
 
 // Run is an event loop that runs forever for each Node.
