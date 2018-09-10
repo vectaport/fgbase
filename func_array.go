@@ -1,8 +1,6 @@
 package fgbase
 
-import (
-	"io"
-)
+import ()
 
 type arrayStruct struct {
 	arr []interface{}
@@ -15,7 +13,8 @@ func arrayFire(n *Node) error {
 	if as.cur < len(as.arr) {
 		x.DstPut(as.arr[as.cur])
 	} else if as.cur == len(as.arr) {
-		x.DstPut(io.EOF)
+		x.DstPut(EOF)
+		return EOF
 	}
 	n.Aux = arrayStruct{as.arr, as.cur + 1}
 	return nil

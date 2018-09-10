@@ -1,7 +1,6 @@
 package fgbase
 
-import (
-)
+import ()
 
 type SinkStats struct {
 	Cnt int
@@ -12,7 +11,8 @@ func sinkFire(n *Node) error {
 	a := n.Srcs[0]
 	v := a.SrcGet()
 
-	if v, ok := v.(error); ok && v.Error()=="EOF" {
+	if v, ok := v.(error); ok && v.Error() == "EOF" {
+		a.Flow = false
 		return v
 	}
 

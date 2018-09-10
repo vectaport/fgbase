@@ -3,6 +3,7 @@ package fgbase
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -383,7 +384,7 @@ func (n *Node) RdyAll() bool {
 
 // Fire executes Node using function pointer.
 func (n *Node) Fire() error {
-        var err error = nil
+	var err error = nil
 	n.incrFireCnt()
 	var newFmt string
 	if TraceLevel > Q {
@@ -451,7 +452,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 
 // DefaultRunFunc is the default run func.
 func (n *Node) DefaultRunFunc() error {
-        var err error = nil
+	var err error = nil
 	for {
 		for n.RdyAll() {
 			if TraceLevel >= VVV {
@@ -460,13 +461,13 @@ func (n *Node) DefaultRunFunc() error {
 			err = n.Fire()
 			sent := n.SendAll()
 			n.restoreDataChannels()
+			if err != nil {
+				return err
+			}
 			if !sent {
 				break
 			} // wait for external event
-			
-			if err != nil {
-			   return err
-			   }
+
 		}
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
@@ -476,13 +477,13 @@ func (n *Node) DefaultRunFunc() error {
 }
 
 // Run is an event loop that runs forever for each Node.
-func (n *Node) Run() {
+func (n *Node) Run() error {
 	if n.RunFunc != nil {
-		n.RunFunc(n)
-		return
+		return n.RunFunc(n)
 	}
 
-	n.DefaultRunFunc()
+	err := n.DefaultRunFunc()
+	return err
 }
 
 // MakeNodes returns a slice of Node.
@@ -590,9 +591,14 @@ func RunAll(nodes []Node) {
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
 	}
 	StartTime = time.Now()
+	var wg sync.WaitGroup
+	wg.Add(len(nodes))
 	for i := 0; i < len(nodes); i++ {
 		node := &nodes[i]
-		go node.Run()
+		go func() {
+			defer wg.Done()
+			node.Run()
+		}()
 	}
 
 	timeout := RunTime
@@ -602,7 +608,7 @@ func RunAll(nodes []Node) {
 			defer StdoutLog.Printf("\n")
 		}
 	} else {
-		select {} // sleep forever
+		wg.Wait()
 	}
 
 	if TraceLevel >= VVVV {
@@ -611,6 +617,7 @@ func RunAll(nodes []Node) {
 			nodes[i].traceValRdy(false)
 		}
 	}
+
 }
 
 // NodeWrap bundles a Node pointer, and an ack channel with an empty interface, in order to

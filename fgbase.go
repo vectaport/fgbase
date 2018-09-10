@@ -3,6 +3,7 @@
 package fgbase
 
 import (
+	"errors"
 	"flag"
 	"log"
 	"os"
@@ -60,6 +61,9 @@ func (t TraceLevelType) String() string {
 		"VVVV",
 	}[t]
 }
+
+// End of flow
+var EOF = errors.New("EOF")
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
