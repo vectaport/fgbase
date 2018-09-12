@@ -20,13 +20,13 @@ type edgeNode struct {
 // Edge of a flowgraph.
 type Edge struct {
 
-	// values shared by upstream and downstream Node
+	// values shared by upstream and downstream Nodes
 	Name      string              // for trace
 	Data      *[]chan interface{} // slice of data channels
 	Ack       chan struct{}       // request (or acknowledge) channel
 	edgeNodes *[]edgeNode         // list of Node's associated with this Edge.
 
-	// values unique to upstream and downstream Node
+	// values unique to upstream and downstream Nodes
 	Val    interface{}   // generic empty interface
 	RdyCnt int           // readiness of I/O
 	Flow   bool          // set true to allow one output, data or ack
