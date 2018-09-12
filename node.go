@@ -501,6 +501,9 @@ func buildEdgeNodes(nodes []Node) {
 	for i, n := range nodes {
 		for j := range n.Srcs {
 			srcj := n.Srcs[j]
+			        if srcj.edgeNodes==nil {
+					   panic("Using an Edge that has an uninitialized edgeNodes\n")
+					   	   }
 			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node: &nodes[i], srcFlag: false})
 		}
 		for j := range n.Dsts {
