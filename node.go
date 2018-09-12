@@ -497,14 +497,14 @@ func MakeNodes(sz int) []Node {
 }
 
 // buildEdgeNodes builds the slice of edgeNode for each Edge to allow reflection.
-func buildEdgeNodes(nodes []Node) {
+func buildEdgeNodes(nodes []*Node) {
 	for i, n := range nodes {
 		for j := range n.Srcs {
 			srcj := n.Srcs[j]
-			        if srcj.edgeNodes==nil {
-					   panic("Using an Edge that has an uninitialized edgeNodes\n")
-					   	   }
-			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node: &nodes[i], srcFlag: false})
+			if srcj.edgeNodes == nil {
+				panic("Using an Edge that has an uninitialized edgeNodes\n")
+			}
+			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node: nodes[i], srcFlag: false})
 		}
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
@@ -513,13 +513,13 @@ func buildEdgeNodes(nodes []Node) {
 			}
 			*dstj.edgeNodes = append(*dstj.edgeNodes, edgeNode{})
 			copy((*dstj.edgeNodes)[k+1:], (*dstj.edgeNodes)[k:])
-			(*dstj.edgeNodes)[k] = edgeNode{node: &nodes[i], srcFlag: true}
+			(*dstj.edgeNodes)[k] = edgeNode{node: nodes[i], srcFlag: true}
 		}
 	}
 }
 
 // extendChannelCaps extends the channel capacity to support arbitrated fan-in.
-func extendChannelCaps(nodes []Node) {
+func extendChannelCaps(nodes []*Node) {
 	for _, n := range nodes {
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
@@ -554,7 +554,7 @@ func extendChannelCaps(nodes []Node) {
 
 // clearUpstreamAcks increments RdyCnt upstream from every initialized downstream Edge
 // (Node input edge) to reflect the fact that flow is initialized here.
-func clearUpstreamAcks(nodes []Node) {
+func clearUpstreamAcks(nodes []*Node) {
 	for _, n := range nodes {
 		for j := range n.Srcs {
 			if n.Srcs[j].Val != nil {
@@ -571,6 +571,22 @@ func clearUpstreamAcks(nodes []Node) {
 
 // RunAll calls Run for each Node, and times out after RunTime.
 func RunAll(nodes []Node) {
+	// build slice of pointers
+	pnodes := make([]*Node, len(nodes))
+	for i := range nodes {
+		pnodes[i] = &nodes[i]
+	}
+
+	runAll(pnodes)
+}
+
+// RunGraph calls Run for each *Node, and times out after RunTime.
+func RunGraph(nodes []*Node) {
+	runAll(nodes)
+}
+
+// runAll calls Run for each Node, and times out after RunTime.
+func runAll(nodes []*Node) {
 
 	for i, _ := range nodes {
 		nodes[i].Init()
@@ -601,7 +617,7 @@ func RunAll(nodes []Node) {
 	var wg sync.WaitGroup
 	wg.Add(len(nodes))
 	for i := 0; i < len(nodes); i++ {
-		node := &nodes[i]
+		node := nodes[i]
 		go func() {
 			defer wg.Done()
 			node.Run()
@@ -648,7 +664,7 @@ func (n *Node) RemoveInputCase(e *Edge) {
 }
 
 // Output .dot graphviz format
-func OutputDot(nodes []Node) {
+func OutputDot(nodes []*Node) {
 
 	fmt.Printf("digraph G {\n")
 
@@ -668,7 +684,7 @@ func OutputDot(nodes []Node) {
 }
 
 // Output .gml graph modeling language format
-func OutputGml(nodes []Node) {
+func OutputGml(nodes []*Node) {
 
 	fmt.Printf("graph\n[\n")
 
