@@ -464,7 +464,6 @@ func (n *Node) DefaultRunFunc() error {
 			}
 			err = n.Fire()
 			sent := n.SendAll()
-			n.restoreDataChannels()
 			if err != nil {
 				return err
 			}
@@ -473,6 +472,7 @@ func (n *Node) DefaultRunFunc() error {
 			} // wait for external event
 
 		}
+		n.restoreDataChannels()
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
 		}
