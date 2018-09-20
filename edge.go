@@ -268,6 +268,9 @@ func (e *Edge) srcWriteRdy() bool {
 
 // SrcRdy tests if a source Edge is ready.
 func (e *Edge) SrcRdy(n *Node) bool {
+	if e == nil {
+		return false
+	}
 	if !e.RdyZero() {
 		if !e.srcReadRdy(n) {
 			return false
@@ -364,6 +367,9 @@ func (e *Edge) dstWriteRdy() bool {
 
 // DstRdy tests if a destination Edge is ready.
 func (e *Edge) DstRdy(n *Node) bool {
+	if e == nil {
+		return false
+	}
 	if !e.RdyZero() {
 		if !e.dstReadRdy() {
 			return e.dstWriteRdy()
@@ -397,6 +403,8 @@ func (e *Edge) SendData(n *Node) bool {
 		if e.Flow {
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
+				n.Tracef("SendData:  len((*e.Data)[i]) %d cap((*e.Data)[i]) %d\n",
+					len((*e.Data)[i]), cap((*e.Data)[i]))
 			}
 			e.RdyCnt += len(*e.Data)
 
@@ -497,6 +505,7 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 
 // SrcCnt is the number of Node's upstream of an Edge
 func (e *Edge) SrcCnt() int {
+
 	i := 0
 	for ; i < len(*e.edgeNodes) && (*e.edgeNodes)[i].srcFlag; i++ {
 	}

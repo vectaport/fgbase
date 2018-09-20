@@ -26,10 +26,11 @@ type Node struct {
 	edgeToCase    map[*Edge]int        // map from *Edge to index of associated select case
 	dataBackup    []reflect.Value      // backup data channels for inputs
 	flag          uintptr              // flags for package internal use
-	srcByName     map[string]*Edge     // map of upstream Edge's by name
-	dstByName     map[string]*Edge     // map of downstream Edge's by name
-	srcNames      []string             // source names
-	dstNames      []string             // destination names
+
+	srcNames  []string         // source names
+	dstNames  []string         // destination names
+	srcByName map[string]*Edge // map of upstream Edge's by name
+	dstByName map[string]*Edge // map of downstream Edge's by name
 }
 
 type edgeDir struct {
@@ -93,6 +94,9 @@ func (n *Node) Init() {
 	recurse := (n.flag & flagRecurse) == flagRecurse
 	for i := range n.Srcs {
 		srci := n.Srcs[i]
+		if srci == nil {
+			break
+		}
 		srci.RdyCnt = func() int {
 			if srci.Val != nil {
 				return 0
@@ -121,6 +125,9 @@ func (n *Node) Init() {
 	}
 	for i := range n.Dsts {
 		dsti := n.Dsts[i]
+		if dsti == nil {
+			break
+		}
 		dsti.RdyCnt = 0
 
 		if dsti.Ack != nil {
@@ -226,25 +233,35 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 		newFmt += "<<"
 	}
 	for i := range n.Srcs {
-		srci := n.Srcs[i]
 		if i != 0 {
 			newFmt += ","
 		}
-		newFmt += fmt.Sprintf("%s=", srci.Name)
-		if srci.RdyZero() {
-			if IsSlice(srci.Val) {
-				newFmt += StringSlice(srci.Val)
-			} else {
-				if srci.Val == nil {
-					newFmt += "<nil>"
-				} else if v, ok := srci.Val.(error); ok && v.Error() == "EOF" {
-					newFmt += "EOF"
-				} else {
-					newFmt += fmt.Sprintf("%s", String(srci.Val))
-				}
-			}
+		srci := n.Srcs[i]
+		if TracePorts && n.srcNames != nil {
+			newFmt += "." + n.srcNames[i] + "("
+		}
+		if srci == nil {
+			newFmt += "*"
 		} else {
-			newFmt += "_"
+			newFmt += fmt.Sprintf("%s=", srci.Name)
+			if srci.RdyZero() {
+				if IsSlice(srci.Val) {
+					newFmt += StringSlice(srci.Val)
+				} else {
+					if srci.Val == nil {
+						newFmt += "<nil>"
+					} else if v, ok := srci.Val.(error); ok && v.Error() == "EOF" {
+						newFmt += "EOF"
+					} else {
+						newFmt += fmt.Sprintf("%s", String(srci.Val))
+					}
+				}
+			} else {
+				newFmt += "_"
+			}
+		}
+		if TracePorts && n.srcNames != nil {
+			newFmt += ")"
 		}
 	}
 	newFmt += ";"
@@ -256,36 +273,46 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 
 	var newFmt string
 	for i := range n.Dsts {
-		dsti := n.Dsts[i]
-		dstiv := dsti.Val
-		if _, ok := dstiv.(nodeWrap); ok {
-			dstiv = dstiv.(nodeWrap).datum // remove wrapper for tracing
-		}
 		if i != 0 {
 			newFmt += ","
 		}
-		if valOnly {
-			newFmt += fmt.Sprintf("%s=", dsti.Name)
-			if !dsti.Flow {
-				newFmt += "_"
-			} else {
-				if dstiv != nil {
-					s := String(dstiv)
-					if v, ok := dstiv.(error); ok && v.Error() == "EOF" {
-						newFmt += "EOF"
-					} else if !IsSlice(dstiv) {
-						newFmt += fmt.Sprintf("%s", s)
-					} else {
-						newFmt += s
-					}
-
-				} else {
-					newFmt += "<nil>"
-				}
-			}
-
+		dsti := n.Dsts[i]
+		if TracePorts && n.dstNames != nil {
+			newFmt += "." + n.dstNames[i] + "("
+		}
+		if dsti == nil {
+			newFmt += "*"
 		} else {
-			newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
+			dstiv := dsti.Val
+			if _, ok := dstiv.(nodeWrap); ok {
+				dstiv = dstiv.(nodeWrap).datum // remove wrapper for tracing
+			}
+			if valOnly {
+				newFmt += fmt.Sprintf("%s=", dsti.Name)
+				if !dsti.Flow {
+					newFmt += "_"
+				} else {
+					if dstiv != nil {
+						s := String(dstiv)
+						if v, ok := dstiv.(error); ok && v.Error() == "EOF" {
+							newFmt += "EOF"
+						} else if !IsSlice(dstiv) {
+							newFmt += fmt.Sprintf("%s", s)
+						} else {
+							newFmt += s
+						}
+
+					} else {
+						newFmt += "<nil>"
+					}
+				}
+
+			} else {
+				newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
+			}
+		}
+		if TracePorts && n.dstNames != nil {
+			newFmt += ")"
 		}
 	}
 	if !valOnly {
@@ -437,6 +464,9 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if TraceLevel >= VVV {
 		n.traceValRdy(false)
 	}
+	if len(n.cases) == 0 {
+		return false
+	}
 	i, recv, recvOK := reflect.Select(n.cases)
 	if !recvOK {
 		n.LogError("receive from select not ok for case %d", i)
@@ -457,6 +487,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 // DefaultRunFunc is the default run func.
 func (n *Node) DefaultRunFunc() error {
 	var err error = nil
+
 	for {
 		for n.RdyAll() {
 			if TraceLevel >= VVV {
@@ -501,6 +532,9 @@ func buildEdgeNodes(nodes []*Node) {
 	for i, n := range nodes {
 		for j := range n.Srcs {
 			srcj := n.Srcs[j]
+			if srcj == nil {
+				break
+			}
 			if srcj.edgeNodes == nil {
 				panic("Using an Edge that has an uninitialized edgeNodes\n")
 			}
@@ -508,6 +542,9 @@ func buildEdgeNodes(nodes []*Node) {
 		}
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
+			if dstj == nil {
+				break
+			}
 			k := 0
 			for ; k < len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].srcFlag; k++ {
 			}
@@ -523,6 +560,9 @@ func extendChannelCaps(nodes []*Node) {
 	for _, n := range nodes {
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
+			if dstj == nil {
+				break
+			}
 			h := dstj.SrcCnt()
 			if h > 1 {
 				l := len(*dstj.Data)
@@ -557,11 +597,17 @@ func extendChannelCaps(nodes []*Node) {
 func clearUpstreamAcks(nodes []*Node) {
 	for _, n := range nodes {
 		for j := range n.Srcs {
+			if n.Srcs[j] == nil {
+				break
+			}
 			if n.Srcs[j].Val != nil {
 				n.RemoveInputCase(n.Srcs[j])
 			}
 		}
 		for j := range n.Dsts {
+			if n.Dsts[j] == nil {
+				break
+			}
 			if n.Dsts[j].Val != nil {
 				n.Dsts[j].RdyCnt += len(*n.Dsts[j].Data)
 			}
@@ -719,43 +765,51 @@ func (n *Node) DstCnt() int {
 }
 
 // FindSrc returns incoming edge by name
-func (n *Node) FindSrc(name string) *Edge {
-	v := n.srcByName[name]
-	if v != nil {
-		return v
+func (n *Node) FindSrc(name string) (*Edge, bool) {
+	if n.srcByName == nil {
+		return nil, false
 	}
-	for i := range n.srcNames {
-		if name == n.srcNames[i] {
-			return n.Srcs[i]
-		}
-	}
-	return nil
-
+	e, ok := n.srcByName[name]
+	return e, ok
 }
 
 // FindDst returns incoming edge by name
-func (n *Node) FindDst(name string) *Edge {
-	v := n.dstByName[name]
-	if v != nil {
-		return v
+func (n *Node) FindDst(name string) (*Edge, bool) {
+	if n.dstByName == nil {
+		return nil, false
 	}
-	for i := range n.dstNames {
-		if name == n.dstNames[i] {
-			return n.Dsts[i]
-		}
-	}
-	return nil
-
+	e, ok := n.dstByName[name]
+	return e, ok
 }
 
 // SetSrcNames names the incoming edges
 func (n *Node) SetSrcNames(name ...string) {
 	n.srcNames = name
+	l := len(n.Srcs)
+	if n.srcByName == nil {
+		n.srcByName = make(map[string]*Edge)
+	}
+	for i, v := range name {
+		if i >= l {
+			n.Srcs = append(n.Srcs, nil)
+		}
+		n.srcByName[v] = n.Srcs[i]
+	}
 }
 
 // SetDstNames names the outgoing edges
 func (n *Node) SetDstNames(name ...string) {
 	n.dstNames = name
+	l := len(n.Dsts)
+	if n.dstByName == nil {
+		n.dstByName = make(map[string]*Edge)
+	}
+	for i, v := range name {
+		if i >= l {
+			n.Dsts = append(n.Dsts, nil)
+		}
+		n.dstByName[v] = n.Dsts[i]
+	}
 }
 
 // SrcNames returns the names of the incoming edges
@@ -766,4 +820,14 @@ func (n *Node) SrcNames() []string {
 // DstNames returns the names of the outgoing edges
 func (n *Node) DstNames() []string {
 	return n.dstNames
+}
+
+// SrcByName returns the incoming edge by name
+func (n *Node) SrcByName(name string) *Edge {
+	return n.srcByName[name]
+}
+
+// DstByName returns the outgoing edge by name
+func (n *Node) DstByName(name string) *Edge {
+	return n.dstByName[name]
 }

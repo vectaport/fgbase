@@ -80,6 +80,9 @@ var TraceSeconds = false
 // Trace types in full detail, including common types.
 var TraceTypes = false
 
+// Trace ports by name using dot notation
+var TracePorts = false
+
 // Trace Node pointer.
 var TracePointer = false
 
@@ -127,6 +130,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var chanszDef interface{} = 1
 	var trsecDef interface{} = false
 	var trtypDef interface{} = false
+	var trportDef interface{} = false
 	var dotDef interface{} = false
 	var gmlDef interface{} = false
 
@@ -149,6 +153,9 @@ func ConfigByFlag(defaults map[string]interface{}) {
 		if defaults["trtyp"] != nil {
 			trtypDef = defaults["trtyp"]
 		}
+		if defaults["trport"] != nil {
+			trportDef = defaults["trport"]
+		}
 		if defaults["dot"] != nil {
 			dotDef = defaults["dot"]
 		}
@@ -163,6 +170,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
 	trtypPtr := flag.Bool("trtyp", trtypDef.(bool), "trace types")
+	trportPtr := flag.Bool("trport", trportDef.(bool), "trace ports")
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
@@ -174,6 +182,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	ChannelSize = *chanszPtr
 	TraceSeconds = *trsecPtr
 	TraceTypes = *trtypPtr
+	TracePorts = *trportPtr
 	DotOutput = *dotPtr
 	GmlOutput = *gmlPtr
 }
