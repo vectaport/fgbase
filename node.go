@@ -27,10 +27,10 @@ type Node struct {
 	dataBackup    []reflect.Value      // backup data channels for inputs
 	flag          uintptr              // flags for package internal use
 
-	srcNames  []string         // source names
-	dstNames  []string         // destination names
-	srcByName map[string]*Edge // map of upstream Edge's by name
-	dstByName map[string]*Edge // map of downstream Edge's by name
+	srcNames       []string       // source names
+	dstNames       []string       // destination names
+	srcIndexByName map[string]int // map of index of source Edge's by name
+	dstIndexByName map[string]int // map of index of destination Edge's by name
 }
 
 type edgeDir struct {
@@ -424,11 +424,17 @@ func (n *Node) Fire() error {
 	if n.FireFunc != nil {
 		err = n.FireFunc(n)
 	} else {
+		/* Generic PASS */
+		var v interface{}
 		for i := range n.Srcs {
-			n.Srcs[i].Flow = true
+			v = n.Srcs[i].SrcGet()
+			if len(n.Dsts) > i {
+				n.Dsts[i].DstPut(v)
+			}
 		}
-		for i := range n.Dsts {
-			n.Dsts[i].Flow = true
+		for i := len(n.Srcs); i < len(n.Dsts); i++ {
+			n.Dsts[i].DstPut(v)
+			
 		}
 	}
 	if TraceLevel > Q {
@@ -716,6 +722,9 @@ func OutputDot(nodes []*Node) {
 
 	for _, iv := range nodes {
 		for _, jv := range iv.Dsts {
+			if jv == nil {
+				break
+			}
 			for _, kv := range *jv.edgeNodes {
 				if !kv.srcFlag {
 					fmt.Printf("%s_%d", iv.Name, iv.ID)
@@ -766,34 +775,46 @@ func (n *Node) DstCnt() int {
 
 // FindSrc returns incoming edge by name
 func (n *Node) FindSrc(name string) (*Edge, bool) {
-	if n.srcByName == nil {
-		return nil, false
-	}
-	e, ok := n.srcByName[name]
-	return e, ok
+	i, ok := n.FindSrcIndex(name)
+	return n.Srcs[i], ok
 }
 
-// FindDst returns incoming edge by name
-func (n *Node) FindDst(name string) (*Edge, bool) {
-	if n.dstByName == nil {
-		return nil, false
+// FindSrcIndex returns index of incoming edge by name
+func (n *Node) FindSrcIndex(name string) (int, bool) {
+	if n.srcIndexByName == nil {
+		return -1, false
 	}
-	e, ok := n.dstByName[name]
-	return e, ok
+	i, ok := n.srcIndexByName[name]
+	return i, ok
+}
+
+// FindDst returns outgoing edge by name
+func (n *Node) FindDst(name string) (*Edge, bool) {
+	i, ok := n.FindDstIndex(name)
+	return n.Dsts[i], ok
+}
+
+// FindDstIndex returns index of outgoing edge by name
+func (n *Node) FindDstIndex(name string) (int, bool) {
+	if n.dstIndexByName == nil {
+		return -1, false
+	}
+	i, ok := n.dstIndexByName[name]
+	return i, ok
 }
 
 // SetSrcNames names the incoming edges
 func (n *Node) SetSrcNames(name ...string) {
 	n.srcNames = name
 	l := len(n.Srcs)
-	if n.srcByName == nil {
-		n.srcByName = make(map[string]*Edge)
+	if n.srcIndexByName == nil {
+		n.srcIndexByName = make(map[string]int)
 	}
 	for i, v := range name {
 		if i >= l {
 			n.Srcs = append(n.Srcs, nil)
 		}
-		n.srcByName[v] = n.Srcs[i]
+		n.srcIndexByName[v] = i
 	}
 }
 
@@ -801,14 +822,14 @@ func (n *Node) SetSrcNames(name ...string) {
 func (n *Node) SetDstNames(name ...string) {
 	n.dstNames = name
 	l := len(n.Dsts)
-	if n.dstByName == nil {
-		n.dstByName = make(map[string]*Edge)
+	if n.dstIndexByName == nil {
+		n.dstIndexByName = make(map[string]int)
 	}
 	for i, v := range name {
 		if i >= l {
 			n.Dsts = append(n.Dsts, nil)
 		}
-		n.dstByName[v] = n.Dsts[i]
+		n.dstIndexByName[v] = i
 	}
 }
 
@@ -824,10 +845,10 @@ func (n *Node) DstNames() []string {
 
 // SrcByName returns the incoming edge by name
 func (n *Node) SrcByName(name string) *Edge {
-	return n.srcByName[name]
+	return n.Srcs[n.srcIndexByName[name]]
 }
 
 // DstByName returns the outgoing edge by name
 func (n *Node) DstByName(name string) *Edge {
-	return n.dstByName[name]
+	return n.Dsts[n.dstIndexByName[name]]
 }

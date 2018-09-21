@@ -295,8 +295,8 @@ func (e *Edge) SrcRdy(n *Node) bool {
 	return true
 }
 
-// SrcWait waits for a source Edge to be ready.
-func (e *Edge) SrcWait(n *Node) {
+// srcWait waits for a source Edge to be ready.
+func (e *Edge) srcWait(n *Node) {
 	if !e.RdyZero() {
 
 		i := n.edgeToCase[e]
@@ -403,8 +403,6 @@ func (e *Edge) SendData(n *Node) bool {
 		if e.Flow {
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
-				n.Tracef("SendData:  len((*e.Data)[i]) %d cap((*e.Data)[i]) %d\n",
-					len((*e.Data)[i]), cap((*e.Data)[i]))
 			}
 			e.RdyCnt += len(*e.Data)
 
