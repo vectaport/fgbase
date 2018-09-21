@@ -434,7 +434,7 @@ func (n *Node) Fire() error {
 		}
 		for i := len(n.Srcs); i < len(n.Dsts); i++ {
 			n.Dsts[i].DstPut(v)
-			
+
 		}
 	}
 	if TraceLevel > Q {
@@ -851,4 +851,34 @@ func (n *Node) SrcByName(name string) *Edge {
 // DstByName returns the outgoing edge by name
 func (n *Node) DstByName(name string) *Edge {
 	return n.Dsts[n.dstIndexByName[name]]
+}
+
+// SrcAppend appends an incoming edge
+func (n *Node) SrcAppend(e *Edge) {
+	n.Srcs = append(n.Srcs, e)
+}
+
+// DstAppend appends an outgoing edge
+func (n *Node) DstAppend(e *Edge) {
+	n.Dsts = append(n.Dsts, e)
+}
+
+// SrcGet gets the edge for a source port
+func (n *Node) SrcGet(i int) *Edge {
+	return n.Srcs[i]
+}
+
+// DstGet gets the edge for a destination port
+func (n *Node) DstGet(i int) *Edge {
+	return n.Dsts[i]
+}
+
+// SrcSet sets the edge for a source port
+func (n *Node) SrcSet(i int, e *Edge) {
+	n.Srcs[i] = e
+}
+
+// DstSet sets the edge for a destination port
+func (n *Node) DstSet(i int, e *Edge) {
+	n.Dsts[i] = e
 }
