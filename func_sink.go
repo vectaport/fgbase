@@ -7,7 +7,7 @@ type SinkStats struct {
 	Sum int
 }
 
-func sinkFire(n *Node) error {
+func SinkFire(n *Node) error {
 	a := n.Srcs[0]
 	v := a.SrcGet()
 
@@ -28,7 +28,7 @@ func sinkFire(n *Node) error {
 // FuncSink sinks a single value.
 func FuncSink(a Edge) Node {
 
-	node := MakeNode("sink", []*Edge{&a}, nil, nil, sinkFire)
+	node := MakeNode("sink", []*Edge{&a}, nil, nil, SinkFire)
 	node.Aux = SinkStats{0, 0}
 	return node
 }
