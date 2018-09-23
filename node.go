@@ -226,6 +226,14 @@ func (n *Node) LogError(format string, v ...interface{}) {
 	StderrLog.Printf(newFmt, v...)
 }
 
+// Panicf for quitting with formatted panic message.
+func (n *Node) Panicf(format string, v ...interface{}) {
+	newFmt := prefixTracef(n)
+	newFmt += "ERROR:  "
+	newFmt += format
+	panic(fmt.Sprintf(newFmt, v...))
+}
+
 // traceValRdySrc lists Node input values
 func (n *Node) traceValRdySrc(valOnly bool) string {
 	newFmt := prefixTracef(n)
@@ -791,6 +799,8 @@ func (n *Node) FindSrcIndex(name string) (int, bool) {
 // FindDst returns outgoing edge by name
 func (n *Node) FindDst(name string) (*Edge, bool) {
 	i, ok := n.FindDstIndex(name)
+	n.Tracef("INSIDE FINDDST i is %d\n", i)
+	n.Tracef("n.dstIndexByName %v\n", n.dstIndexByName)
 	return n.Dsts[i], ok
 }
 
@@ -863,13 +873,13 @@ func (n *Node) DstAppend(e *Edge) {
 	n.Dsts = append(n.Dsts, e)
 }
 
-// SrcGet gets the edge for a source port
-func (n *Node) SrcGet(i int) *Edge {
+// Src gets the edge for a source port
+func (n *Node) Src(i int) *Edge {
 	return n.Srcs[i]
 }
 
-// DstGet gets the edge for a destination port
-func (n *Node) DstGet(i int) *Edge {
+// Dst gets the edge for a destination port
+func (n *Node) Dst(i int) *Edge {
 	return n.Dsts[i]
 }
 

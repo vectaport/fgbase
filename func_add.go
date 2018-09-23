@@ -75,7 +75,7 @@ func addFire2(a, b interface{}) interface{} {
 }
 
 // Addition primitive
-func addFire(n *Node) error {
+func AddFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -95,6 +95,6 @@ func addFire(n *Node) error {
 // FuncAdd adds values and returns the sum (x = a + b).
 func FuncAdd(a, b, x Edge) Node {
 
-	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, addFire)
+	node := MakeNode("add", []*Edge{&a, &b}, []*Edge{&x}, nil, AddFire)
 	return node
 }
