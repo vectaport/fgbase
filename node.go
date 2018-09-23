@@ -799,8 +799,6 @@ func (n *Node) FindSrcIndex(name string) (int, bool) {
 // FindDst returns outgoing edge by name
 func (n *Node) FindDst(name string) (*Edge, bool) {
 	i, ok := n.FindDstIndex(name)
-	n.Tracef("INSIDE FINDDST i is %d\n", i)
-	n.Tracef("n.dstIndexByName %v\n", n.dstIndexByName)
 	return n.Dsts[i], ok
 }
 
