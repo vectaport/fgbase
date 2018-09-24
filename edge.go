@@ -215,11 +215,13 @@ func (e *Edge) srcReadRdy(n *Node) bool {
 
 // srcReadHandle handles a source Edge data read.
 func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
-	var wrapFlag = false
-	if n2, ok := e.Val.(nodeWrap); ok {
+	e.RdyCnt--
+
+	// unpack steered ack wrapping
+	wrapFlag := false
+	if n2, wrapflag := e.Val.(nodeWrap); wrapflag {
 		e.Ack2 = n2.ack2
 		e.Val = e.Val.(nodeWrap).datum
-		wrapFlag = true
 		if &n2.node.FireFunc == &n.FireFunc {
 			n.flag |= flagRecursed
 		} else {
@@ -227,7 +229,7 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 			n.flag = (n.flag & ^bitr)
 		}
 	}
-	e.RdyCnt--
+
 	if false {
 		n.Tracef("srcReadHandle -- %s.RdyCnt=%d (%s)\n", e.Name, e.RdyCnt,
 			func() string {
@@ -237,9 +239,11 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 				return "!s"
 			}())
 	}
+
 	if e.RdyCnt < 0 {
 		n.Tracef("%s.RdyCnt less than zero, time to panic\n", e.Name)
 	}
+
 	if TraceLevel >= VV {
 		var attrs string
 		if selectFlag {
@@ -325,6 +329,7 @@ func (e *Edge) dstReadRdy() bool {
 func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 
 	e.RdyCnt--
+
 	if false {
 		n.Tracef("dstReadHandle -- %s.RdyCnt=%d (%s)\n", e.Name, e.RdyCnt,
 			func() string {
@@ -334,8 +339,10 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 				return "!s"
 			}())
 	}
+
 	if e.RdyCnt < 0 {
 		n.Tracef("%s.RdyCnt less than zero, time to panic\n", e.Name)
+
 	}
 	if TraceLevel >= VV {
 		var selectStr string
@@ -350,6 +357,7 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 		}
 		n.Tracef("<- %s %s\n", nm, selectStr)
 	}
+
 	if e.RdyCnt < 0 {
 		panic("Edge.dstReadHandle:  Edge RdyCnt less than zero")
 	}

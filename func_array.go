@@ -2,28 +2,23 @@ package fgbase
 
 import ()
 
-type arrayStruct struct {
-	arr []interface{}
-	cur int
-}
-
-func arrayFire(n *Node) error {
+func ArrayFire(n *Node) error {
 	x := n.Dsts[0]
-	as := n.Aux.(arrayStruct)
-	if as.cur < len(as.arr) {
-		x.DstPut(as.arr[as.cur])
-	} else if as.cur == len(as.arr) {
+	arr := n.Aux.([]interface{})
+	if len(arr) > 0 {
+		x.DstPut(arr[0])
+	} else if len(arr) == 0 {
 		x.DstPut(EOF)
 		return EOF
 	}
-	n.Aux = arrayStruct{as.arr, as.cur + 1}
+	n.Aux = arr[1:]
 	return nil
 }
 
 // FuncArray streams the contents of an array then stops
 func FuncArray(x Edge, arr []interface{}) Node {
 
-	node := MakeNode("array", nil, []*Edge{&x}, nil, arrayFire)
-	node.Aux = arrayStruct{arr, 0}
+	node := MakeNode("array", nil, []*Edge{&x}, nil, ArrayFire)
+	node.Aux = arr
 	return node
 }

@@ -406,19 +406,22 @@ func (n *Node) RestoreDataChannel(e *Edge) {
 }
 
 // RdyAll tests readiness of Node to execute.
-func (n *Node) RdyAll() bool {
+func (n *Node) RdyAll() (rdy bool) {
 
 	if n.RdyFunc == nil {
 		if !n.DefaultRdyFunc() {
-			return false
+			rdy = false
+			return
 		}
 	} else {
 		if !n.RdyFunc(n) {
-			return false
+			rdy = false
+			return
 		}
 	}
 
-	return true
+	rdy = true
+	return
 }
 
 // Fire executes Node using function pointer.
@@ -784,7 +787,11 @@ func (n *Node) DstCnt() int {
 // FindSrc returns incoming edge by name
 func (n *Node) FindSrc(name string) (*Edge, bool) {
 	i, ok := n.FindSrcIndex(name)
-	return n.Srcs[i], ok
+	if !ok {
+		return nil, false
+	} else {
+		return n.Srcs[i], true
+	}
 }
 
 // FindSrcIndex returns index of incoming edge by name
@@ -799,7 +806,11 @@ func (n *Node) FindSrcIndex(name string) (int, bool) {
 // FindDst returns outgoing edge by name
 func (n *Node) FindDst(name string) (*Edge, bool) {
 	i, ok := n.FindDstIndex(name)
-	return n.Dsts[i], ok
+	if !ok {
+		return nil, false
+	} else {
+		return n.Dsts[i], true
+	}
 }
 
 // FindDstIndex returns index of outgoing edge by name
