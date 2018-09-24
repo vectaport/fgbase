@@ -71,7 +71,7 @@ func mulFire2(a, b interface{}) interface{} {
 }
 
 // Multiplication primitive
-func mulFire(n *Node) error {
+func MulFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -91,6 +91,6 @@ func mulFire(n *Node) error {
 // FuncMul multiplies values and returns the product (x = a * b).
 func FuncMul(a, b, x Edge) Node {
 
-	node := MakeNode("mul", []*Edge{&a, &b}, []*Edge{&x}, nil, mulFire)
+	node := MakeNode("mul", []*Edge{&a, &b}, []*Edge{&x}, nil, MulFire)
 	return node
 }

@@ -71,7 +71,7 @@ func divFire2(a, b interface{}) interface{} {
 }
 
 // Division primitive
-func divFire(n *Node) error {
+func DivFire(n *Node) error {
 
 	a := n.Srcs[0]
 	b := n.Srcs[1]
@@ -97,6 +97,6 @@ func divFire(n *Node) error {
 // FuncDiv divides values and returns the quotient (x = a / b).
 func FuncDiv(a, b, x Edge) Node {
 
-	node := MakeNode("div", []*Edge{&a, &b}, []*Edge{&x}, nil, divFire)
+	node := MakeNode("div", []*Edge{&a, &b}, []*Edge{&x}, nil, DivFire)
 	return node
 }

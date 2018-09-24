@@ -70,7 +70,7 @@ func subFire2(a, b interface{}) interface{} {
 	}
 }
 
-func subFire(n *Node) error {
+func SubFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -90,6 +90,6 @@ func subFire(n *Node) error {
 // FuncSub subtracts values and returns the difference (x = a - b).
 func FuncSub(a, b, x Edge) Node {
 
-	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, subFire)
+	node := MakeNode("sub", []*Edge{&a, &b}, []*Edge{&x}, nil, SubFire)
 	return node
 }

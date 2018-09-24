@@ -901,3 +901,13 @@ func (n *Node) SrcSet(i int, e *Edge) {
 func (n *Node) DstSet(i int, e *Edge) {
 	n.Dsts[i] = e
 }
+
+// SetSrcNum sets the number of source ports
+func (n *Node) SetSrcNum(num int) {
+	n.Srcs = make([]*Edge, num)
+}
+
+// SetDstNum sets the number of result ports
+func (n *Node) SetDstNum(num int) {
+	n.Dsts = make([]*Edge, num)
+}
