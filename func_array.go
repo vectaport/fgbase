@@ -9,7 +9,7 @@ func ArrayFire(n *Node) error {
 		x.DstPut(arr[0])
 	} else if len(arr) == 0 {
 		x.DstPut(EOF)
-		return EOF
+		return EOF // ??? causes write on channel to never finish ???
 	}
 	n.Aux = arr[1:]
 	return nil
