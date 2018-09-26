@@ -81,7 +81,14 @@ func AddFire(n *Node) error {
 	b := n.Srcs[1]
 	x := n.Dsts[0]
 
-	atmp, btmp, same := Promote(n, a.SrcGet(), b.SrcGet())
+	av := a.SrcGet()
+	bv := b.SrcGet()
+	if IsEOF(av) || IsEOF(bv) {
+	   x.DstPut(EOF)
+	   return EOF
+        }
+
+	atmp, btmp, same := Promote(n, av, bv)
 
 	if !same {
 		n.LogError("incompatible types for addition (%v+%v)", reflect.TypeOf(a.Val), reflect.TypeOf(b.Val))

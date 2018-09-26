@@ -65,6 +65,15 @@ func (t TraceLevelType) String() string {
 // End of flow
 var EOF = errors.New("EOF")
 
+// IsEOF returns true if interface{} is EOF error
+func IsEOF(v interface{}) (eof bool) {
+     err,ok := v.(error)
+     if ok {
+     	eof = err.Error()=="EOF"
+     }
+     return
+}
+
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
 
