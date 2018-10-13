@@ -24,7 +24,7 @@ type Edge struct {
 	Name      string              // for trace
 	Data      *[]chan interface{} // slice of data channels
 	Ack       chan struct{}       // request (or acknowledge) channel
-	edgeNodes *[]edgeNode         // list of Node's associated with this Edge.
+	edgeNodes *[]edgeNode          // list of Node's associated with this Edge.
 
 	// values unique to upstream and downstream Nodes
 	Val    interface{}   // generic empty interface
@@ -37,11 +37,13 @@ type Edge struct {
 // Return new Edge to connect one upstream Node to one or more downstream Node's.
 // Initialize optional data value to start flow.
 func makeEdge(name string, initVal interface{}) Edge {
+
+        
 	var e Edge
 
 	i := atomic.AddInt64(&EdgeID, 1)
 	if name == "" {
-		e.Name = "e" + strconv.Itoa(int(i-1))
+		e.Name = fmt.Sprintf("e%d", i-1)
 	} else {
 		e.Name = name
 	}
@@ -50,7 +52,7 @@ func makeEdge(name string, initVal interface{}) Edge {
 	var dc []chan interface{}
 	e.Data = &dc
 	e.Ack = make(chan struct{}, ChannelSize)
-	var nl []edgeNode
+	var nl []edgeNode = make([]edgeNode,0)
 	e.edgeNodes = &nl
 	return e
 }
@@ -512,7 +514,7 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 // SrcCnt is the number of Node's upstream of an Edge
 func (e *Edge) SrcCnt() int {
 
-	i := 0
+        i := 0
 	for ; i < len(*e.edgeNodes) && (*e.edgeNodes)[i].srcFlag; i++ {
 	}
 	return i
@@ -581,3 +583,10 @@ func (e *Edge) DstPut(v interface{}) {
 	e.Flow = true
 	e.Val = v
 }
+
+// Dump prints the edge details
+func (e *Edge) Dump() {
+     fmt.Printf("Edge:  %+v\n", e)
+     fmt.Printf("Edge:  and edgeNodes is nil?  %t\n", e.edgeNodes==nil)
+}
+

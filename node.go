@@ -553,7 +553,8 @@ func buildEdgeNodes(nodes []*Node) {
 				break
 			}
 			if srcj.edgeNodes == nil {
-				panic("Using an Edge that has an uninitialized edgeNodes\n")
+			        srcj.Dump()
+				n.Panicf("Using an Edge that has an uninitialized edgeNodes\n")
 			}
 			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node: nodes[i], srcFlag: false})
 		}
@@ -651,6 +652,8 @@ func RunGraph(nodes []*Node) {
 // runAll calls Run for each Node, and times out after RunTime.
 func runAll(nodes []*Node) {
 
+     
+        // builds node internals after edges attached
 	for i, _ := range nodes {
 		nodes[i].Init()
 	}
@@ -729,7 +732,7 @@ func (n *Node) RemoveInputCase(e *Edge) {
 // Output .dot graphviz format
 func OutputDot(nodes []*Node) {
 
-	fmt.Printf("digraph G {\n")
+fmt.Printf("digraph G {\n")
 
 	for _, iv := range nodes {
 		for _, jv := range iv.Dsts {

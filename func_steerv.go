@@ -2,29 +2,36 @@ package fgbase
 
 import ()
 
-func steervRdy(n *Node) bool {
+func SteervRdy(n *Node) bool {
+        if len(n.Srcs)==1 {
+	   return SteercRdy(n)
+        }
+	
 	a := n.Srcs[0]
 	b := n.Srcs[1]
-	x := n.Dsts[0]
-	y := n.Dsts[1]
 	if a.SrcRdy(n) && b.SrcRdy(n) {
 		if ZeroTest(a.Val) {
-			return x.DstRdy(n)
+			return n.Dsts[0].DstRdy(n)
 		}
-		return y.DstRdy(n)
+	        i := min(Int(a.Val),len(n.Dsts)-1)
+		return n.Dsts[i].DstRdy(n)
 	}
 	return false
 }
 
-func steervFire(n *Node) error {
+func SteervFire(n *Node) error {
+        if len(n.Srcs)==1 {
+	   return SteercFire(n)
+        }
+	
 	a := n.Srcs[0]
 	b := n.Srcs[1]
-	x := n.Dsts[0]
-	y := n.Dsts[1]
-	if ZeroTest(a.SrcGet()) {
-		x.DstPut(b.SrcGet())
+	av := a.SrcGet()
+	if ZeroTest(av) {
+		n.Dsts[0].DstPut(b.SrcGet())
 	} else {
-		y.DstPut(b.SrcGet())
+	        i := min(Int(av),len(n.Dsts)-1)
+		n.Dsts[i].DstPut(b.SrcGet())
 	}
 	return nil
 }
@@ -32,7 +39,7 @@ func steervFire(n *Node) error {
 // FuncSteerv steers the second value by the first (if a==0 { x = b } else { y = b }).
 func FuncSteerv(a, b, x, y Edge) Node {
 
-	node := MakeNode("steerv", []*Edge{&a, &b}, []*Edge{&x, &y}, steervRdy, steervFire)
+	node := MakeNode("steerv", []*Edge{&a, &b}, []*Edge{&x, &y}, SteervRdy, SteervFire)
 	return node
 
 }

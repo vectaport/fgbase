@@ -5,11 +5,12 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func kconsFire(n *fgbase.Node) {
+func kconsFire(n *fgbase.Node) error {
 
 	x := n.Dsts[0]
 	partitionConsumer := n.Aux.(sarama.PartitionConsumer)
 	x.DstPut(<-partitionConsumer.Messages())
+	return nil
 
 }
 

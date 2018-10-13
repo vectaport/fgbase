@@ -6,6 +6,11 @@ import (
 	"strconv"
 )
 
+// ZeroTester tests if an empty interface represents zero
+type ZeroTester interface {
+	ZeroTest() bool
+}
+
 // ZeroTest returns true if empty interface (interface{}) is a numeric zero.
 func ZeroTest(a interface{}) bool {
 
@@ -68,7 +73,7 @@ func ZeroTest(a interface{}) bool {
 		}
 	default:
 		{
-			return false
+			return a.(ZeroTester).ZeroTest()
 		}
 	}
 }
@@ -449,4 +454,77 @@ func IsNada(d interface{}) bool {
 // IsZero returns true if a interface{} has a golang zero value
 func IsZero(d interface{}) bool {
 	return reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(), d)
+}
+
+
+// Inter converts a value to an int
+type Inter interface {
+	Int() int
+}
+
+// Int returns an int version of a value
+func Int(a interface{}) int {
+
+	switch a.(type) {
+	case int8:
+		{
+			return a.(int)
+		}
+	case uint8:
+		{
+			return a.(int)
+		}
+	case int16:
+		{
+			return a.(int)
+		}
+	case uint16:
+		{
+			return a.(int)
+		}
+	case int32:
+		{
+			return a.(int)
+		}
+	case uint32:
+		{
+			return a.(int)
+		}
+	case int64:
+		{
+			return a.(int)
+		}
+	case uint64:
+		{
+			return a.(int)
+		}
+	case int:
+		{
+			return a.(int)
+		}
+	case uint:
+		{
+			return a.(int)
+		}
+	case float32:
+		{
+			return a.(int)
+		}
+	case float64:
+		{
+			return a.(int)
+		}
+	case complex64:
+		{
+			return a.(int)
+		}
+	case complex128:
+		{
+			return a.(int)
+		}
+	default:
+		{
+			return a.(Inter).Int()
+		}
+	}
 }

@@ -7,11 +7,12 @@ import (
 	"github.com/vectaport/fgbase"
 )
 
-func kprodFire(n *fgbase.Node) {
+func kprodFire(n *fgbase.Node) error {
 
 	a := n.Srcs[0]
 	producer := n.Aux.(sarama.AsyncProducer)
 	producer.Input() <- &sarama.ProducerMessage{Topic: "test", Key: nil, Value: sarama.StringEncoder(fmt.Sprintf("%v", a.SrcGet()))}
+	return nil
 
 }
 
