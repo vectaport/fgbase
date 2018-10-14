@@ -6,7 +6,7 @@ func mapFire(n *Node) error {
 	a := n.Srcs[0]
 	x := n.Dsts
 	i := n.Aux.(int)
-	x[i].DstPut(n.NodeWrap(a.SrcGet(), x[i].Ack))
+	x[i].DstPut(n.AckWrap(a.SrcGet(), x[i].Ack))
 	return nil
 }
 

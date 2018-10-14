@@ -292,8 +292,8 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 			newFmt += "*"
 		} else {
 			dstiv := dsti.Val
-			if _, ok := dstiv.(nodeWrap); ok {
-				dstiv = dstiv.(nodeWrap).datum // remove wrapper for tracing
+			if _, ok := dstiv.(ackWrap); ok {
+				dstiv = dstiv.(ackWrap).datum // remove wrapper for tracing
 			}
 			if valOnly {
 				newFmt += fmt.Sprintf("%s=", dsti.Name)
@@ -553,7 +553,7 @@ func buildEdgeNodes(nodes []*Node) {
 				break
 			}
 			if srcj.edgeNodes == nil {
-			        srcj.Dump()
+				srcj.Dump()
 				n.Panicf("Using an Edge that has an uninitialized edgeNodes\n")
 			}
 			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node: nodes[i], srcFlag: false})
@@ -652,8 +652,7 @@ func RunGraph(nodes []*Node) {
 // runAll calls Run for each Node, and times out after RunTime.
 func runAll(nodes []*Node) {
 
-     
-        // builds node internals after edges attached
+	// builds node internals after edges attached
 	for i, _ := range nodes {
 		nodes[i].Init()
 	}
@@ -709,10 +708,10 @@ func runAll(nodes []*Node) {
 
 }
 
-// NodeWrap bundles a Node pointer, and an ack channel with an empty interface, in order to
+// AckWrap bundles a Node pointer, and an ack channel with an empty interface, in order to
 // pass information about an upstream node downstream.  Used for acking back in a Pool.
-func (n *Node) NodeWrap(d interface{}, ack chan struct{}) interface{} {
-	return nodeWrap{n, d, ack}
+func (n *Node) AckWrap(d interface{}, ack chan struct{}) interface{} {
+	return ackWrap{n, d, ack}
 }
 
 // Recursed returns true if a Node from the same Pool is upstream of this Node.
@@ -732,7 +731,7 @@ func (n *Node) RemoveInputCase(e *Edge) {
 // Output .dot graphviz format
 func OutputDot(nodes []*Node) {
 
-fmt.Printf("digraph G {\n")
+	fmt.Printf("digraph G {\n")
 
 	for _, iv := range nodes {
 		for _, jv := range iv.Dsts {
@@ -898,11 +897,17 @@ func (n *Node) Dst(i int) *Edge {
 // SrcSet sets the edge for a source port
 func (n *Node) SrcSet(i int, e *Edge) {
 	n.Srcs[i] = e
+	(*e.dstCnt)++
 }
 
 // DstSet sets the edge for a destination port
 func (n *Node) DstSet(i int, e *Edge) {
+	if e.DstCnt() > 0 {
+		// n.Tracef("Set up new chan for %s\n", e.Name)
+		e.Ack = make(chan struct{}, ChannelSize)
+	}
 	n.Dsts[i] = e
+	(*e.srcCnt)++
 }
 
 // SetSrcNum sets the number of source ports

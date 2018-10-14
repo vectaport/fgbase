@@ -21,10 +21,11 @@ type edgeNode struct {
 type Edge struct {
 
 	// values shared by upstream and downstream Nodes
-	Name      string              // for trace
-	Data      *[]chan interface{} // slice of data channels
-	Ack       chan struct{}       // request (or acknowledge) channel
-	edgeNodes *[]edgeNode          // list of Node's associated with this Edge.
+	Name           string              // for trace
+	Data           *[]chan interface{} // slice of data channels
+	Ack            chan struct{}       // request (or acknowledge) channel
+	edgeNodes      *[]edgeNode         // list of Node's associated with this Edge.
+	srcCnt, dstCnt *int                // count of upstream/downstream nodes
 
 	// values unique to upstream and downstream Nodes
 	Val    interface{}   // generic empty interface
@@ -38,7 +39,6 @@ type Edge struct {
 // Initialize optional data value to start flow.
 func makeEdge(name string, initVal interface{}) Edge {
 
-        
 	var e Edge
 
 	i := atomic.AddInt64(&EdgeID, 1)
@@ -52,8 +52,12 @@ func makeEdge(name string, initVal interface{}) Edge {
 	var dc []chan interface{}
 	e.Data = &dc
 	e.Ack = make(chan struct{}, ChannelSize)
-	var nl []edgeNode = make([]edgeNode,0)
+	var nl []edgeNode = make([]edgeNode, 0)
 	e.edgeNodes = &nl
+	srcCount := 0
+	e.srcCnt = &srcCount
+	dstCount := 0
+	e.dstCnt = &dstCount
 	return e
 }
 
@@ -221,9 +225,9 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 
 	// unpack steered ack wrapping
 	wrapFlag := false
-	if n2, wrapflag := e.Val.(nodeWrap); wrapflag {
+	if n2, wrapflag := e.Val.(ackWrap); wrapflag {
 		e.Ack2 = n2.ack2
-		e.Val = e.Val.(nodeWrap).datum
+		e.Val = e.Val.(ackWrap).datum
 		if &n2.node.FireFunc == &n.FireFunc {
 			n.flag |= flagRecursed
 		} else {
@@ -411,6 +415,12 @@ func (e *Edge) SendData(n *Node) bool {
 	sendOK := false
 	if e.Data != nil {
 		if e.Flow {
+
+			// more than one source on this edge requires ack steering
+			if e.SrcCnt() > 1 {
+				e.Val = n.AckWrap(e.Val, e.Ack)
+			}
+
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
 			}
@@ -425,9 +435,9 @@ func (e *Edge) SendData(n *Node) bool {
 				var attrs string
 
 				// remove from wrapper if in one
-				if _, ok := ev.(nodeWrap); ok {
-					attrs += fmt.Sprintf(" // Ack2=%p", ev.(nodeWrap).ack2)
-					ev = ev.(nodeWrap).datum
+				if _, ok := ev.(ackWrap); ok {
+					attrs += fmt.Sprintf(" // Ack2=%p", ev.(ackWrap).ack2)
+					ev = ev.(ackWrap).datum
 				}
 
 				if false {
@@ -514,15 +524,19 @@ func (e *Edge) PoolEdge(src *Edge) *Edge {
 // SrcCnt is the number of Node's upstream of an Edge
 func (e *Edge) SrcCnt() int {
 
-        i := 0
-	for ; i < len(*e.edgeNodes) && (*e.edgeNodes)[i].srcFlag; i++ {
-	}
-	return i
+	return *e.srcCnt
+	/*
+		i := 0
+		for ; i < len(*e.edgeNodes) && (*e.edgeNodes)[i].srcFlag; i++ {
+		}
+		return i
+	*/
 }
 
 // DstCnt is the number of Node's downstream of an Edge
 func (e *Edge) DstCnt() int {
-	return len(*e.edgeNodes) - e.SrcCnt()
+	return *e.dstCnt
+	// return len(*e.edgeNodes) - e.SrcCnt()
 }
 
 // DstOrder returns the order of a Node in an Edge's destinations
@@ -586,7 +600,6 @@ func (e *Edge) DstPut(v interface{}) {
 
 // Dump prints the edge details
 func (e *Edge) Dump() {
-     fmt.Printf("Edge:  %+v\n", e)
-     fmt.Printf("Edge:  and edgeNodes is nil?  %t\n", e.edgeNodes==nil)
+	fmt.Printf("Edge:  %+v\n", e)
+	fmt.Printf("Edge:  and edgeNodes is nil?  %t\n", e.edgeNodes == nil)
 }
-

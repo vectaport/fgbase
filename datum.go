@@ -143,7 +143,7 @@ func String(d interface{}) string {
 		}
 		return s
 	}
-	if dd, ok := d.(nodeWrap); ok {
+	if dd, ok := d.(ackWrap); ok {
 		return String(dd.datum)
 	}
 	if IsStruct(d) {
@@ -455,7 +455,6 @@ func IsNada(d interface{}) bool {
 func IsZero(d interface{}) bool {
 	return reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(), d)
 }
-
 
 // Inter converts a value to an int
 type Inter interface {

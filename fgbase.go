@@ -67,11 +67,11 @@ var EOF = errors.New("EOF")
 
 // IsEOF returns true if interface{} is EOF error
 func IsEOF(v interface{}) (eof bool) {
-     err,ok := v.(error)
-     if ok {
-     	eof = err.Error()=="EOF"
-     }
-     return
+	err, ok := v.(error)
+	if ok {
+		eof = err.Error() == "EOF"
+	}
+	return
 }
 
 // Enable tracing, writes to StdoutLog if TraceLevel>Q.
@@ -116,8 +116,8 @@ var globalFireCnt int64
 // Buffer size for every channel.
 var ChannelSize = 1
 
-// node channel wrapper
-type nodeWrap struct {
+// wrapper adds channel to steer ack
+type ackWrap struct {
 	node  *Node
 	datum interface{}
 	ack2  chan struct{}

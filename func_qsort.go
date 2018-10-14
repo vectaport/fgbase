@@ -74,7 +74,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 
 		if l <= ChannelSize || !p.Alloc(n, 2) {
 			sort.Sort(d)
-			x.DstPut(n.NodeWrap(d, x.Ack))
+			x.DstPut(n.AckWrap(d, x.Ack))
 			x.SendData(n)
 			return nil
 		}
@@ -87,7 +87,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 		var lo, hi interface{}
 		if mlo > 1 {
 			n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
-			lo = n.NodeWrap(d.SubSlice(0, mlo), x.Ack)
+			lo = n.AckWrap(d.SubSlice(0, mlo), x.Ack)
 			xBack.DstPut(lo)
 			xBack.SendData(n)
 			x.RdyCnt++
@@ -96,7 +96,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 		}
 		if l-mhi > 1 {
 			n.Tracef("Original(%p) recurse right [%d:%d], id=%d, depth will be %d\n", d.Original(), mhi, l, d.ID(), d.Depth()+1)
-			hi = n.NodeWrap(d.SubSlice(mhi, l), x.Ack)
+			hi = n.AckWrap(d.SubSlice(mhi, l), x.Ack)
 			xBack.DstPut(hi)
 			xBack.SendData(n)
 			x.RdyCnt++

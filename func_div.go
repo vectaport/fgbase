@@ -80,9 +80,9 @@ func DivFire(n *Node) error {
 	av := a.SrcGet()
 	bv := b.SrcGet()
 	if IsEOF(av) || IsEOF(bv) {
-	   x.DstPut(EOF)
-	   return EOF
-        }
+		x.DstPut(EOF)
+		return EOF
+	}
 
 	aTmp, bTmp, same := Promote(n, av, bv)
 
