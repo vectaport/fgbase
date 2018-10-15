@@ -2,9 +2,22 @@ package fgbase
 
 import ()
 
+// Sinker consumes wavefronts of values one at a time forever
+type Sinker interface {
+	Sink(source []interface{})
+}
+
 type SinkStats struct {
 	Cnt int
 	Sum int
+}
+
+func (s *SinkStats) Sink(v []interface{}) {
+	for i := range v {
+		s.Cnt++
+		s.Sum += Int(v[i])
+	}
+
 }
 
 func SinkFire(n *Node) error {
@@ -16,11 +29,8 @@ func SinkFire(n *Node) error {
 		return v
 	}
 
-	s := n.Aux.(SinkStats)
-	if v, ok := v.(int); ok {
-		n.Aux = SinkStats{s.Cnt + 1, s.Sum + v}
-	} else {
-		n.Aux = SinkStats{s.Cnt + 1, 0}
+	if s, ok := n.Aux.(Sinker); ok {
+		s.Sink([]interface{}{v})
 	}
 	return nil
 }
@@ -29,6 +39,6 @@ func SinkFire(n *Node) error {
 func FuncSink(a Edge) Node {
 
 	node := MakeNode("sink", []*Edge{&a}, nil, nil, SinkFire)
-	node.Aux = SinkStats{0, 0}
+	node.Aux = &SinkStats{0, 0}
 	return node
 }
