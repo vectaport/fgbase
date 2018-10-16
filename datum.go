@@ -14,68 +14,44 @@ type ZeroTester interface {
 // ZeroTest returns true if empty interface (interface{}) is a numeric zero.
 func ZeroTest(a interface{}) bool {
 
-	switch a.(type) {
+	switch v := a.(type) {
 	case int8:
-		{
-			return a.(int8) == 0
-		}
+		return v == 0
 	case uint8:
-		{
-			return a.(uint8) == 0
-		}
+		return v == 0
 	case int16:
-		{
-			return a.(int16) == 0
-		}
+		return v == 0
 	case uint16:
-		{
-			return a.(uint16) == 0
-		}
+		return v == 0
 	case int32:
-		{
-			return a.(int32) == 0
-		}
+		return v == 0
 	case uint32:
-		{
-			return a.(uint32) == 0
-		}
+		return v == 0
 	case int64:
-		{
-			return a.(int64) == 0
-		}
+		return v == 0
 	case uint64:
-		{
-			return a.(uint64) == 0
-		}
+		return v == 0
 	case int:
-		{
-			return a.(int) == 0
-		}
+		return v == 0
 	case uint:
-		{
-			return a.(uint) == 0
-		}
+		return v == 0
+
 	case float32:
-		{
-			return a.(float32) == 0.0
-		}
+		return v == 0.0
 	case float64:
-		{
-			return a.(float64) == 0.0
-		}
+		return v == 0.0
+
 	case complex64:
-		{
-			return a.(complex64) == 0.0+0.0i
-		}
+		return v == 0.0+0.0i
 	case complex128:
-		{
-			return a.(complex128) == 0.0+0.0i
-		}
+		return v == 0.0+0.0i
+
 	default:
-		{
-			return a.(ZeroTester).ZeroTest()
+		if v, ok := a.(ZeroTester); ok {
+			return v.ZeroTest()
 		}
 	}
+	return false
 }
 
 // EqualsTest returns true if two empty interfaces have the same numeric or string value.
@@ -466,64 +442,39 @@ func Int(a interface{}) int {
 
 	switch a.(type) {
 	case int8:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case uint8:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case int16:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case uint16:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case int32:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case uint32:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case int64:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case uint64:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case int:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case uint:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case float32:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case float64:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case complex64:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	case complex128:
-		{
-			return a.(int)
-		}
+		return a.(int)
 	default:
 		{
-			return a.(Inter).Int()
+			if v, ok := a.(Inter); ok {
+				return v.Int()
+			}
 		}
 	}
+	return -1
 }
