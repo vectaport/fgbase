@@ -902,10 +902,13 @@ func (n *Node) SrcSet(i int, e *Edge) {
 
 // DstSet sets the edge for a destination port
 func (n *Node) DstSet(i int, e *Edge) {
-	if e.DstCnt() > 0 {
-		// n.Tracef("Set up new chan for %s\n", e.Name)
+
+	// Setup new ack chan when not the first use of this Edge
+	// Used to steer acks back to where the data came from using AckWrap
+	if e.DstCnt() > 0 && e.SrcCnt() > 0 {
 		e.Ack = make(chan struct{}, ChannelSize)
 	}
+	
 	n.Dsts[i] = e
 	(*e.srcCnt)++
 }
