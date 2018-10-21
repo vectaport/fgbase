@@ -3,11 +3,18 @@ package fgbase
 import ()
 
 func RdyFire(n *Node) error {
-	a := n.Srcs[0]
-	b := n.Srcs[1]
-	x := n.Dsts[0]
-	b.Flow = true
-	x.DstPut(a.SrcGet())
+	/*
+		a := n.Srcs[0]
+		b := n.Srcs[1]
+		x := n.Dsts[0]
+		b.Flow = true
+		x.DstPut(a.SrcGet())
+		return nil
+	*/
+	n.Srcs[n.SrcCnt()-1].Flow = true
+	for i := 0; i < len(n.Srcs)-1; i++ {
+		n.Dsts[i].DstPut(n.Srcs[i].SrcGet())
+	}
 	return nil
 }
 

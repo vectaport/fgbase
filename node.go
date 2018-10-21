@@ -908,7 +908,7 @@ func (n *Node) DstSet(i int, e *Edge) {
 	if e.DstCnt() > 0 && e.SrcCnt() > 0 {
 		e.Ack = make(chan struct{}, ChannelSize)
 	}
-	
+
 	n.Dsts[i] = e
 	(*e.srcCnt)++
 }
