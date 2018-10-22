@@ -2,6 +2,7 @@ package fgbase
 
 import ()
 
+// RdyFire is fire func for FuncRdy
 func RdyFire(n *Node) error {
 	/*
 		a := n.Srcs[0]

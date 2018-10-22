@@ -2,6 +2,7 @@ package fgbase
 
 import ()
 
+// ArrayFire is fire func for FuncArray
 func ArrayFire(n *Node) error {
 	x := n.Dsts[0]
 	arr := n.Aux.([]interface{})

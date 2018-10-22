@@ -2,6 +2,7 @@ package fgbase
 
 import ()
 
+// SteercRdy is ready func for FuncSteerc
 func SteercRdy(n *Node) bool {
 	a := n.Srcs[0]
 	if a.SrcRdy(n) {
@@ -14,6 +15,7 @@ func SteercRdy(n *Node) bool {
 	return false
 }
 
+// SteercRdy is fire func for FuncSteerc
 func SteercFire(n *Node) error {
 	a := n.Srcs[0]
 	av := a.SrcGet()

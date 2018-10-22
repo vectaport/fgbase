@@ -70,7 +70,7 @@ func mulFire2(a, b interface{}) interface{} {
 	}
 }
 
-// Multiplication primitive
+// MulFire is fire func for FuncMul
 func MulFire(n *Node) error {
 
 	a := n.Srcs[0]

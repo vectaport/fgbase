@@ -54,7 +54,8 @@ func modFire2(a, b interface{}) interface{} {
 	}
 }
 
-func modFire(n *Node) error {
+// ModFire is fire primitive for FuncMod
+func ModFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]
 	x := n.Dsts[0]
@@ -73,6 +74,6 @@ func modFire(n *Node) error {
 // FuncMod is the module operator (x = a % b).
 func FuncMod(a, b, x Edge) Node {
 
-	node := MakeNode("mod", []*Edge{&a, &b}, []*Edge{&x}, nil, modFire)
+	node := MakeNode("mod", []*Edge{&a, &b}, []*Edge{&x}, nil, ModFire)
 	return node
 }

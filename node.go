@@ -426,7 +426,7 @@ func (n *Node) RdyAll() (rdy bool) {
 
 // Fire executes Node using function pointer.
 func (n *Node) Fire() error {
-	var err error = nil
+	var err error
 	n.incrFireCnt()
 	var newFmt string
 	if TraceLevel > Q {
@@ -503,7 +503,7 @@ func (n *Node) RecvOne() (recvOK bool) {
 
 // DefaultRunFunc is the default run func.
 func (n *Node) DefaultRunFunc() error {
-	var err error = nil
+	var err error
 
 	for {
 		for n.RdyAll() {
@@ -542,35 +542,6 @@ func (n *Node) Run() error {
 func MakeNodes(sz int) []Node {
 	n := make([]Node, sz)
 	return n
-}
-
-// buildEdgeNodes builds the slice of edgeNode for each Edge to allow reflection.
-func buildEdgeNodes(nodes []*Node) {
-	for i, n := range nodes {
-		for j := range n.Srcs {
-			srcj := n.Srcs[j]
-			if srcj == nil {
-				break
-			}
-			if srcj.edgeNodes == nil {
-				srcj.Dump()
-				n.Panicf("Using an Edge that has an uninitialized edgeNodes\n")
-			}
-			*srcj.edgeNodes = append(*srcj.edgeNodes, edgeNode{node: nodes[i], srcFlag: false})
-		}
-		for j := range n.Dsts {
-			dstj := n.Dsts[j]
-			if dstj == nil {
-				break
-			}
-			k := 0
-			for ; k < len(*dstj.edgeNodes) && (*dstj.edgeNodes)[k].srcFlag; k++ {
-			}
-			*dstj.edgeNodes = append(*dstj.edgeNodes, edgeNode{})
-			copy((*dstj.edgeNodes)[k+1:], (*dstj.edgeNodes)[k:])
-			(*dstj.edgeNodes)[k] = edgeNode{node: nodes[i], srcFlag: true}
-		}
-	}
 }
 
 // extendChannelCaps extends the channel capacity to support arbitrated fan-in.
@@ -653,11 +624,9 @@ func RunGraph(nodes []*Node) {
 func runAll(nodes []*Node) {
 
 	// builds node internals after edges attached
-	for i, _ := range nodes {
-		nodes[i].Init()
+	for _,v := range nodes {
+		v.Init()
 	}
-
-	buildEdgeNodes(nodes) // build reflection capability
 
 	if GmlOutput || DotOutput {
 		if GmlOutput {
@@ -728,7 +697,7 @@ func (n *Node) RemoveInputCase(e *Edge) {
 	}
 }
 
-// Output .dot graphviz format
+// OutputDot outputs .dot graphviz format
 func OutputDot(nodes []*Node) {
 
 	fmt.Printf("digraph G {\n")
@@ -751,7 +720,7 @@ func OutputDot(nodes []*Node) {
 
 }
 
-// Output .gml graph modeling language format
+// OutputGml outputs .gml graph modeling language format
 func OutputGml(nodes []*Node) {
 
 	fmt.Printf("graph\n[\n")
@@ -791,9 +760,8 @@ func (n *Node) FindSrc(name string) (*Edge, bool) {
 	i, ok := n.FindSrcIndex(name)
 	if !ok {
 		return nil, false
-	} else {
-		return n.Srcs[i], true
 	}
+	return n.Srcs[i], true
 }
 
 // FindSrcIndex returns index of incoming edge by name
@@ -810,9 +778,8 @@ func (n *Node) FindDst(name string) (*Edge, bool) {
 	i, ok := n.FindDstIndex(name)
 	if !ok {
 		return nil, false
-	} else {
-		return n.Dsts[i], true
 	}
+	return n.Dsts[i], true
 }
 
 // FindDstIndex returns index of outgoing edge by name
@@ -898,6 +865,7 @@ func (n *Node) Dst(i int) *Edge {
 func (n *Node) SrcSet(i int, e *Edge) {
 	n.Srcs[i] = e
 	(*e.dstCnt)++
+	*e.edgeNodes = append(*e.edgeNodes, edgeNode{node: n, srcFlag: false})
 }
 
 // DstSet sets the edge for a destination port
@@ -911,6 +879,11 @@ func (n *Node) DstSet(i int, e *Edge) {
 
 	n.Dsts[i] = e
 	(*e.srcCnt)++
+	k := 0
+	for ; k < len(*e.edgeNodes) && (*e.edgeNodes)[k].srcFlag; k++ {}
+	*e.edgeNodes = append(*e.edgeNodes, edgeNode{})
+	copy((*e.edgeNodes)[k+1:], (*e.edgeNodes)[k:])
+	(*e.edgeNodes)[k] = edgeNode{node: n, srcFlag: true}
 }
 
 // SetSrcNum sets the number of source ports

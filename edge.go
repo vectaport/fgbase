@@ -52,7 +52,7 @@ func makeEdge(name string, initVal interface{}) Edge {
 	var dc []chan interface{}
 	e.Data = &dc
 	e.Ack = make(chan struct{}, ChannelSize)
-	var nl []edgeNode = make([]edgeNode, 0)
+	var nl = make([]edgeNode, 0)
 	e.edgeNodes = &nl
 	srcCount := 0
 	e.srcCnt = &srcCount
@@ -208,7 +208,7 @@ func (e *Edge) DstJSON(n *Node, portString string) {
 
 }
 
-// Rdy tests if RdyCnt has returned to zero.
+// RdyZero tests if RdyCnt has returned to zero.
 func (e *Edge) RdyZero() bool {
 	return e.RdyCnt == 0
 }

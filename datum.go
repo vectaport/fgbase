@@ -174,9 +174,8 @@ func String(d interface{}) string {
 	}
 	if IsInt(d) && !TraceTypes {
 		return fmt.Sprintf("%s", s)
-	} else {
-		return fmt.Sprintf("%T(%s)", d, s)
 	}
+	return fmt.Sprintf("%T(%s)", d, s)
 }
 
 // StringSlice returns a string representation of a slice, ellipse shortened if TraceLevel<VVVV.

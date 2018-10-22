@@ -25,10 +25,9 @@ func csvoRdy(n *Node) bool {
 		if err == io.EOF {
 			os.Exit(0)
 			return false
-		} else {
-			check(err)
-			n.Aux = csvState{r, h, record}
 		}
+		check(err)
+		n.Aux = csvState{r, h, record}
 	}
 
 	record := n.Aux.(csvState).record

@@ -33,11 +33,10 @@ func csviRdy(n *Node) bool {
 		if err == io.EOF {
 			n.Aux = nil
 			return false
-		} else {
-			check(err)
-			n.Aux = csvState{r, header, record}
-			return true
 		}
+		check(err)
+		n.Aux = csvState{r, header, record}
+		return true
 	}
 	return false
 }

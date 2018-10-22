@@ -27,12 +27,12 @@ func FuncReduce(a, x Edge, reducer func(n *Node, datum, collection interface{}) 
 		return nil
 	}
 
-	var reduceRdy func(n *Node) bool = nil
+	var reduceRdy func(n *Node) bool
 	if freerun {
 		reduceRdy = reduceFreerunRdy
 	}
 
-	var reduceFire func(n *Node) error = reduceSteppedFire
+	var reduceFire = reduceSteppedFire
 	if freerun {
 		reduceFire = reduceFreerunFire
 	}

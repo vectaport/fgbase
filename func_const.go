@@ -2,6 +2,7 @@ package fgbase
 
 import ()
 
+// ConstFire is fire func for FuncConst
 func ConstFire(n *Node) error {
 	x := n.Dsts[0]
 	x.DstPut(n.Aux)

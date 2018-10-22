@@ -70,6 +70,7 @@ func subFire2(a, b interface{}) interface{} {
 	}
 }
 
+// SubFire is fire func for FuncFire
 func SubFire(n *Node) error {
 	a := n.Srcs[0]
 	b := n.Srcs[1]

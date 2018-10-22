@@ -70,7 +70,7 @@ func divFire2(a, b interface{}) interface{} {
 	}
 }
 
-// Division primitive
+// DivFire is fire func for FuncDiv
 func DivFire(n *Node) error {
 
 	a := n.Srcs[0]

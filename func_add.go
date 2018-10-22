@@ -74,7 +74,7 @@ func addFire2(a, b interface{}) interface{} {
 	}
 }
 
-// Addition primitive
+// AddFire fire func for FuncAdd
 func AddFire(n *Node) error {
 
 	a := n.Srcs[0]

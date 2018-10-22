@@ -2,6 +2,7 @@ package fgbase
 
 import ()
 
+// SteervRdy is ready func for FuncSteerv
 func SteervRdy(n *Node) bool {
 	if len(n.Srcs) == 1 {
 		return SteercRdy(n)
@@ -19,6 +20,7 @@ func SteervRdy(n *Node) bool {
 	return false
 }
 
+// SteervFire is fire func for FuncSteerv
 func SteervFire(n *Node) error {
 	if len(n.Srcs) == 1 {
 		return SteercFire(n)
