@@ -624,7 +624,7 @@ func RunGraph(nodes []*Node) {
 func runAll(nodes []*Node) {
 
 	// builds node internals after edges attached
-	for _,v := range nodes {
+	for _, v := range nodes {
 		v.Init()
 	}
 
@@ -880,7 +880,8 @@ func (n *Node) DstSet(i int, e *Edge) {
 	n.Dsts[i] = e
 	(*e.srcCnt)++
 	k := 0
-	for ; k < len(*e.edgeNodes) && (*e.edgeNodes)[k].srcFlag; k++ {}
+	for ; k < len(*e.edgeNodes) && (*e.edgeNodes)[k].srcFlag; k++ {
+	}
 	*e.edgeNodes = append(*e.edgeNodes, edgeNode{})
 	copy((*e.edgeNodes)[k+1:], (*e.edgeNodes)[k:])
 	(*e.edgeNodes)[k] = edgeNode{node: n, srcFlag: true}

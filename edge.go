@@ -603,3 +603,44 @@ func (e *Edge) Dump() {
 	fmt.Printf("Edge:  %+v\n", e)
 	fmt.Printf("Edge:  and edgeNodes is nil?  %t\n", e.edgeNodes == nil)
 }
+
+// Same returns true if two edges are really the same
+func (e *Edge) Same(e2 *Edge) bool {
+	return e.Data == e2.Data
+}
+
+// Link links this edge to another edge
+func (e *Edge) Link(e2 *Edge) {
+	for _, v := range e.allEdges() {
+		v.Data = e2.Data
+		v.Ack = e2.Ack
+		v.edgeNodes = e2.edgeNodes
+		v.srcCnt = e2.srcCnt
+		v.dstCnt = e2.dstCnt
+	}
+}
+
+// allEdges returns a slice of all the edges associated with this edge
+func (e *Edge) allEdges() []*Edge {
+	el := make([]*Edge, 0)
+	for _, v := range *e.edgeNodes {
+		n := v.node
+		if v.srcFlag {
+			// search node destinations for matching Data pointer
+			for j := 0; j < n.DstCnt(); j++ {
+				if n.Dsts[j].Data == e.Data {
+					el = append(el, n.Dsts[j])
+				}
+			}
+
+		} else {
+			// search node sources for matching Data pointer
+			for j := 0; j < n.SrcCnt(); j++ {
+				if n.Srcs[j].Data == e.Data {
+					el = append(el, n.Srcs[j])
+				}
+			}
+		}
+	}
+	return el
+}

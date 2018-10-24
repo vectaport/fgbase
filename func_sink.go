@@ -7,7 +7,6 @@ type Sinker interface {
 	Sink(source []interface{})
 }
 
-
 // SinkStats to use with Sinker interface
 type SinkStats struct {
 	Cnt int
