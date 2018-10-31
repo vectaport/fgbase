@@ -11,10 +11,16 @@ import (
 	"time"
 )
 
-// EdgeNode contains information on a Node connected to an Edge.
+// edgeNode contains information on a Node connected to an Edge.
 type edgeNode struct {
 	node    *Node
 	srcFlag bool
+}
+
+// edgeNodePlus adds the Edge as well
+type edgeNodePlus struct {
+	edgeNode
+	edge *Edge
 }
 
 // Edge of a flowgraph.
@@ -232,7 +238,7 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 			n.flag |= flagRecursed
 		} else {
 			bitr := ^flagRecursed
-			n.flag = (n.flag & ^bitr)
+			n.flag = (n.flag & bitr)
 		}
 	}
 
@@ -417,7 +423,7 @@ func (e *Edge) SendData(n *Node) bool {
 		if e.Flow {
 
 			// more than one source on this edge requires ack steering
-			if e.SrcCnt() > 1 {
+			if e.SrcCnt() > 1 && !n.IsPool() {
 				e.Val = n.AckWrap(e.Val, e.Ack)
 			}
 
@@ -609,27 +615,17 @@ func (e *Edge) Same(e2 *Edge) bool {
 	return e.Data == e2.Data
 }
 
-// Link links this edge to another edge
-func (e *Edge) Link(e2 *Edge) {
-	for _, v := range e.allEdges() {
-		v.Data = e2.Data
-		v.Ack = e2.Ack
-		v.edgeNodes = e2.edgeNodes
-		v.srcCnt = e2.srcCnt
-		v.dstCnt = e2.dstCnt
-	}
-}
-
-// allEdges returns a slice of all the edges associated with this edge
-func (e *Edge) allEdges() []*Edge {
-	el := make([]*Edge, 0)
+// allEdgesPlus returns a slice of all the edges linked with this edge
+func (e *Edge) allEdgesPlus() []*edgeNodePlus {
+	el := make([]*edgeNodePlus, 0)
 	for _, v := range *e.edgeNodes {
 		n := v.node
 		if v.srcFlag {
 			// search node destinations for matching Data pointer
 			for j := 0; j < n.DstCnt(); j++ {
 				if n.Dsts[j].Data == e.Data {
-					el = append(el, n.Dsts[j])
+					fmt.Printf("Node \"%s_%d\" has an edge %q with true srcflag\n", n.Name, n.ID, n.Dsts[j].Name)
+					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: true}, n.Dsts[j]})
 				}
 			}
 
@@ -637,10 +633,28 @@ func (e *Edge) allEdges() []*Edge {
 			// search node sources for matching Data pointer
 			for j := 0; j < n.SrcCnt(); j++ {
 				if n.Srcs[j].Data == e.Data {
-					el = append(el, n.Srcs[j])
+					fmt.Printf("Node \"%s_%d\" has an edge %q with false srcflag\n", n.Name, n.ID, n.Srcs[j].Name)
+					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: false}, n.Srcs[j]})
 				}
 			}
 		}
 	}
 	return el
+}
+
+// srcRegister registers the node with its src edge
+func (e *Edge) srcRegister(n *Node) {
+	(*e.dstCnt)++
+	*e.edgeNodes = append(*e.edgeNodes, edgeNode{node: n, srcFlag: false})
+}
+
+// dstRegister registers the node with its dst edge
+func (e *Edge) dstRegister(n *Node) {
+	(*e.srcCnt)++
+	k := 0
+	for ; k < len(*e.edgeNodes) && (*e.edgeNodes)[k].srcFlag; k++ {
+	}
+	*e.edgeNodes = append(*e.edgeNodes, edgeNode{})
+	copy((*e.edgeNodes)[k+1:], (*e.edgeNodes)[k:])
+	(*e.edgeNodes)[k] = edgeNode{node: n, srcFlag: true}
 }

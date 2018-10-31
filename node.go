@@ -80,6 +80,16 @@ func makeNode(name string, srcs, dsts []*Edge, ready NodeRdy, fire NodeFire, poo
 
 	n.Srcs = srcs
 	n.Dsts = dsts
+	for _, v := range n.Srcs {
+		if v != nil {
+			v.srcRegister(&n)
+		}
+	}
+	for _, v := range n.Dsts {
+		if v != nil {
+			v.dstRegister(&n)
+		}
+	}
 
 	// n.Init()
 
@@ -546,26 +556,29 @@ func MakeNodes(sz int) []Node {
 
 // extendChannelCaps extends the channel capacity to support arbitrated fan-in.
 func extendChannelCaps(nodes []*Node) {
+        // for all the nodes in the slice
 	for _, n := range nodes {
+	        // for all the destination edges 
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
 			if dstj == nil {
 				break
 			}
-			h := dstj.SrcCnt()
-			if h > 1 {
-				l := len(*dstj.Data)
-				for k := 0; k < l; k++ {
-					if cap((*dstj.Data)[k]) < h {
-						// StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.SrcCnt()=%d)\n", dstj.Name, len(*dstj.Data), dstj.DstCnt())
-						c := make(chan interface{}, h)
-						(*dstj.Data)[k] = c
+			
 
-						// update relevant select case and data channel upstream
-						nn := dstj.DstNode(0)
-						x := nn.edgeToCase[nn.Srcs[0]]
-						nn.cases[x] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(c)}
-						nn.dataBackup[x] = nn.cases[x].Chan
+			// if that edge has more than one upstream node and isn't a pool node
+			if dstj.SrcCnt() > 1 && !n.IsPool() {
+
+				// for all the data channels on that node shared with downstream nodes
+				for k := range *dstj.Data {
+
+				        // if the capacity of that channel is less than the the number of upstream nodes
+					if cap((*dstj.Data)[k]) < dstj.SrcCnt() {
+
+					        // create and plugin a new channel with greater capacity
+						StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.SrcCnt()=%d)\n", dstj.Name, len(*dstj.Data), dstj.DstCnt())
+						c := make(chan interface{}, dstj.SrcCnt())
+						(*dstj.Data)[k] = c
 
 					}
 
@@ -599,6 +612,23 @@ func clearUpstreamAcks(nodes []*Node) {
 			}
 			if n.Dsts[j].Val != nil {
 				n.Dsts[j].RdyCnt += len(*n.Dsts[j].Data)
+				/* REMOVE WHEN NO LONGER NEEDED vvvvvvv */
+				testcnt := 0
+				cntcnt := 0
+				ecopies := n.Dsts[j].allEdgesPlus()
+				// count up all downstream copies of this edge that have Val set
+				for _, es := range ecopies {
+					if !es.srcFlag {
+						cntcnt++
+					}
+					if !es.srcFlag && es.edge.Val != nil {
+						testcnt++ // n.Dsts[j].RdyCnt++
+					}
+				}
+				if testcnt != n.Dsts[j].RdyCnt {
+					n.Panicf("For edge %q on node \"%s_%d\" testcnt %d didn't match RdyCnt %d after looking at %d of %d", n.Dsts[j].Name, n.Name, n.ID, testcnt, n.Dsts[j].RdyCnt, cntcnt, len(ecopies))
+				}
+				/* REMOVE WHEN NO LONGER NEEDED ^^^^^^^ */
 			}
 		}
 	}
@@ -623,6 +653,8 @@ func RunGraph(nodes []*Node) {
 // runAll calls Run for each Node, and times out after RunTime.
 func runAll(nodes []*Node) {
 
+	extendChannelCaps(nodes)
+	
 	// builds node internals after edges attached
 	for _, v := range nodes {
 		v.Init()
@@ -638,19 +670,18 @@ func runAll(nodes []*Node) {
 		return
 	}
 
-	extendChannelCaps(nodes)
 	clearUpstreamAcks(nodes)
 
 	if TraceLevel >= VVVV {
-		for i := range nodes {
-			nodes[i].TraceValRdy()
+		for _,n := range nodes {
+			n.TraceValRdy()
 		}
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
 	}
 	StartTime = time.Now()
 	var wg sync.WaitGroup
 	wg.Add(len(nodes))
-	for i := 0; i < len(nodes); i++ {
+	for i := range nodes {
 		node := nodes[i]
 		go func() {
 			defer wg.Done()
@@ -668,7 +699,7 @@ func runAll(nodes []*Node) {
 		wg.Wait()
 	}
 
-	if TraceLevel >= VVVV {
+	if OutputSummary || TraceLevel >= VVVV {
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
 		for i := 0; i < len(nodes); i++ {
 			nodes[i].traceValRdy(false)
@@ -701,8 +732,10 @@ func (n *Node) RemoveInputCase(e *Edge) {
 func OutputDot(nodes []*Node) {
 
 	fmt.Printf("digraph G {\n")
+	fmt.Printf("graph [ ordered=\"in\" ordered=\"out\" ]\n")
 
 	for _, iv := range nodes {
+		fmt.Printf("\n// %s\n", iv.Name)
 		for _, jv := range iv.Dsts {
 			if jv == nil {
 				break
@@ -710,7 +743,8 @@ func OutputDot(nodes []*Node) {
 			for _, kv := range *jv.edgeNodes {
 				if !kv.srcFlag {
 					fmt.Printf("%s_%d", iv.Name, iv.ID)
-					fmt.Printf(" -> %s_%d\n", kv.node.Name, kv.node.ID)
+					fmt.Printf(" -> %s_%d", kv.node.Name, kv.node.ID)
+					fmt.Printf(" [ label=%q ]\n", " "+jv.Name)
 				}
 			}
 		}
@@ -864,8 +898,7 @@ func (n *Node) Dst(i int) *Edge {
 // SrcSet sets the edge for a source port
 func (n *Node) SrcSet(i int, e *Edge) {
 	n.Srcs[i] = e
-	(*e.dstCnt)++
-	*e.edgeNodes = append(*e.edgeNodes, edgeNode{node: n, srcFlag: false})
+	e.srcRegister(n)
 }
 
 // DstSet sets the edge for a destination port
@@ -878,13 +911,7 @@ func (n *Node) DstSet(i int, e *Edge) {
 	}
 
 	n.Dsts[i] = e
-	(*e.srcCnt)++
-	k := 0
-	for ; k < len(*e.edgeNodes) && (*e.edgeNodes)[k].srcFlag; k++ {
-	}
-	*e.edgeNodes = append(*e.edgeNodes, edgeNode{})
-	copy((*e.edgeNodes)[k+1:], (*e.edgeNodes)[k:])
-	(*e.edgeNodes)[k] = edgeNode{node: n, srcFlag: true}
+	e.dstRegister(n)
 }
 
 // SetSrcNum sets the number of source ports
@@ -895,4 +922,25 @@ func (n *Node) SetSrcNum(num int) {
 // SetDstNum sets the number of result ports
 func (n *Node) SetDstNum(num int) {
 	n.Dsts = make([]*Edge, num)
+}
+
+// Link links an internal stream to an external stream
+func (n *Node) Link(in, ex *Edge) {
+
+	ecopies := in.allEdgesPlus()
+	for _, v := range ecopies {
+		// need to get at associated *Node and srcFlag
+		ve := v.edge
+		ve.Data = ex.Data
+		ve.Ack = ex.Ack
+		ve.edgeNodes = ex.edgeNodes // have to grow edgeNodes appropriately
+		ve.srcCnt = ex.srcCnt       // have to lower counts based on no longer used edges
+		ve.dstCnt = ex.dstCnt
+		if v.srcFlag {
+			ve.dstRegister(v.node)
+		} else {
+			ve.srcRegister(v.node)
+		}
+
+	}
 }

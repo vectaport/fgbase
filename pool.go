@@ -52,15 +52,15 @@ func (p *Pool) Alloc(n *Node, decr int) bool {
 }
 
 // Trace logs the current number of free Pool Node's using "*"
-// (or "X" every ten if Pool larger than 128).
+// (or "X" every ten if Pool larger than 100).
 func (p *Pool) Trace(n *Node) {
 	if TraceLevel >= V {
 		delta, c := 1, "*"
-		if p.size > 128 {
+		if p.size > 100 {
 			delta = 10
 			c = "X"
 		}
-		n.Tracef("\tpool \t%d\t%s\n", p.free, func() string {
+		n.Tracef("\tpoolfree\t%d\t%s\n", p.free, func() string {
 			var s string
 			for i := 0; i < p.free; i += delta {
 				s += c

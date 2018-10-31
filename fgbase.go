@@ -25,7 +25,8 @@ var StdoutLog = log.New(os.Stdout, "", 0)
 // Log for collecting error messages.
 var StderrLog = log.New(os.Stderr, "", 0)
 
-// Compile global flowgraph stats.
+// GlobalStats will enable global flowgraph stats for uncommon debug-purposes.
+// Otherwise it should be left false because it requires a global mutex.
 var GlobalStats = false
 
 // Trace level constants.
@@ -74,43 +75,46 @@ func IsEOF(v interface{}) (eof bool) {
 	return
 }
 
-// Enable tracing, writes to StdoutLog if TraceLevel>Q.
+// TraceLevel enables tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
 
-// Indent trace by Node id tabs.
+// TraceIndent is trace by Node id tabs.
 var TraceIndent = false
 
-// Trace number of node executions.
+// TraceFireCnt is the number of node executions.
 var TraceFireCnt = true
 
-// Trace elapsed seconds.
+// TraceSeconds that have elapsed.
 var TraceSeconds = false
 
-// Trace types in full detail, including common types.
+// TraceTyypes in full detail, including common types.
 var TraceTypes = false
 
-// Trace ports by name using dot notation
+// TracePorts by name using dot notation
 var TracePorts = false
 
 // Trace Node pointer.
 var TracePointer = false
 
-// Graphviz .dot output
+// Output Summary
+var OutputSummary = false
+
+// DotOutput is Graphviz .dot output
 var DotOutput = false
 
-// GML output
+// GMLOutput is gml output
 var GmlOutput = false
 
-// Unique Node id.
+// NodeID is a unique node id.
 var NodeID int64
 
-// Unique Edged id.
+// EgdeID is a unique edge id.
 var EdgeID int64
 
-// Duration to run this flowgraph.
+// RunTime is the duration to run this flowgraph.
 var RunTime time.Duration = -1
 
-// Global count of number of Node executions.
+// globalFireCnt is the global count of Node executions
 var globalFireCnt int64
 
 // Buffer size for every channel.
@@ -130,7 +134,8 @@ func MakeGraph(sze, szn int) ([]Edge, []Node) {
 
 // ConfigByFlag initializes a standard set of command line arguments for flowgraph utilities,
 // while at the same time parsing all other flags.  Use the defaults argument to override
-// default settings for ncore, chanz, sec, trace, trsec, trtyp, dot, and gml.  Use -help to see the standard set.
+// default settings for ncore, chanz, sec, trace, trsec, trtyp, trport, summ, dot, and gml.
+// Use -help to see the standard set.
 func ConfigByFlag(defaults map[string]interface{}) {
 
 	var ncoreDef interface{} = runtime.NumCPU() - 1
@@ -140,6 +145,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var trsecDef interface{} = false
 	var trtypDef interface{} = false
 	var trportDef interface{} = false
+	var summDef interface{} = false
 	var dotDef interface{} = false
 	var gmlDef interface{} = false
 
@@ -165,6 +171,9 @@ func ConfigByFlag(defaults map[string]interface{}) {
 		if defaults["trport"] != nil {
 			trportDef = defaults["trport"]
 		}
+		if defaults["summ"] != nil {
+			summDef = defaults["summ"]
+		}
 		if defaults["dot"] != nil {
 			dotDef = defaults["dot"]
 		}
@@ -180,6 +189,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
 	trtypPtr := flag.Bool("trtyp", trtypDef.(bool), "trace types")
 	trportPtr := flag.Bool("trport", trportDef.(bool), "trace ports")
+	summPtr := flag.Bool("summ", summDef.(bool), "output summary")
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
@@ -192,6 +202,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	TraceSeconds = *trsecPtr
 	TraceTypes = *trtypPtr
 	TracePorts = *trportPtr
+	OutputSummary = *summPtr
 	DotOutput = *dotPtr
 	GmlOutput = *gmlPtr
 }

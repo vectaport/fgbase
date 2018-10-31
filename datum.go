@@ -183,7 +183,7 @@ func StringSlice(d interface{}) string {
 	m := 8
 	l := Len(d)
 	if l < m || TraceLevel == VVVV {
-		m = l
+		m = min(l,1024)
 	}
 	dv := reflect.ValueOf(d)
 	dt := reflect.TypeOf(d)
@@ -195,7 +195,7 @@ func StringSlice(d interface{}) string {
 		}
 		s += fmt.Sprintf("%s", String(Index(d, i)))
 	}
-	if m < l && TraceLevel < VVVV {
+	if m < l {
 		s += " ..."
 	}
 	s += "}"
