@@ -31,6 +31,7 @@ type Node struct {
 	dstNames       []string       // destination names
 	srcIndexByName map[string]int // map of index of source Edge's by name
 	dstIndexByName map[string]int // map of index of destination Edge's by name
+	Owner          interface{}    // owner of this node
 }
 
 type edgeDir struct {
@@ -556,15 +557,14 @@ func MakeNodes(sz int) []Node {
 
 // extendChannelCaps extends the channel capacity to support arbitrated fan-in.
 func extendChannelCaps(nodes []*Node) {
-        // for all the nodes in the slice
+	// for all the nodes in the slice
 	for _, n := range nodes {
-	        // for all the destination edges 
+		// for all the destination edges
 		for j := range n.Dsts {
 			dstj := n.Dsts[j]
 			if dstj == nil {
 				break
 			}
-			
 
 			// if that edge has more than one upstream node and isn't a pool node
 			if dstj.SrcCnt() > 1 && !n.IsPool() {
@@ -572,10 +572,10 @@ func extendChannelCaps(nodes []*Node) {
 				// for all the data channels on that node shared with downstream nodes
 				for k := range *dstj.Data {
 
-				        // if the capacity of that channel is less than the the number of upstream nodes
+					// if the capacity of that channel is less than the the number of upstream nodes
 					if cap((*dstj.Data)[k]) < dstj.SrcCnt() {
 
-					        // create and plugin a new channel with greater capacity
+						// create and plugin a new channel with greater capacity
 						StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.SrcCnt()=%d)\n", dstj.Name, len(*dstj.Data), dstj.DstCnt())
 						c := make(chan interface{}, dstj.SrcCnt())
 						(*dstj.Data)[k] = c
@@ -654,7 +654,7 @@ func RunGraph(nodes []*Node) {
 func runAll(nodes []*Node) {
 
 	extendChannelCaps(nodes)
-	
+
 	// builds node internals after edges attached
 	for _, v := range nodes {
 		v.Init()
@@ -673,7 +673,7 @@ func runAll(nodes []*Node) {
 	clearUpstreamAcks(nodes)
 
 	if TraceLevel >= VVVV {
-		for _,n := range nodes {
+		for _, n := range nodes {
 			n.TraceValRdy()
 		}
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")

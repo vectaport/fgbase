@@ -58,7 +58,9 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 		}()
 
 		av := a.SrcGet()
-		if ackEarly { a.Flow = false }
+		if ackEarly {
+			a.Flow = false
+		}
 		d, ok := av.(RecursiveSort)
 		if !ok {
 			n.LogError("not of type RecursiveSort (%T)\n", a.Val)
