@@ -611,24 +611,14 @@ func clearUpstreamAcks(nodes []*Node) {
 				break
 			}
 			if n.Dsts[j].Val != nil {
-				n.Dsts[j].RdyCnt += len(*n.Dsts[j].Data)
-				/* REMOVE WHEN NO LONGER NEEDED vvvvvvv */
-				testcnt := 0
-				cntcnt := 0
+
 				ecopies := n.Dsts[j].allEdgesPlus()
 				// count up all downstream copies of this edge that have Val set
 				for _, es := range ecopies {
-					if !es.srcFlag {
-						cntcnt++
-					}
 					if !es.srcFlag && es.edge.Val != nil {
-						testcnt++ // n.Dsts[j].RdyCnt++
+						n.Dsts[j].RdyCnt++
 					}
 				}
-				if testcnt != n.Dsts[j].RdyCnt {
-					n.Panicf("For edge %q on node \"%s_%d\" testcnt %d didn't match RdyCnt %d after looking at %d of %d", n.Dsts[j].Name, n.Name, n.ID, testcnt, n.Dsts[j].RdyCnt, cntcnt, len(ecopies))
-				}
-				/* REMOVE WHEN NO LONGER NEEDED ^^^^^^^ */
 			}
 		}
 	}
