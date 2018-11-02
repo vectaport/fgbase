@@ -23,6 +23,16 @@ type edgeNodePlus struct {
 	edge *Edge
 }
 
+// block write state
+type block int
+
+const (
+	noBlock block = iota
+	dataBlock
+	ackBlock
+	readBlock
+)
+
 // Edge of a flowgraph.
 type Edge struct {
 
@@ -34,10 +44,11 @@ type Edge struct {
 	srcCnt, dstCnt *int                // count of upstream/downstream nodes
 
 	// values unique to upstream and downstream Nodes
-	Val    interface{}   // generic empty interface
-	RdyCnt int           // readiness of I/O
-	Flow   bool          // set true to allow one output, data or ack
-	Ack2   chan struct{} // alternate channel for ack steering
+	Val     interface{}   // generic empty interface
+	RdyCnt  int           // readiness of I/O
+	Flow    bool          // set true to allow one output, data or ack
+	Ack2    chan struct{} // alternate channel for ack steering
+	blocked block         // blocked status:  dataBlock, ackBlock, noBlock
 
 }
 
@@ -258,13 +269,18 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 
 	if TraceLevel >= VV {
 		var attrs string
-		if selectFlag {
-			attrs += " // s"
-		} else {
-			attrs = " // !s"
+		if TraceLevel >= VVVV {
+			if selectFlag {
+				attrs += "\t// select"
+			} else {
+				attrs = "\t// !select"
+			}
 		}
 		if wrapFlag && TraceLevel >= VV {
 			attrs += fmt.Sprintf(",Ack2=%p", e.Ack2)
+		}
+		if TraceLevel >= VVVV {
+			attrs += fmt.Sprintf(",Data=%v", e.Data)
 		}
 		if e.Val == nil {
 			n.Tracef("<nil> <- %s.Data%s\n", e.Name, attrs)
@@ -346,9 +362,9 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 		n.Tracef("dstReadHandle -- %s.RdyCnt=%d (%s)\n", e.Name, e.RdyCnt,
 			func() string {
 				if selectFlag {
-					return "s"
+					return "select"
 				}
-				return "!s"
+				return "!select"
 			}())
 	}
 
@@ -358,16 +374,18 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 	}
 	if TraceLevel >= VV {
 		var selectStr string
-		if selectFlag {
-			selectStr = "// s"
-		} else {
-			selectStr = "// !s"
+		if TraceLevel >= VVVV {
+			if selectFlag {
+				selectStr = "\t// select"
+			} else {
+				selectStr = "\t// !select"
+			}
 		}
 		nm := e.Name + ".Ack"
 		if true || len(*e.Data) > 1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
-		n.Tracef("<- %s %s\n", nm, selectStr)
+		n.Tracef("<- %s%s\n", nm, selectStr)
 	}
 
 	if e.RdyCnt < 0 {
@@ -422,16 +440,7 @@ func (e *Edge) SendData(n *Node) bool {
 	if e.Data != nil {
 		if e.Flow {
 
-			// more than one source on this edge requires ack steering
-			if e.SrcCnt() > 1 && !n.IsPool() {
-				e.Val = n.AckWrap(e.Val, e.Ack)
-			}
-
-			for i := range *e.Data {
-				(*e.Data)[i] <- e.Val
-			}
 			e.RdyCnt += len(*e.Data)
-
 			if TraceLevel >= VV {
 				nm := e.Name + ".Data"
 				if len(*e.Data) > 1 {
@@ -440,35 +449,41 @@ func (e *Edge) SendData(n *Node) bool {
 				ev := e.Val
 				var attrs string
 
-				// remove from wrapper if in one
-				if _, ok := ev.(ackWrap); ok {
-					attrs += fmt.Sprintf(" // Ack2=%p", ev.(ackWrap).ack2)
-					ev = ev.(ackWrap).datum
-				}
-
-				if false {
+				if TraceLevel >= VVVV {
 					// add other attributes for debug purposes
 					if attrs == "" {
-						attrs += " // "
+						attrs += "\t// "
 					} else {
 						attrs += ","
 					}
-					attrs += "len={"
-					for i := range *e.Data {
-						if i != 0 {
-							attrs += ","
+					if false {
+						attrs += "len={"
+						for i := range *e.Data {
+							if i != 0 {
+								attrs += ","
+							}
+							attrs += strconv.Itoa(len((*e.Data)[i]))
 						}
-						attrs += strconv.Itoa(len((*e.Data)[i]))
-					}
-					attrs += "},"
-					attrs += "cap={"
-					for i := range *e.Data {
-						if i != 0 {
-							attrs += ","
+						attrs += "},"
+						attrs += "cap={"
+						for i := range *e.Data {
+							if i != 0 {
+								attrs += ","
+							}
+							attrs += strconv.Itoa(cap((*e.Data)[i]))
 						}
-						attrs += strconv.Itoa(cap((*e.Data)[i]))
+						attrs += "}"
 					}
-					attrs += "}"
+					if true {
+						attrs += "chan={"
+						for i := range *e.Data {
+							if i != 0 {
+								attrs += ","
+							}
+							attrs += fmt.Sprintf("%v", (*e.Data)[i])
+						}
+						attrs += "}"
+					}
 				}
 
 				if ev == nil {
@@ -477,6 +492,17 @@ func (e *Edge) SendData(n *Node) bool {
 					n.Tracef("%s <- %s%s\n", nm, String(ev), attrs)
 				}
 			}
+
+			// more than one source on this edge requires ack steering
+			if e.SrcCnt() > 1 && !n.IsPool() {
+				e.Val = n.AckWrap(e.Val, e.Ack)
+			}
+
+			e.blocked = dataBlock
+			for i := range *e.Data {
+				(*e.Data)[i] <- e.Val
+			}
+			e.blocked = noBlock
 
 			e.Val = nil
 			sendOK = true
@@ -491,19 +517,27 @@ func (e *Edge) SendAck(n *Node) bool {
 	sendOK := false
 	if e.Ack != nil {
 		if e.Flow {
+			e.RdyCnt++
 			if e.Ack2 != nil {
-				if TraceLevel >= VV {
-					n.Tracef("%s.Ack <- // Ack2=%p\n", e.Name, e.Ack2)
+				attrs := ""
+				if TraceLevel >= VVVV {
+					attrs += fmt.Sprintf("\t// Ack2=%p", e.Ack2)
 				}
+				if TraceLevel >= VV {
+					n.Tracef("%s.Ack <-%s\n", e.Name, attrs)
+				}
+				e.blocked = ackBlock
 				e.Ack2 <- struct{}{}
+				e.blocked = noBlock
 				e.Ack2 = nil
 			} else {
 				if TraceLevel >= VV {
 					n.Tracef("%s.Ack <-\n", e.Name)
 				}
+				e.blocked = ackBlock
 				e.Ack <- struct{}{}
+				e.blocked = noBlock
 			}
-			e.RdyCnt++
 			sendOK = true
 		}
 	}
@@ -624,7 +658,7 @@ func (e *Edge) allEdgesPlus() []*edgeNodePlus {
 			// search node destinations for matching Data pointer
 			for j := 0; j < n.DstCnt(); j++ {
 				if n.Dsts[j].Data == e.Data {
-					fmt.Printf("Node \"%s_%d\" has an edge %q with true srcflag\n", n.Name, n.ID, n.Dsts[j].Name)
+					// fmt.Printf("Node \"%s_%d\" has an edge %q with true srcflag\n", n.Name, n.ID, n.Dsts[j].Name)
 					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: true}, n.Dsts[j]})
 				}
 			}
@@ -633,7 +667,7 @@ func (e *Edge) allEdgesPlus() []*edgeNodePlus {
 			// search node sources for matching Data pointer
 			for j := 0; j < n.SrcCnt(); j++ {
 				if n.Srcs[j].Data == e.Data {
-					fmt.Printf("Node \"%s_%d\" has an edge %q with false srcflag\n", n.Name, n.ID, n.Srcs[j].Name)
+					// fmt.Printf("Node \"%s_%d\" has an edge %q with false srcflag\n", n.Name, n.ID, n.Srcs[j].Name)
 					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: false}, n.Srcs[j]})
 				}
 			}

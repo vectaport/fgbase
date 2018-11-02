@@ -9,7 +9,12 @@ func SteercRdy(n *Node) bool {
 		if ZeroTest(a.Val) {
 			return n.Dsts[0].DstRdy(n)
 		}
-		i := min(Int(a.Val), len(n.Dsts)-1)
+		i := 0
+		if Int(a.Val) < 0 {
+			i = len(n.Dsts) - 1
+		} else {
+			i = min(Int(a.Val), len(n.Dsts)-1)
+		}
 		return n.Dsts[i].DstRdy(n)
 	}
 	return false
@@ -22,7 +27,12 @@ func SteercFire(n *Node) error {
 	if ZeroTest(av) {
 		n.Dsts[0].DstPut(av)
 	} else {
-		i := min(Int(av), len(n.Dsts)-1)
+		i := 0
+		if Int(a.Val) < 0 {
+			i = len(n.Dsts) - 1
+		} else {
+			i = min(Int(a.Val), len(n.Dsts)-1)
+		}
 		n.Dsts[i].DstPut(av)
 	}
 	return nil

@@ -32,6 +32,7 @@ type Node struct {
 	srcIndexByName map[string]int // map of index of source Edge's by name
 	dstIndexByName map[string]int // map of index of destination Edge's by name
 	Owner          interface{}    // owner of this node
+	selecting      bool           // true when in select
 }
 
 type edgeDir struct {
@@ -212,7 +213,7 @@ func prefixTracef(n *Node) (format string) {
 		newFmt += fmt.Sprintf(":%p", n)
 	}
 
-	newFmt += ") "
+	newFmt += ")\t"
 
 	return newFmt
 }
@@ -282,6 +283,9 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 		if TracePorts && n.srcNames != nil {
 			newFmt += ")"
 		}
+		if srci.blocked == ackBlock {
+			newFmt += "(α)"
+		}
 	}
 	newFmt += ";"
 	return newFmt
@@ -328,6 +332,9 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 
 			} else {
 				newFmt += fmt.Sprintf("%s=k%v", dsti.Name, dsti.RdyCnt)
+				if dsti.blocked == dataBlock {
+					newFmt += "(δ)"
+				}
 			}
 		}
 		if TracePorts && n.dstNames != nil {
@@ -336,6 +343,24 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 	}
 	if !valOnly {
 		newFmt += ">>"
+	}
+	if summarizing {
+		newFmt += "\t// "
+		if !n.selecting {
+			newFmt += "!select,"
+		}
+		newFmt += "cases["
+		for i := range n.cases {
+			if i != 0 {
+				newFmt += " "
+			}
+			if n.cases[i].Chan == reflect.ValueOf(nil) {
+				newFmt += fmt.Sprintf("nil")
+			} else {
+				newFmt += fmt.Sprintf("%p", n.cases[i].Chan.Interface())
+			}
+		}
+		newFmt += "]"
 	}
 	return newFmt
 }
@@ -399,20 +424,31 @@ func (n *Node) DefaultRdyFunc() bool {
 
 // restoreDataChannels restore data channels for next use
 func (n *Node) restoreDataChannels() {
-	for i := range n.dataBackup {
-		if n.Srcs[i].RdyCnt > 0 {
-			n.cases[i].Chan = n.dataBackup[i]
+	j := 0
+	for i := range n.Srcs {
+		if n.Srcs[i].Data != nil {
+			if n.Srcs[i].RdyCnt > 0 {
+				n.cases[j].Chan = n.dataBackup[j]
+			}
+			j++
 		}
 	}
-}
 
-// RestoreDataChannel restores the data channel for a given source edge
-func (n *Node) RestoreDataChannel(e *Edge) {
-	for i := range n.Srcs {
-		if n.Srcs[i] == e {
-			n.cases[i].Chan = n.dataBackup[i]
-			break
+	if false {
+		chanstr := "cases["
+		for i := range n.cases {
+			if i != 0 {
+				chanstr += " "
+			}
+			if n.cases[i].Chan == reflect.ValueOf(nil) {
+				chanstr += fmt.Sprintf("nil")
+			} else {
+				chanstr += fmt.Sprintf("%p", n.cases[i].Chan.Interface())
+			}
 		}
+		chanstr += "]"
+
+		n.Tracef("DATA CHANNEL %p RESTORED %s\n", n.cases, chanstr)
 	}
 }
 
@@ -495,7 +531,9 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if len(n.cases) == 0 {
 		return false
 	}
+	n.selecting = true
 	i, recv, recvOK := reflect.Select(n.cases)
+	n.selecting = false
 	if !recvOK {
 		n.LogError("receive from select not ok for case %d", i)
 		return false
@@ -663,10 +701,12 @@ func runAll(nodes []*Node) {
 	clearUpstreamAcks(nodes)
 
 	if TraceLevel >= VVVV {
+		summarizing = true
 		for _, n := range nodes {
 			n.TraceValRdy()
 		}
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
+		summarizing = false
 	}
 	StartTime = time.Now()
 	var wg sync.WaitGroup
@@ -689,11 +729,16 @@ func runAll(nodes []*Node) {
 		wg.Wait()
 	}
 
-	if OutputSummary || TraceLevel >= VVVV {
+	if TraceLevel >= VVV {
+	        time.Sleep(time.Second)
+		if TraceLevel >= VVVV {
+			summarizing = true
+		}
 		StdoutLog.Printf("<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>\n")
 		for i := 0; i < len(nodes); i++ {
 			nodes[i].traceValRdy(false)
 		}
+		summarizing = false
 	}
 
 }

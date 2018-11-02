@@ -96,9 +96,6 @@ var TracePorts = false
 // Trace Node pointer.
 var TracePointer = false
 
-// Output Summary
-var OutputSummary = false
-
 // DotOutput is Graphviz .dot output
 var DotOutput = false
 
@@ -114,11 +111,14 @@ var EdgeID int64
 // RunTime is the duration to run this flowgraph.
 var RunTime time.Duration = -1
 
+// Buffer size for every channel.
+var ChannelSize = 1
+
 // globalFireCnt is the global count of Node executions
 var globalFireCnt int64
 
-// Buffer size for every channel.
-var ChannelSize = 1
+// summarizing is true when summary is being generated
+var summarizing = false
 
 // wrapper adds channel to steer ack
 type ackWrap struct {
@@ -145,7 +145,6 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var trsecDef interface{} = false
 	var trtypDef interface{} = false
 	var trportDef interface{} = false
-	var summDef interface{} = false
 	var dotDef interface{} = false
 	var gmlDef interface{} = false
 
@@ -171,9 +170,6 @@ func ConfigByFlag(defaults map[string]interface{}) {
 		if defaults["trport"] != nil {
 			trportDef = defaults["trport"]
 		}
-		if defaults["summ"] != nil {
-			summDef = defaults["summ"]
-		}
 		if defaults["dot"] != nil {
 			dotDef = defaults["dot"]
 		}
@@ -189,7 +185,6 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
 	trtypPtr := flag.Bool("trtyp", trtypDef.(bool), "trace types")
 	trportPtr := flag.Bool("trport", trportDef.(bool), "trace ports")
-	summPtr := flag.Bool("summ", summDef.(bool), "output summary")
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
@@ -202,7 +197,6 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	TraceSeconds = *trsecPtr
 	TraceTypes = *trtypPtr
 	TracePorts = *trportPtr
-	OutputSummary = *summPtr
 	DotOutput = *dotPtr
 	GmlOutput = *gmlPtr
 }
