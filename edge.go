@@ -651,10 +651,10 @@ func (e *Edge) Same(e2 *Edge) bool {
 
 // SetName sets the edge name in every copy
 func (e *Edge) SetName(name string) {
-     el := e.allEdgesPlus()
-     for _, v := range el {
-     	 v.edge.Name = name
-     }
+	el := e.allEdgesPlus()
+	for _, v := range el {
+		v.edge.Name = name
+	}
 }
 
 // allEdgesPlus returns a slice of all the edges linked with this edge
@@ -665,7 +665,7 @@ func (e *Edge) allEdgesPlus() []*edgeNodePlus {
 		if v.srcFlag {
 			// search node destinations for matching Data pointer
 			for j := 0; j < n.DstCnt(); j++ {
-				if n.Dsts[j]!=nil && n.Dsts[j].Data == e.Data {
+				if n.Dsts[j] != nil && n.Dsts[j].Data == e.Data {
 					// fmt.Printf("Node \"%s_%d\" has an edge %q with true srcflag\n", n.Name, n.ID, n.Dsts[j].Name)
 					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: true}, n.Dsts[j]})
 				}

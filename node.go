@@ -730,7 +730,7 @@ func runAll(nodes []*Node) {
 	}
 
 	if TraceLevel >= VVV {
-	        time.Sleep(time.Second)
+		time.Sleep(time.Second)
 		if TraceLevel >= VVVV {
 			summarizing = true
 		}
