@@ -44,11 +44,12 @@ type Edge struct {
 	srcCnt, dstCnt *int                // count of upstream/downstream nodes
 
 	// values unique to upstream and downstream Nodes
-	Val     interface{}   // generic empty interface
-	RdyCnt  int           // readiness of I/O
-	Flow    bool          // set true to allow one output, data or ack
-	Ack2    chan struct{} // alternate channel for ack steering
-	blocked block         // blocked status:  dataBlock, ackBlock, noBlock
+	Val      interface{}   // generic empty interface
+	RdyCnt   int           // readiness of I/O
+	Flow     bool          // set true to allow one output, data or ack
+	Ack2     chan struct{} // alternate channel for ack steering
+	blocked  block         // blocked status:  dataBlock, ackBlock, noBlock
+	dotAttrs *[]string     // attributes for dot outputs
 
 }
 
@@ -75,6 +76,8 @@ func makeEdge(name string, initVal interface{}) Edge {
 	e.srcCnt = &srcCount
 	dstCount := 0
 	e.dstCnt = &dstCount
+	da := make([]string, 0)
+	e.dotAttrs = &da
 	return e
 }
 
@@ -699,4 +702,15 @@ func (e *Edge) dstRegister(n *Node) {
 	*e.edgeNodes = append(*e.edgeNodes, edgeNode{})
 	copy((*e.edgeNodes)[k+1:], (*e.edgeNodes)[k:])
 	(*e.edgeNodes)[k] = edgeNode{node: n, srcFlag: true}
+}
+
+// SetDotAttrs set the attribute string used for outputting this edge in dot format
+// If more than one they are spread across dot edges.
+func (e *Edge) SetDotAttrs(attrs []string) {
+	*e.dotAttrs = attrs
+}
+
+// DotAttrs returns the attribute strings used for outputting this edge in dot format
+func (e *Edge) DotAttrs() []string {
+	return *e.dotAttrs
 }

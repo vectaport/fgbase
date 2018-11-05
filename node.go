@@ -20,6 +20,7 @@ type Node struct {
 	RunFunc  NodeRun     // func to repeatedly run Node
 	Aux      interface{} // auxiliary empty interface to hold state
 	RdyState int         // state of latest readiness
+	Owner    interface{} // owner of this node
 
 	cases         []reflect.SelectCase // select cases to read from Edge's
 	caseToEdgeDir map[int]edgeDir      // map from index of selected case to associated Edge
@@ -31,8 +32,8 @@ type Node struct {
 	dstNames       []string       // destination names
 	srcIndexByName map[string]int // map of index of source Edge's by name
 	dstIndexByName map[string]int // map of index of destination Edge's by name
-	Owner          interface{}    // owner of this node
 	selecting      bool           // true when in select
+	dotAttr        string         // attributes for dot outputs
 }
 
 type edgeDir struct {
@@ -763,6 +764,16 @@ func (n *Node) RemoveInputCase(e *Edge) {
 	}
 }
 
+// SetDotAttr set the attribute string used for outputting this node in dot format
+func (n *Node) SetDotAttr(attr string) {
+	n.dotAttr = attr
+}
+
+// DotAttr returns the attribute string used for outputting this node in dot format
+func (n *Node) DotAttr() string {
+	return n.dotAttr
+}
+
 // OutputDot outputs .dot graphviz format
 func OutputDot(nodes []*Node) {
 
@@ -771,16 +782,34 @@ func OutputDot(nodes []*Node) {
 
 	for _, iv := range nodes {
 		fmt.Printf("\n// %s\n", iv.Name)
+		if iv.DotAttr() != "" {
+			fmt.Printf("%s_%d [ %s ]\n", iv.Name, iv.ID, iv.DotAttr())
+		}
+		k := 0
 		for _, jv := range iv.Dsts {
 			if jv == nil {
 				break
 			}
 			for _, kv := range *jv.edgeNodes {
-				if !kv.srcFlag {
-					fmt.Printf("%s_%d", iv.Name, iv.ID)
-					fmt.Printf(" -> %s_%d", kv.node.Name, kv.node.ID)
-					fmt.Printf(" [ label=%q ]\n", " "+jv.Name)
+				if kv.srcFlag {
+					continue
 				}
+				attr := ""
+				l := len(*jv.dotAttrs)
+				if l == 1 {
+					attr = (*jv.dotAttrs)[0]
+				} else if l > 1 {
+					attr = (*jv.dotAttrs)[k%l]
+				}
+				fmt.Printf("%s_%d", iv.Name, iv.ID)
+				fmt.Printf(" -> %s_%d", kv.node.Name, kv.node.ID)
+				fmt.Printf(" [ label=%q", " "+jv.Name)
+				if attr != "" {
+					fmt.Printf(" %s", attr)
+				}
+				fmt.Printf(" ]\n")
+				fmt.Printf("// K IS NOW %d\n", k)
+				k++
 			}
 		}
 	}
