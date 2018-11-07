@@ -669,7 +669,6 @@ func (e *Edge) allEdgesPlus() []*edgeNodePlus {
 			// search node destinations for matching Data pointer
 			for j := 0; j < n.DstCnt(); j++ {
 				if n.Dsts[j] != nil && n.Dsts[j].Data == e.Data {
-					// fmt.Printf("Node \"%s_%d\" has an edge %q with true srcflag\n", n.Name, n.ID, n.Dsts[j].Name)
 					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: true}, n.Dsts[j]})
 				}
 			}
@@ -678,7 +677,6 @@ func (e *Edge) allEdgesPlus() []*edgeNodePlus {
 			// search node sources for matching Data pointer
 			for j := 0; j < n.SrcCnt(); j++ {
 				if n.Srcs[j] != nil && n.Srcs[j].Data == e.Data {
-					// fmt.Printf("Node \"%s_%d\" has an edge %q with false srcflag\n", n.Name, n.ID, n.Srcs[j].Name)
 					el = append(el, &edgeNodePlus{edgeNode{node: n, srcFlag: false}, n.Srcs[j]})
 				}
 			}
@@ -713,4 +711,18 @@ func (e *Edge) SetDotAttrs(attrs []string) {
 // DotAttrs returns the attribute strings used for outputting this edge in dot format
 func (e *Edge) DotAttrs() []string {
 	return *e.dotAttrs
+}
+
+// linkName returns an alternate name for this edge
+func (e *Edge) linkName() string {
+	homeName := e.Name
+	awayName := ""
+	el := e.allEdgesPlus()
+	for _, v := range el {
+		if v.edge.Name != homeName {
+			awayName = v.edge.Name
+			break
+		}
+	}
+	return awayName
 }

@@ -797,18 +797,17 @@ func OutputDot(nodes []*Node) {
 				attr := ""
 				l := len(*jv.dotAttrs)
 				if l == 1 {
-					attr = (*jv.dotAttrs)[0]
+					attr = " " + (*jv.dotAttrs)[0]
 				} else if l > 1 {
-					attr = (*jv.dotAttrs)[k%l]
+					attr = " " + (*jv.dotAttrs)[k%l]
 				}
 				fmt.Printf("%s_%d", iv.Name, iv.ID)
 				fmt.Printf(" -> %s_%d", kv.node.Name, kv.node.ID)
-				fmt.Printf(" [ label=%q", " "+jv.Name)
-				if attr != "" {
-					fmt.Printf(" %s", attr)
+				onm := jv.linkName()
+				if onm != "" {
+					onm = "/" + onm
 				}
-				fmt.Printf(" ]\n")
-				fmt.Printf("// K IS NOW %d\n", k)
+				fmt.Printf(" [ label=\"%s%s\"%s ]\n", " "+jv.Name, onm, attr)
 				k++
 			}
 		}
@@ -833,7 +832,8 @@ func OutputGml(nodes []*Node) {
 				if !kv.srcFlag {
 					fmt.Printf("  edge\n  [\n   source %s_%d\n", iv.Name, iv.ID)
 					fmt.Printf("   target %s_%d\n", kv.node.Name, kv.node.ID)
-					fmt.Printf("   label \"%s\"\n  ]\n", jv.Name)
+					fmt.Printf("   label \"%s", jv.Name)
+					fmt.Printf("\"\n  ]\n")
 				}
 			}
 		}
@@ -991,20 +991,18 @@ func (n *Node) SetDstNum(num int) {
 // Link links an internal stream to an external stream
 func (n *Node) Link(in, ex *Edge) {
 
-	ecopies := in.allEdgesPlus()
-	for _, v := range ecopies {
+	for _, v := range in.allEdgesPlus() {
 		// need to get at associated *Node and srcFlag
-		ve := v.edge
-		ve.Data = ex.Data
-		ve.Ack = ex.Ack
-		ve.edgeNodes = ex.edgeNodes // have to grow edgeNodes appropriately
-		ve.srcCnt = ex.srcCnt       // have to lower counts based on no longer used edges
-		ve.dstCnt = ex.dstCnt
+		vi := v.edge
+		vi.Data = ex.Data
+		vi.Ack = ex.Ack
+		vi.edgeNodes = ex.edgeNodes
+		vi.srcCnt = ex.srcCnt
+		vi.dstCnt = ex.dstCnt
 		if v.srcFlag {
-			ve.dstRegister(v.node)
+			vi.dstRegister(v.node)
 		} else {
-			ve.srcRegister(v.node)
+			vi.srcRegister(v.node)
 		}
-
 	}
 }
