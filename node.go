@@ -32,7 +32,6 @@ type Node struct {
 	dstNames       []string       // destination names
 	srcIndexByName map[string]int // map of index of source Edge's by name
 	dstIndexByName map[string]int // map of index of destination Edge's by name
-	selecting      bool           // true when in select
 	dotAttr        string         // attributes for dot outputs
 }
 
@@ -45,6 +44,7 @@ const (
 	flagPool = uintptr(1 << iota)
 	flagRecurse
 	flagRecursed
+	flagSelecting
 )
 
 // NodeRdy is the function signature for evaluating readiness of a Node to fire.
@@ -347,7 +347,7 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 	}
 	if summarizing {
 		newFmt += "\t// "
-		if !n.selecting {
+		if n.flag&flagSelecting == flagSelecting {
 			newFmt += "!select,"
 		}
 		newFmt += "cases["
@@ -532,9 +532,9 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if len(n.cases) == 0 {
 		return false
 	}
-	n.selecting = true
+	n.flag = n.flag | flagSelecting
 	i, recv, recvOK := reflect.Select(n.cases)
-	n.selecting = false
+	n.flag = n.flag ^ flagSelecting
 	if !recvOK {
 		n.LogError("receive from select not ok for case %d", i)
 		return false
@@ -1005,4 +1005,45 @@ func (n *Node) Link(in, ex *Edge) {
 			vi.srcRegister(v.node)
 		}
 	}
+}
+
+// String returns a string representation of the node
+func (n *Node) String() string {
+	srcs := ""
+	for i := 0; i < n.SrcCnt(); i++ {
+		if n.srcNames != nil {
+			srcs += fmt.Sprintf(".%s(", n.srcNames[i])
+		}
+		if i != 0 {
+			srcs += ","
+		}
+		if n.Srcs[i] == nil {
+			srcs += "nil"
+		} else {
+
+			srcs += n.Srcs[i].Name
+		}
+		if n.srcNames != nil {
+			srcs += ")"
+		}
+	}
+	dsts := ""
+	for i := 0; i < n.DstCnt(); i++ {
+		if n.dstNames != nil {
+			dsts += fmt.Sprintf(".%s(", n.dstNames[i])
+		}
+		if i != 0 {
+			dsts += ","
+		}
+		if n.Dsts[i] == nil {
+			dsts += "nil"
+		} else {
+			dsts += n.Dsts[i].Name
+		}
+		if n.dstNames != nil {
+			dsts += ")"
+		}
+	}
+	s := fmt.Sprintf("%s(%s)(%s)", n.Name, srcs, dsts)
+	return s
 }

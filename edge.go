@@ -23,7 +23,7 @@ type edgeNodePlus struct {
 	edge *Edge
 }
 
-// block write state
+// block state
 type block int
 
 const (
@@ -48,7 +48,7 @@ type Edge struct {
 	RdyCnt   int           // readiness of I/O
 	Flow     bool          // set true to allow one output, data or ack
 	Ack2     chan struct{} // alternate channel for ack steering
-	blocked  block         // blocked status:  dataBlock, ackBlock, noBlock
+	blocked  block         // blocked status:  dataBlock, ackBlock, readBLock, noBlock
 	dotAttrs *[]string     // attributes for dot outputs
 
 }
