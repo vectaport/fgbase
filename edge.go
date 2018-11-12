@@ -594,7 +594,7 @@ func (e *Edge) DstOrder(n *Node) int {
 
 // SrcNode returns the ith upstream Node of an Edge
 func (e *Edge) SrcNode(i int) *Node {
-	if i > e.SrcCnt() || i < 0 {
+	if i >= e.SrcCnt() || i < 0 {
 		return nil
 	}
 	return (*e.edgeNodes)[i].node
@@ -602,11 +602,11 @@ func (e *Edge) SrcNode(i int) *Node {
 
 // DstNode returns the ith downstream Node of an Edge
 func (e *Edge) DstNode(i int) *Node {
-	if i > e.DstCnt() || i < 0 {
+	if i >= e.DstCnt() || i < 0 {
 		return nil
 	}
-	h := e.SrcCnt()
-	return (*e.edgeNodes)[i+h].node
+	i += e.SrcCnt()
+	return (*e.edgeNodes)[i].node
 }
 
 // CloseData closes all outgoing data channels.
