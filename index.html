@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Flowgraph by vectaport</title>
+    <title>Fgbase by vectaport</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
@@ -15,56 +15,56 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>Flowgraph</h1>
+        <h1>Fgbase</h1>
         <p>Ready-send coordination layer on top of goroutines.</p>
 
-        <p class="view"><a href="https://github.com/vectaport/flowgraph">View the Project on GitHub <small>vectaport/flowgraph</small></a></p>
+        <p class="view"><a href="https://github.com/vectaport/fgbase">View the Project on GitHub <small>vectaport/fgbase</small></a></p>
 
 
         <ul>
-          <li><a href="https://github.com/vectaport/flowgraph/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/vectaport/flowgraph/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/vectaport/flowgraph">View On <strong>GitHub</strong></a></li>
+          <li><a href="https://github.com/vectaport/fgbase/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/vectaport/fgbase/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/vectaport/fgbase">View On <strong>GitHub</strong></a></li>
         </ul>
       </header>
       <section>
         <h1>
-<a id="flowgraph" class="anchor" href="#flowgraph" aria-hidden="true"><span class="octicon octicon-link"></span></a>flowgraph</h1>
+<a id="fgbase" class="anchor" href="#fgbase" aria-hidden="true"><span class="octicon octicon-link"></span></a>fgbase</h1>
 
 <h2>
-<a id="package-of-go-flowgraph-primitives" class="anchor" href="#package-of-go-flowgraph-primitives" aria-hidden="true"><span class="octicon octicon-link"></span></a>Package of Go flowgraph primitives</h2>
+<a id="package-of-go-fgbase-primitives" class="anchor" href="#package-of-go-fgbase-primitives" aria-hidden="true"><span class="octicon octicon-link"></span></a>Package of Go fgbase primitives</h2>
 
 <ul>
-<li><a href="https://godoc.org/github.com/vectaport/flowgraph"><img src="https://godoc.org/github.com/vectaport/flowgraph?status.svg" alt="GoDoc"></a></li>
-<li><a href="https://github.com/vectaport/flowgraph/wiki">Wiki</a></li>
+<li><a href="https://godoc.org/github.com/vectaport/fgbase"><img src="https://godoc.org/github.com/vectaport/fgbase?status.svg" alt="GoDoc"></a></li>
+<li><a href="https://github.com/vectaport/fgbase/wiki">Wiki</a></li>
 </ul>
 
 <p>Go offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming distributed systems across many cores and many Unix boxes.  But so much is possible with goroutines it requires the application or invention of extra concepts to construct scaleable and reliable systems that won't deadlock or be throttled by bottlenecks.</p>
 
-<p>Flowgraphs are a distinct model of concurrent programming that augment channels with ready-send handshake mechanisms to ensure that no data is sent before the receiver is ready.  <a href="http://en.wikipedia.org/wiki/Message_Passing_Interface">MPI</a> (a framework for distributed supercomputer computation) directly supports flowgraph computation, but doesn't address flow-based computation within a single Unix process.  Go with its goroutines (more efficient than threads according to Rob Pike) facilitates taking the MPI model down to whatever granularity the concurrent programmer wants.</p>
+<p>Fgbases are a distinct model of concurrent programming that augment channels with ready-send handshake mechanisms to ensure that no data is sent before the receiver is ready.  <a href="http://en.wikipedia.org/wiki/Message_Passing_Interface">MPI</a> (a framework for distributed supercomputer computation) directly supports fgbase computation, but doesn't address flow-based computation within a single Unix process.  Go with its goroutines (more efficient than threads according to Rob Pike) facilitates taking the MPI model down to whatever granularity the concurrent programmer wants.</p>
 
-<p>How to use goroutines, channels, and select to implement the flowgraph model is not completely obvious, and this framework is an attempt to illustrate one possible approach.  </p>
+<p>How to use goroutines, channels, and select to implement the fgbase model is not completely obvious, and this framework is an attempt to illustrate one possible approach.  </p>
 
-<p>Features of github.com/vectaport/flowgraph:</p>
+<p>Features of github.com/vectaport/fgbase:</p>
 
 <ul>
-<li>flowgraph.Edge augments a channel with a ready-send acknowledge protocol
+<li>fgbase.Edge augments a channel with a ready-send acknowledge protocol
 
 <ul>
 <li>ready-send can guarantee that unbuffered writes never lead to deadlock</li>
 </ul>
 </li>
-<li>flowgraph.Node augments a goroutine with an empty interface data protocol
+<li>fgbase.Node augments a goroutine with an empty interface data protocol
 
 <ul>
 <li>an empty interface data protocol allows a small set of primitives to be reused for a wide variety of things</li>
 </ul>
 </li>
-<li>test benches at <a href="http://github.com/vectaport/flowgraph_test">github.com/vectaport/flowgraph_test</a>
+<li>test benches at <a href="http://github.com/vectaport/fgbase_test">github.com/vectaport/fgbase_test</a>
 </li>
 </ul>
 
-<p>The flowgraph package can be used to render flowgraphs drawn and simulated in <a href="http://github.com/vectaport/ipl-1.1">github.com/vectaport/ipl</a> into compilable Go code.  <em>ipl</em> is an implementation of a flowgraph language suggested by <a href="http://karlfant.net">Karl Fant</a>.</p>
+<p>The fgbase package can be used to render fgbases drawn and simulated in <a href="http://github.com/vectaport/ipl-1.1">github.com/vectaport/ipl</a> into compilable Go code.  <em>ipl</em> is an implementation of a fgbase language suggested by <a href="http://karlfant.net">Karl Fant</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/vectaport">vectaport</a></p>
