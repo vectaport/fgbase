@@ -715,7 +715,9 @@ func runAll(nodes []*Node) {
 	for i := range nodes {
 		node := nodes[i]
 		go func() {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+			}()
 			node.Run()
 		}()
 	}
@@ -1000,8 +1002,14 @@ func (n *Node) Link(in, ex *Edge) {
 		vi.srcCnt = ex.srcCnt
 		vi.dstCnt = ex.dstCnt
 		if v.srcFlag {
+			if !DotOutput {
+				(*vi.srcCnt)--
+			}
 			vi.dstRegister(v.node)
 		} else {
+			if !DotOutput {
+				(*vi.dstCnt)--
+			}
 			vi.srcRegister(v.node)
 		}
 	}

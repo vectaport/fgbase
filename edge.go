@@ -498,6 +498,9 @@ func (e *Edge) SendData(n *Node) bool {
 
 			// more than one source on this edge requires ack steering
 			if e.SrcCnt() > 1 && !n.IsPool() {
+				if false && e.DstCnt() > 1 {
+					n.Panicf("Unexpected fan-out that ends on arbirated fan-in for \"%s/%s\"\n", e.Name, e.linkName())
+				}
 				e.Val = n.AckWrap(e.Val, e.Ack)
 			}
 
