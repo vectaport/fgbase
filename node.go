@@ -798,9 +798,7 @@ func OutputDot(nodes []*Node) {
 				}
 				attr := ""
 				l := len(*jv.dotAttrs)
-				if l == 1 {
-					attr = " " + (*jv.dotAttrs)[0]
-				} else if l > 1 {
+				if l > 0 {
 					attr = " " + (*jv.dotAttrs)[k%l]
 				}
 				fmt.Printf("%s_%d", iv.Name, iv.ID)
@@ -810,7 +808,9 @@ func OutputDot(nodes []*Node) {
 					onm = "/" + onm
 				}
 				fmt.Printf(" [ label=\"%s%s\"%s ]\n", " "+jv.Name, onm, attr)
-				k++
+				if attr != "" {
+					k++
+				}
 			}
 		}
 	}
