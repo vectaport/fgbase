@@ -75,6 +75,14 @@ func IsEOF(v interface{}) (eof bool) {
 	return
 }
 
+const (
+      Old int = iota
+      New
+)
+
+// TraceStyle is Old or New
+var TraceStyle = New
+
 // TraceLevel enables tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q
 
@@ -87,7 +95,7 @@ var TraceFireCnt = true
 // TraceSeconds that have elapsed.
 var TraceSeconds = false
 
-// TraceTyypes in full detail, including common types.
+// TraceTypes in full detail, including common types.
 var TraceTypes = false
 
 // TracePorts by name using dot notation

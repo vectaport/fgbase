@@ -190,10 +190,17 @@ func prefixTracef(n *Node) (format string) {
 			newFmt += "\t"
 		}
 	}
+	if TraceStyle==New {
+	        newFmt += fmt.Sprintf("%d: ", n.Cnt)
+	}
 	newFmt += n.Name
-	newFmt += fmt.Sprintf("(%d", n.ID)
+	if TraceStyle==New {
+	        newFmt += fmt.Sprintf("_%d", n.ID)
+	} else {
+		newFmt += fmt.Sprintf("(%d", n.ID)
+	}
 
-	if TraceFireCnt {
+	if TraceStyle==Old && TraceFireCnt {
 		if n.Cnt >= 0 {
 			newFmt += fmt.Sprintf(":%d", n.Cnt)
 		} else {
@@ -201,7 +208,7 @@ func prefixTracef(n *Node) (format string) {
 		}
 	}
 
-	if TraceSeconds || TraceLevel >= VVVV {
+	if TraceStyle==Old && TraceSeconds || TraceLevel >= VVVV {
 		t := TimeSinceStart()
 		if t >= 0.0 {
 			newFmt += fmt.Sprintf(":%.4f", TimeSinceStart())
@@ -210,12 +217,13 @@ func prefixTracef(n *Node) (format string) {
 		}
 	}
 
-	if TracePointer {
+	if TraceStyle==Old && TracePointer {
 		newFmt += fmt.Sprintf(":%p", n)
 	}
 
-	newFmt += ")\t"
-
+	if TraceStyle==Old {
+	        newFmt += ")\t"
+	}
 	return newFmt
 }
 
@@ -224,7 +232,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	if TraceLevel < V {
 		return
 	}
-	newFmt := prefixTracef(n)
+	newFmt := prefixTracef(n) + "\t"
 	newFmt += format
 	StdoutLog.Printf(newFmt, v...)
 }
@@ -252,6 +260,9 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 	newFmt := prefixTracef(n)
 	if !valOnly {
 		newFmt += "<<"
+	}
+        if TraceStyle==New {
+	        newFmt += "("
 	}
 	for i := range n.Srcs {
 		if i != 0 {
@@ -288,7 +299,11 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 			newFmt += "(α)"
 		}
 	}
-	newFmt += ";"
+        if TraceStyle==New {
+	        newFmt += ")"
+	} else {
+	       newFmt += ";"
+        }
 	return newFmt
 }
 
@@ -296,6 +311,9 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 func (n *Node) traceValRdyDst(valOnly bool) string {
 
 	var newFmt string
+        if TraceStyle==New {
+	        newFmt += "("
+	}
 	for i := range n.Dsts {
 		if i != 0 {
 			newFmt += ","
@@ -344,6 +362,9 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 	}
 	if !valOnly {
 		newFmt += ">>"
+	}
+	if TraceStyle==New {
+	        newFmt += ")"
 	}
 	if summarizing {
 		newFmt += "\t// "
