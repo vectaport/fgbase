@@ -170,9 +170,9 @@ func String(d interface{}) string {
 
 	}
 	if s == "" {
-		s = fmt.Sprintf("%v", d)
+		s = fmt.Sprintf("%+v", d)
 	}
-	if IsInt(d) && !TraceTypes {
+	if IsInt(d) || !TraceTypes {
 		return fmt.Sprintf("%s", s)
 	}
 	return fmt.Sprintf("%T(%s)", d, s)

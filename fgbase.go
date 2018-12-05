@@ -76,8 +76,8 @@ func IsEOF(v interface{}) (eof bool) {
 }
 
 const (
-      Old int = iota
-      New
+	Old int = iota
+	New
 )
 
 // TraceStyle is Old or New
