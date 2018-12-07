@@ -292,6 +292,7 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 		}
 	}
 	if e.RdyCnt < 0 {
+		n.Tracef("Edge %q RdyCnt less than zero\n", e.Name)
 		panic("Edge.srcReadHandle:  Edge RdyCnt less than zero")
 	}
 }
@@ -392,6 +393,7 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 	}
 
 	if e.RdyCnt < 0 {
+		n.Tracef("Edge %q RdyCnt less than zero\n", e.Name)
 		panic("Edge.dstReadHandle:  Edge RdyCnt less than zero")
 	}
 }
@@ -728,4 +730,35 @@ func (e *Edge) linkName() string {
 		}
 	}
 	return awayName
+}
+
+// DumpEdgeNodes dumps all the edgeNodes for this Edge
+func (e *Edge) DumpEdgeNodes() {
+	f := func(srcFlag bool) string {
+		if srcFlag {
+			return "src"
+		}
+		return "dst"
+	}
+
+	for _, v := range *e.edgeNodes {
+		fmt.Printf("%s:%s\n", v.node.Name, f(v.srcFlag))
+	}
+}
+
+// Disconnect a node from an edge
+func (e *Edge) Disconnect(n *Node) {
+	for i := range *e.edgeNodes {
+		if (*e.edgeNodes)[i].node == n {
+			if i == 0 {
+				*e.edgeNodes = (*e.edgeNodes)[1:]
+				break
+			}
+			if i+1 < len(*e.edgeNodes) {
+				*e.edgeNodes = append((*e.edgeNodes)[0:i], (*e.edgeNodes)[i+1:]...)
+				break
+			}
+			*e.edgeNodes = (*e.edgeNodes)[:i]
+		}
+	}
 }

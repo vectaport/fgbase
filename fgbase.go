@@ -81,7 +81,7 @@ const (
 )
 
 // TraceStyle is Old or New
-var TraceStyle = New
+var TraceStyle = Old
 
 // TraceLevel enables tracing, writes to StdoutLog if TraceLevel>Q.
 var TraceLevel = Q

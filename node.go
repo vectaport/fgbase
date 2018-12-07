@@ -191,7 +191,11 @@ func prefixTracef(n *Node) (format string) {
 		}
 	}
 	if TraceStyle == New {
-		newFmt += fmt.Sprintf("%d: ", n.Cnt)
+		if n.Cnt == -1 {
+			newFmt += "*: "
+		} else {
+			newFmt += fmt.Sprintf("%d: ", n.Cnt)
+		}
 	}
 	newFmt += n.Name
 	if TraceStyle == New {
@@ -232,7 +236,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 	if TraceLevel < V {
 		return
 	}
-	newFmt := prefixTracef(n) + "\t"
+	newFmt := prefixTracef(n) + " "
 	newFmt += format
 	StdoutLog.Printf(newFmt, v...)
 }
@@ -259,9 +263,13 @@ func (n *Node) Panicf(format string, v ...interface{}) {
 func (n *Node) traceValRdySrc(valOnly bool) string {
 	newFmt := prefixTracef(n)
 	if !valOnly {
-		newFmt += "<<"
+		if TraceStyle == Old {
+			newFmt += "<<"
+		} else {
+			newFmt += " <"
+		}
 	} else if TraceStyle == New {
-		newFmt += "("
+		newFmt += " ("
 	}
 	for i := range n.Srcs {
 		if i != 0 {
@@ -298,10 +306,12 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 			newFmt += "(α)"
 		}
 	}
-	if TraceStyle == New {
+	if TraceStyle == New && valOnly {
 		newFmt += ")"
-	} else {
+	} else if TraceStyle == Old {
 		newFmt += ";"
+	} else {
+		newFmt += "><"
 	}
 	return newFmt
 }
@@ -310,7 +320,7 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 func (n *Node) traceValRdyDst(valOnly bool) string {
 
 	var newFmt string
-	if TraceStyle == New {
+	if TraceStyle == New && valOnly {
 		newFmt += "("
 	}
 	for i := range n.Dsts {
@@ -360,9 +370,13 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 		}
 	}
 	if !valOnly {
-		newFmt += ">>"
+		if TraceStyle == Old {
+			newFmt += ">>"
+		} else {
+			newFmt += ">"
+		}
 	}
-	if TraceStyle == New {
+	if TraceStyle == New && valOnly {
 		newFmt += ")"
 	}
 	if summarizing {
