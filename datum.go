@@ -106,8 +106,12 @@ func CopySlice(d interface{}) interface{} {
 // ellipse shortened slices if TraceLevel<VVVV.
 func String(d interface{}) string {
 
+	if v, ok := d.(fmt.Stringer); ok {
+		return /*"AAA"+*/ v.String()
+	}
+
 	if IsSlice(d) {
-		return StringSlice(d)
+		return /*"BBB"+*/ StringSlice(d)
 	}
 	if dd, ok := d.([]interface{}); ok {
 		var s string
@@ -117,13 +121,13 @@ func String(d interface{}) string {
 			}
 			s += String(dd[i])
 		}
-		return s
+		return /*"CCC"+*/ s
 	}
 	if dd, ok := d.(ackWrap); ok {
-		return String(dd.datum)
+		return /*"DDD"+*/ String(dd.datum)
 	}
 	if IsStruct(d) {
-		return StringStruct(d)
+		return /*"EEE"+*/ StringStruct(d)
 	}
 
 	var s string
@@ -166,16 +170,16 @@ func String(d interface{}) string {
 	}
 
 	if !TraceTypes && s != "" {
-		return s
+		return /*"FFF"+*/ s
 
 	}
 	if s == "" {
 		s = fmt.Sprintf("%+v", d)
 	}
 	if IsInt(d) || !TraceTypes {
-		return fmt.Sprintf("%s", s)
+		return /*"GGG"+*/ fmt.Sprintf("%s", s)
 	}
-	return fmt.Sprintf("%T(%s)", d, s)
+	return "HHH" + fmt.Sprintf("%T(%s)", d, s)
 }
 
 // StringSlice returns a string representation of a slice, ellipse shortened if TraceLevel<VVVV.

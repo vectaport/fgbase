@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"strconv"
 	"sync/atomic"
-	"time"
 )
 
 // edgeNode contains information on a Node connected to an Edge.
@@ -205,7 +204,7 @@ func (e *Edge) DstJSON(n *Node, portString string) {
 		bufCnt := 0
 		for {
 			v := <-ej
-			time.Sleep(10000)
+			// time.Sleep(10000)
 			bufCnt++
 			b, err := json.Marshal(v)
 			// n.Tracef("json output:  %v", string(b))
@@ -357,6 +356,13 @@ func (e *Edge) dstReadRdy() bool {
 	return len(e.Ack) > 0
 }
 
+func emptystruct() string {
+	if TraceStyle == New {
+		return "struct{}"
+	}
+	return ""
+}
+
 // dstReadHandle handles a destination Edge ack read.
 func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 
@@ -389,7 +395,7 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 		if true || len(*e.Data) > 1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
-		n.Tracef("<- %s%s\n", nm, selectStr)
+		n.Tracef("%s<- %s%s\n", emptystruct()+" ", nm, selectStr)
 	}
 
 	if e.RdyCnt < 0 {
@@ -532,7 +538,7 @@ func (e *Edge) SendAck(n *Node) bool {
 					attrs += fmt.Sprintf("\t// Ack2=%p", e.Ack2)
 				}
 				if TraceLevel >= VV {
-					n.Tracef("%s.Ack <-%s\n", e.Name, attrs)
+					n.Tracef("%s.Ack <- struct {}%s\n", e.Name, attrs)
 				}
 				e.blocked = ackBlock
 				e.Ack2 <- struct{}{}
@@ -540,7 +546,7 @@ func (e *Edge) SendAck(n *Node) bool {
 				e.Ack2 = nil
 			} else {
 				if TraceLevel >= VV {
-					n.Tracef("%s.Ack <-\n", e.Name)
+					n.Tracef("%s.Ack <-%s\n", e.Name, " "+emptystruct())
 				}
 				e.blocked = ackBlock
 				e.Ack <- struct{}{}

@@ -192,10 +192,19 @@ func prefixTracef(n *Node) (format string) {
 	}
 	if TraceStyle == New {
 		if n.Cnt == -1 {
-			newFmt += "*: "
+			newFmt += "*:"
 		} else {
-			newFmt += fmt.Sprintf("%d: ", n.Cnt)
+			newFmt += fmt.Sprintf("%d:", n.Cnt)
 		}
+		if TraceSeconds {
+			t := TimeSinceStart()
+			if t >= 0.0 {
+				newFmt += fmt.Sprintf("%.4f:", TimeSinceStart())
+			} else {
+				newFmt += "*:"
+			}
+		}
+		newFmt += " "
 	}
 	newFmt += n.Name
 	if TraceStyle == New {
@@ -212,7 +221,7 @@ func prefixTracef(n *Node) (format string) {
 		}
 	}
 
-	if TraceStyle == Old && TraceSeconds || TraceLevel >= VVVV {
+	if TraceStyle == Old && (TraceSeconds || TraceLevel >= VVVV) {
 		t := TimeSinceStart()
 		if t >= 0.0 {
 			newFmt += fmt.Sprintf(":%.4f", TimeSinceStart())
@@ -245,7 +254,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 func (n *Node) LogError(format string, v ...interface{}) {
 	// _,nm,ln,_ := runtime.Caller(1)
 	newFmt := prefixTracef(n)
-	newFmt += "ERROR:  "
+	newFmt += " ERROR:  "
 	newFmt += format
 	// newFmt += fmt.Sprintf(" -- %s:%d ", nm, ln)
 	StderrLog.Printf(newFmt, v...)
@@ -254,7 +263,7 @@ func (n *Node) LogError(format string, v ...interface{}) {
 // Panicf for quitting with formatted panic message.
 func (n *Node) Panicf(format string, v ...interface{}) {
 	newFmt := prefixTracef(n)
-	newFmt += "ERROR:  "
+	newFmt += " ERROR:  "
 	newFmt += format
 	panic(fmt.Sprintf(newFmt, v...))
 }
@@ -533,11 +542,18 @@ func (n *Node) Fire() error {
 	if TraceLevel > Q {
 		// newFmt += "\t"
 		newFmt += n.traceValRdyDst(true)
-		if n.Aux != nil && IsStruct(n.Aux) {
-			s := String(n.Aux)
-			if s != "{}" {
-				// newFmt += "\t// " + s
-				newFmt += " // " + s
+		if n.Aux != nil {
+			var s = ""
+			if IsStruct(n.Aux) {
+				s = String(n.Aux)
+				if s != "{}" {
+					// newFmt += "\t// " + s
+					newFmt += " // " + s
+				}
+			} else {
+				if v, ok := n.Aux.(fmt.Stringer); ok {
+					newFmt += " // " + v.String()
+				}
 			}
 		}
 		newFmt += "\n"
@@ -818,9 +834,7 @@ func OutputDot(nodes []*Node) {
 
 	for _, iv := range nodes {
 		fmt.Printf("\n// %s\n", iv.Name)
-		if iv.DotAttr() != "" {
-			fmt.Printf("%s_%d [ %s ]\n", iv.Name, iv.ID, iv.DotAttr())
-		}
+		fmt.Printf("%sɸ%d [ label=%s %s]\n", iv.Name, iv.ID, iv.Name, iv.DotAttr())
 		k := 0
 		for _, jv := range iv.Dsts {
 			if jv == nil {
@@ -835,8 +849,8 @@ func OutputDot(nodes []*Node) {
 				if l > 0 {
 					attr = " " + (*jv.dotAttrs)[k%l]
 				}
-				fmt.Printf("%s_%d", iv.Name, iv.ID)
-				fmt.Printf(" -> %s_%d", kv.node.Name, kv.node.ID)
+				fmt.Printf("%sɸ%d", iv.Name, iv.ID)
+				fmt.Printf(" -> %sɸ%d", kv.node.Name, kv.node.ID)
 				onm := jv.linkName()
 				if onm != "" {
 					onm = "/" + onm
