@@ -552,7 +552,10 @@ func (n *Node) Fire() error {
 				}
 			} else {
 				if v, ok := n.Aux.(fmt.Stringer); ok {
-					newFmt += " // " + v.String()
+				        s = v.String()
+					if s != "&{}" {
+					        newFmt += " // " + v.String()
+					}
 				}
 			}
 		}
