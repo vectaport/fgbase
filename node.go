@@ -552,9 +552,9 @@ func (n *Node) Fire() error {
 				}
 			} else {
 				if v, ok := n.Aux.(fmt.Stringer); ok {
-				        s = v.String()
+					s = v.String()
 					if s != "&{}" {
-					        newFmt += " // " + v.String()
+						newFmt += " // " + v.String()
 					}
 				}
 			}
@@ -1079,8 +1079,11 @@ func (n *Node) String() string {
 		if n.Srcs[i] == nil {
 			srcs += "nil"
 		} else {
-
-			srcs += n.Srcs[i].Name
+			onm := n.Srcs[i].linkName()
+			if onm != "" {
+				onm = "/" + onm
+			}
+			srcs += n.Srcs[i].Name + onm
 		}
 		if n.srcNames != nil {
 			srcs += ")"
@@ -1097,7 +1100,11 @@ func (n *Node) String() string {
 		if n.Dsts[i] == nil {
 			dsts += "nil"
 		} else {
-			dsts += n.Dsts[i].Name
+			onm := n.Dsts[i].linkName()
+			if onm != "" {
+				onm = "/" + onm
+			}
+			dsts += n.Dsts[i].Name + onm
 		}
 		if n.dstNames != nil {
 			dsts += ")"
