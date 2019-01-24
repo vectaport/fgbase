@@ -292,7 +292,7 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 	}
 	if e.RdyCnt < 0 {
 		n.Tracef("Edge %q RdyCnt less than zero\n", e.Name)
-		panic("Edge.srcReadHandle:  Edge RdyCnt less than zero")
+		panic(fmt.Sprintf("Edge.srcReadHandle:  Edge %q RdyCnt less than zero", e.Name))
 	}
 }
 
@@ -303,6 +303,9 @@ func (e *Edge) srcWriteRdy() bool {
 
 // SrcRdy tests if a source Edge is ready.
 func (e *Edge) SrcRdy(n *Node) bool {
+	if !n.isSrc(e) {
+		panic(fmt.Sprintf("Unexpected destination edge %q checked for source readiness on node %q\n", e.Name, n.Name))
+	}
 	if e == nil {
 		return false
 	}
@@ -392,10 +395,11 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 			}
 		}
 		nm := e.Name + ".Ack"
+		tmp := fmt.Sprintf(" // <<%+v>>", e.Ack)
 		if true || len(*e.Data) > 1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
-		n.Tracef("%s<- %s%s\n", emptystruct()+" ", nm, selectStr)
+		n.Tracef("%s<- %s%s%s\n", emptystruct()+" ", nm, selectStr, tmp)
 	}
 
 	if e.RdyCnt < 0 {
@@ -407,6 +411,7 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _, c := range *e.Data {
+		fmt.Printf("dstWriteRdy for edge %s (cap=%d, len=%d, srccnt=%d)\n", cap(c), len(c), e.SrcCnt())
 		if cap(c) < len(c)+e.SrcCnt() {
 			return false
 		}
@@ -416,6 +421,9 @@ func (e *Edge) dstWriteRdy() bool {
 
 // DstRdy tests if a destination Edge is ready.
 func (e *Edge) DstRdy(n *Node) bool {
+	if n.isSrc(e) {
+		panic(fmt.Sprintf("Unexpected source edge %q checked for destination readiness on node %q\n", e.Name, n.Name))
+	}
 	if e == nil {
 		return false
 	}
@@ -546,7 +554,8 @@ func (e *Edge) SendAck(n *Node) bool {
 				e.Ack2 = nil
 			} else {
 				if TraceLevel >= VV {
-					n.Tracef("%s.Ack <-%s\n", e.Name, " "+emptystruct())
+					tmp := fmt.Sprintf(" // <<%+v>>", e.Ack)
+					n.Tracef("%s.Ack <-%s%s\n", e.Name, " "+emptystruct(), tmp)
 				}
 				e.blocked = ackBlock
 				e.Ack <- struct{}{}

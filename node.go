@@ -466,7 +466,7 @@ func (n *Node) DefaultRdyFunc() bool {
 	return true
 }
 
-// restoreDataChannels restore data channels for next use
+// restoreDataChannels restores data channels for next use
 func (n *Node) restoreDataChannels() {
 	j := 0
 	for i := range n.Srcs {
@@ -622,8 +622,9 @@ func (n *Node) DefaultRunFunc() error {
 				break
 			} // wait for external event
 
+			// just moved inside loop so it doesn't happen
+			n.restoreDataChannels()
 		}
-		n.restoreDataChannels()
 		if !n.RecvOne() { // bad receiving shuts down go-routine
 			break
 		}
@@ -794,6 +795,12 @@ func runAll(nodes []*Node) {
 		for i := 0; i < len(nodes); i++ {
 			nodes[i].traceValRdy(false)
 		}
+		/*
+			for i := 0; i < len(nodes); i++ {
+				nodes[i].showCases("")
+			}
+		*/
+
 		summarizing = false
 	}
 
@@ -811,7 +818,7 @@ func (n *Node) Recursed() bool { return n.flag&flagRecursed == flagRecursed }
 // IsPool returns true if Node is part of a Pool.
 func (n *Node) IsPool() bool { return n.flag&flagPool == flagPool }
 
-// RemoveInputCase removes the nth input of a Node from the select switch.
+// RemoveInputCase removes the input of a Node from the select switch.
 // It is restored after RdyAll.
 func (n *Node) RemoveInputCase(e *Edge) {
 	if !e.IsConst() {
@@ -1112,4 +1119,21 @@ func (n *Node) String() string {
 	}
 	s := fmt.Sprintf("%s(%s)(%s)", n.Name, srcs, dsts)
 	return s
+}
+
+// showCases prints out the current case for a node
+func (n *Node) showCases(prefix string) {
+	for i, c := range n.cases {
+		n.Tracef("%s -- CASE %d (%s):  %+v\n", prefix, i, n.caseToEdgeDir[i].edge.Name, c.Chan)
+	}
+}
+
+// isSrc checks if this is a source edge for this node
+func (n *Node) isSrc(e *Edge) bool {
+	for i := 0; i < len(n.Srcs); i++ {
+		if n.Srcs[i] == e {
+			return true
+		}
+	}
+	return false
 }
