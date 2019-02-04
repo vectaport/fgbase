@@ -234,6 +234,11 @@ func (e *Edge) RdyZero() bool {
 
 // srcReadRdy tests if a source Edge is ready for a data read.
 func (e *Edge) srcReadRdy(n *Node) bool {
+        // nodes in a pools that are sharing src channels could get
+	// blocked on a read because another node might read the channel first
+	// but that just puts in them in a queue ready to read the next data
+	// the problem is these pool nodes can't respond until later to any
+	// other incoming data or message
 	i := n.edgeToCase[e]
 	return n.cases[i].Chan.IsValid() && n.cases[i].Chan.Len() > 0
 }
@@ -411,7 +416,6 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 // dstWriteRdy tests if a destination Edge is ready for a data write.
 func (e *Edge) dstWriteRdy() bool {
 	for _, c := range *e.Data {
-		fmt.Printf("dstWriteRdy for edge %s (cap=%d, len=%d, srccnt=%d)\n", cap(c), len(c), e.SrcCnt())
 		if cap(c) < len(c)+e.SrcCnt() {
 			return false
 		}
