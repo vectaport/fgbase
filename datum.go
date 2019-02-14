@@ -80,6 +80,20 @@ func IsStruct(d interface{}) bool {
 	return reflect.ValueOf(d).Kind() == reflect.Struct
 }
 
+// IsPtr returns true if empty interface (interface{}) is a pointer
+func IsPtr(d interface{}) bool {
+	return reflect.ValueOf(d).Kind() == reflect.Ptr
+}
+
+// ResolvePtr resolves an empty interface which is a pointer
+func ResolvePtr(d interface{}) interface{} {
+	rv := reflect.ValueOf(d)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	return rv.Interface()
+}
+
 // Index returns the nth element of an empty interface (interface{}) that is a slice.
 func Index(d interface{}, i int) interface{} {
 	return reflect.ValueOf(d).Index(i).Interface()
@@ -105,6 +119,8 @@ func CopySlice(d interface{}) interface{} {
 // String returns a string representation of a interface{} with
 // ellipse shortened slices if TraceLevel<VVVV.
 func String(d interface{}) string {
+
+	d = ResolvePtr(d)
 
 	if v, ok := d.(fmt.Stringer); ok {
 		return /*"AAA"+*/ v.String()

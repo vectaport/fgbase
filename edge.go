@@ -234,7 +234,7 @@ func (e *Edge) RdyZero() bool {
 
 // srcReadRdy tests if a source Edge is ready for a data read.
 func (e *Edge) srcReadRdy(n *Node) bool {
-        // nodes in a pools that are sharing src channels could get
+	// nodes in a pools that are sharing src channels could get
 	// blocked on a read because another node might read the channel first
 	// but that just puts in them in a queue ready to read the next data
 	// the problem is these pool nodes can't respond until later to any
@@ -303,6 +303,9 @@ func (e *Edge) srcReadHandle(n *Node, selectFlag bool) {
 
 // srcWriteRdy tests if a source Edge is ready for an ack write.
 func (e *Edge) srcWriteRdy() bool {
+	if e.Ack2 != nil {
+		return len(e.Ack2) < cap(e.Ack2)
+	}
 	return len(e.Ack) < cap(e.Ack)
 }
 
@@ -400,11 +403,10 @@ func (e *Edge) dstReadHandle(n *Node, selectFlag bool) {
 			}
 		}
 		nm := e.Name + ".Ack"
-		tmp := fmt.Sprintf(" // <<%+v>>", e.Ack)
 		if true || len(*e.Data) > 1 {
 			nm += "{" + strconv.Itoa(e.RdyCnt+1) + "}"
 		}
-		n.Tracef("%s<- %s%s%s\n", emptystruct()+" ", nm, selectStr, tmp)
+		n.Tracef("%s<- %s%s\n", emptystruct()+" ", nm, selectStr)
 	}
 
 	if e.RdyCnt < 0 {
@@ -558,8 +560,7 @@ func (e *Edge) SendAck(n *Node) bool {
 				e.Ack2 = nil
 			} else {
 				if TraceLevel >= VV {
-					tmp := fmt.Sprintf(" // <<%+v>>", e.Ack)
-					n.Tracef("%s.Ack <-%s%s\n", e.Name, " "+emptystruct(), tmp)
+					n.Tracef("%s.Ack <-%s\n", e.Name, " "+emptystruct())
 				}
 				e.blocked = ackBlock
 				e.Ack <- struct{}{}

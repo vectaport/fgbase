@@ -553,7 +553,7 @@ func (n *Node) Fire() error {
 			} else {
 				if v, ok := n.Aux.(fmt.Stringer); ok {
 					s = v.String()
-					if s != "&{}" {
+					if s != "{}" {
 						newFmt += " // " + v.String()
 					}
 				}
@@ -648,7 +648,7 @@ func MakeNodes(sz int) []Node {
 	return n
 }
 
-// extendChannelCaps extends the channel capacity to support arbitrated fan-in.
+// extendChannelCaps extends the channel capacity to support arbitrated fan-in and buffered fan-out
 func extendChannelCaps(nodes []*Node) {
 	// for all the nodes in the slice
 	for _, n := range nodes {
@@ -670,13 +670,39 @@ func extendChannelCaps(nodes []*Node) {
 
 						// create and plugin a new channel with greater capacity
 						StdoutLog.Printf("Multiple upstream nodes on %s (len(*dstj.Data)=%d vs dstj.SrcCnt()=%d)\n", dstj.Name, len(*dstj.Data), dstj.DstCnt())
-						c := make(chan interface{}, dstj.SrcCnt())
-						(*dstj.Data)[k] = c
+						c := func() int {
+							if ChannelSize == 0 {
+								return dstj.SrcCnt() - 1
+							}
+							return dstj.SrcCnt() * ChannelSize
+						}()
+						(*dstj.Data)[k] = make(chan interface{}, c)
 
 					}
 
 				}
 			}
+
+			// if that edge is fanning out
+			if dstj.DstCnt() > 1 {
+				c := func() int {
+					if ChannelSize == 0 {
+						return dstj.DstCnt() - 1
+					}
+					return dstj.DstCnt() * ChannelSize
+				}()
+				dstj.Ack = make(chan struct{}, c)
+				for i := 0; i < dstj.DstCnt(); i++ {
+					dnstream := dstj.DstNode(i)
+					for _, v := range dnstream.Srcs {
+                                                if v.Same(dstj) {
+						        v.Ack = dstj.Ack
+						        break
+						}
+					}
+				}
+			}
+
 			if false {
 				if len(*dstj.Data) != dstj.DstCnt() {
 					StdoutLog.Printf("Multiple downstream nodes on %s (len(*dstj.Data)=%d vs dstj.DstCnt()=%d) -- %v\n", dstj.Name, len(*dstj.Data), dstj.SrcCnt(), dstj.edgeNodes)
@@ -1077,11 +1103,11 @@ func (n *Node) Link(in, ex *Edge) {
 func (n *Node) String() string {
 	srcs := ""
 	for i := 0; i < n.SrcCnt(); i++ {
-		if n.srcNames != nil {
-			srcs += fmt.Sprintf(".%s(", n.srcNames[i])
-		}
 		if i != 0 {
 			srcs += ","
+		}
+		if n.srcNames != nil {
+			srcs += fmt.Sprintf(".%s(", n.srcNames[i])
 		}
 		if n.Srcs[i] == nil {
 			srcs += "nil"
@@ -1098,11 +1124,11 @@ func (n *Node) String() string {
 	}
 	dsts := ""
 	for i := 0; i < n.DstCnt(); i++ {
-		if n.dstNames != nil {
-			dsts += fmt.Sprintf(".%s(", n.dstNames[i])
-		}
 		if i != 0 {
 			dsts += ","
+		}
+		if n.dstNames != nil {
+			dsts += fmt.Sprintf(".%s(", n.dstNames[i])
 		}
 		if n.Dsts[i] == nil {
 			dsts += "nil"
