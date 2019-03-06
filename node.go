@@ -695,9 +695,9 @@ func extendChannelCaps(nodes []*Node) {
 				for i := 0; i < dstj.DstCnt(); i++ {
 					dnstream := dstj.DstNode(i)
 					for _, v := range dnstream.Srcs {
-                                                if v.Same(dstj) {
-						        v.Ack = dstj.Ack
-						        break
+						if v.Same(dstj) {
+							v.Ack = dstj.Ack
+							break
 						}
 					}
 				}
