@@ -91,7 +91,10 @@ func ResolvePtr(d interface{}) interface{} {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
-	return rv.Interface()
+        if rv.IsValid() {
+	        return rv.Interface()
+	}
+	return nil
 }
 
 // Index returns the nth element of an empty interface (interface{}) that is a slice.

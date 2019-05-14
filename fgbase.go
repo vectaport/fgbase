@@ -3,7 +3,6 @@
 package fgbase
 
 import (
-	"errors"
 	"flag"
 	"log"
 	"os"
@@ -64,15 +63,22 @@ func (t TraceLevelType) String() string {
 }
 
 // End of flow
-var EOF = errors.New("EOF")
+type Error string
+func (e Error) Error() string {
+        return string(e)
+}
+const EOF = Error("EOF")
 
 // IsEOF returns true if interface{} is EOF error
 func IsEOF(v interface{}) (eof bool) {
-	err, ok := v.(error)
+	return v == EOF
+	/*
+	if err, ok := v.(error)
 	if ok {
-		eof = err.Error() == "EOF"
+		eof = err.Error() == EOF
 	}
 	return
+	*/
 }
 
 const (
