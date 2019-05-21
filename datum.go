@@ -91,8 +91,8 @@ func ResolvePtr(d interface{}) interface{} {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
-        if rv.IsValid() {
-	        return rv.Interface()
+	if rv.IsValid() {
+		return rv.Interface()
 	}
 	return nil
 }

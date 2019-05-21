@@ -64,20 +64,22 @@ func (t TraceLevelType) String() string {
 
 // End of flow
 type Error string
+
 func (e Error) Error() string {
-        return string(e)
+	return string(e)
 }
+
 const EOF = Error("EOF")
 
 // IsEOF returns true if interface{} is EOF error
 func IsEOF(v interface{}) (eof bool) {
 	return v == EOF
 	/*
-	if err, ok := v.(error)
-	if ok {
-		eof = err.Error() == EOF
-	}
-	return
+		if err, ok := v.(error)
+		if ok {
+			eof = err.Error() == EOF
+		}
+		return
 	*/
 }
 
