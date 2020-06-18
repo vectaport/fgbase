@@ -2,9 +2,6 @@
 Package of Go flowgraph primitives
 ----------------------------------
 
-* [![GoDoc](https://godoc.org/github.com/vectaport/fgbase?status.svg)](https://godoc.org/github.com/vectaport/fgbase)
-* [Wiki](https://github.com/vectaport/fgbase/wiki)
-
 ### Getting Started
 
 ```
@@ -13,6 +10,12 @@ go get -u github.com/vectaport/fgbase_test
 cd $GOPATH/src/github.com/vectaport/fgbase_test
 make
 ```
+
+### Links
+
+* [![GoDoc](https://godoc.org/github.com/vectaport/fgbase?status.svg)](https://godoc.org/github.com/vectaport/fgbase)
+* [Wiki](https://github.com/vectaport/fgbase/wiki)
+
 
 Go (Golang) offers direct support for concurrent programming with goroutines, channels, and the select statement.  Used together they offer all the building blocks necessary for programming across many cores and many Unix boxes.  But so much is possible with goroutines that constructing scaleable and reliable systems (that won't deadlock or be throttled by bottlenecks) requires the application or invention of additional concepts.
 
