@@ -2,6 +2,16 @@
 Package of Go flowgraph primitives
 ----------------------------------
 
+### Getting Started
+
+```
+go get -u github.com/vectaport/fgbase
+go get -u github.com/vectaport/fgbase_test
+cd $GOPATH/src/github.com/vectaport/fgbase_test
+make
+```
+
+
 * [![GoDoc](https://godoc.org/github.com/vectaport/fgbase?status.svg)](https://godoc.org/github.com/vectaport/fgbase)
 * [Wiki](https://github.com/vectaport/fgbase/wiki)
 
