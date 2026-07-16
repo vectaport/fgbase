@@ -805,6 +805,9 @@ func runAll(nodes []*Node) {
 
 	timeout := RunTime
 	if timeout > 0 {
+		if TraceLevel > QQ {
+			defer StdoutLog.Printf("\n")
+		}
 		// Race the deadline against the node goroutines actually finishing.
 		// A graph that terminates on its own (sources close their data
 		// channels, shutdown cascades downstream) returns as soon as every
@@ -817,12 +820,11 @@ func runAll(nodes []*Node) {
 			wg.Wait()
 			close(done)
 		}()
+		deadline := time.NewTimer(timeout)
+		defer deadline.Stop()
 		select {
 		case <-done:
-		case <-time.After(timeout):
-			if TraceLevel > QQ {
-				defer StdoutLog.Printf("\n")
-			}
+		case <-deadline.C:
 		}
 	} else {
 		wg.Wait()
