@@ -3,6 +3,7 @@
 package fgbase
 
 import (
+	"errors"
 	"flag"
 	"log"
 	"os"
@@ -62,25 +63,16 @@ func (t TraceLevelType) String() string {
 	}[t]
 }
 
-// End of flow
-type Error string
+// EOS is the single canonical end-of-stream sentinel. A single shared
+// *errorString identity (not a per-package value type) so that
+// comparing against it, from any package, is a plain pointer-safe
+// equality check -- see errors.New.
+var EOS = errors.New("EOS")
 
-func (e Error) Error() string {
-	return string(e)
-}
-
-const EOF = Error("EOF")
-
-// IsEOF returns true if interface{} is EOF error
-func IsEOF(v interface{}) (eof bool) {
-	return v == EOF
-	/*
-		if err, ok := v.(error)
-		if ok {
-			eof = err.Error() == EOF
-		}
-		return
-	*/
+// IsEOS returns true if interface{} is the EOS error.
+func IsEOS(v interface{}) bool {
+	err, ok := v.(error)
+	return ok && errors.Is(err, EOS)
 }
 
 const (

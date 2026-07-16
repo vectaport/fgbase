@@ -1,6 +1,8 @@
 package fgbase
 
-import ()
+import (
+	"errors"
+)
 
 // Sinker consumes wavefronts of values one at a time forever
 type Sinker interface {
@@ -25,7 +27,7 @@ func SinkFire(n *Node) error {
 	a := n.Srcs[0]
 	v := a.SrcGet()
 
-	if v, ok := v.(error); ok && v.Error() == "EOF" {
+	if v, ok := v.(error); ok && errors.Is(v, EOS) {
 		a.Flow = false
 		return v
 	}

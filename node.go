@@ -1,6 +1,7 @@
 package fgbase
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -298,8 +299,8 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				} else {
 					if srci.Val == nil {
 						newFmt += "<nil>"
-					} else if v, ok := srci.Val.(error); ok && v.Error() == "EOF" {
-						newFmt += "EOF"
+					} else if v, ok := srci.Val.(error); ok && errors.Is(v, EOS) {
+						newFmt += "EOS"
 					} else {
 						newFmt += fmt.Sprintf("%s", String(srci.Val))
 					}
@@ -354,8 +355,8 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 				} else {
 					if dstiv != nil {
 						s := String(dstiv)
-						if v, ok := dstiv.(error); ok && v.Error() == "EOF" {
-							newFmt += "EOF"
+						if v, ok := dstiv.(error); ok && errors.Is(v, EOS) {
+							newFmt += "EOS"
 						} else if !IsSlice(dstiv) {
 							newFmt += fmt.Sprintf("%s", s)
 						} else {
@@ -804,9 +805,26 @@ func runAll(nodes []*Node) {
 
 	timeout := RunTime
 	if timeout > 0 {
-		time.Sleep(timeout)
 		if TraceLevel > QQ {
 			defer StdoutLog.Printf("\n")
+		}
+		// Race the deadline against the node goroutines actually finishing.
+		// A graph that terminates on its own (sources close their data
+		// channels, shutdown cascades downstream) returns as soon as every
+		// node's goroutine has exited -- no straggler left running after
+		// runAll returns. A graph with a genuinely unbounded loop (see
+		// examples/loop*.go) never reaches that, so this still falls back
+		// to abandoning it at the deadline exactly as before.
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		deadline := time.NewTimer(timeout)
+		defer deadline.Stop()
+		select {
+		case <-done:
+		case <-deadline.C:
 		}
 	} else {
 		wg.Wait()
