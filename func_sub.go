@@ -78,9 +78,9 @@ func SubFire(n *Node) error {
 
 	av := a.SrcGet()
 	bv := b.SrcGet()
-	if IsEOF(av) || IsEOF(bv) {
-		x.DstPut(EOF)
-		return EOF
+	if IsEOS(av) || IsEOS(bv) {
+		x.DstPut(EOS)
+		return EOS
 	}
 
 	atmp, btmp, same := Promote(n, av, bv)

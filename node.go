@@ -1,6 +1,7 @@
 package fgbase
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -298,8 +299,8 @@ func (n *Node) traceValRdySrc(valOnly bool) string {
 				} else {
 					if srci.Val == nil {
 						newFmt += "<nil>"
-					} else if v, ok := srci.Val.(error); ok && v.Error() == "EOF" {
-						newFmt += "EOF"
+					} else if v, ok := srci.Val.(error); ok && errors.Is(v, EOS) {
+						newFmt += "EOS"
 					} else {
 						newFmt += fmt.Sprintf("%s", String(srci.Val))
 					}
@@ -354,8 +355,8 @@ func (n *Node) traceValRdyDst(valOnly bool) string {
 				} else {
 					if dstiv != nil {
 						s := String(dstiv)
-						if v, ok := dstiv.(error); ok && v.Error() == "EOF" {
-							newFmt += "EOF"
+						if v, ok := dstiv.(error); ok && errors.Is(v, EOS) {
+							newFmt += "EOS"
 						} else if !IsSlice(dstiv) {
 							newFmt += fmt.Sprintf("%s", s)
 						} else {
