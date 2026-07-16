@@ -804,9 +804,24 @@ func runAll(nodes []*Node) {
 
 	timeout := RunTime
 	if timeout > 0 {
-		time.Sleep(timeout)
-		if TraceLevel > QQ {
-			defer StdoutLog.Printf("\n")
+		// Race the deadline against the node goroutines actually finishing.
+		// A graph that terminates on its own (sources close their data
+		// channels, shutdown cascades downstream) returns as soon as every
+		// node's goroutine has exited -- no straggler left running after
+		// runAll returns. A graph with a genuinely unbounded loop (see
+		// examples/loop*.go) never reaches that, so this still falls back
+		// to abandoning it at the deadline exactly as before.
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(timeout):
+			if TraceLevel > QQ {
+				defer StdoutLog.Printf("\n")
+			}
 		}
 	} else {
 		wg.Wait()
