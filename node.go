@@ -29,6 +29,9 @@ type Node struct {
 	dataBackup    []reflect.Value      // backup data channels for inputs
 	flag          uintptr              // flags for package internal use
 
+	quit     chan struct{} // set by runAll before Init; closed to ask this Node's Run to return
+	quitCase int           // index into cases of the quit case, set by Init
+
 	srcNames       []string       // source names
 	dstNames       []string       // destination names
 	srcIndexByName map[string]int // map of index of source Edge's by name
@@ -154,6 +157,9 @@ func (n *Node) Init() {
 			cnt = cnt + 1
 		}
 	}
+
+	n.cases = append(n.cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(n.quit)})
+	n.quitCase = cnt
 }
 
 // makeNodeForPool returns a new Node with copies of source and destination Edge's.
@@ -589,6 +595,11 @@ func (n *Node) RecvOne() (recvOK bool) {
 	n.flag = n.flag | flagSelecting
 	i, recv, recvOK := reflect.Select(n.cases)
 	n.flag = n.flag ^ flagSelecting
+	if i == n.quitCase {
+		// quit closed by runAll asking this Node's Run to return -- expected
+		// shutdown, not a bad receive.
+		return false
+	}
 	if !recvOK {
 		n.LogError("receive from select not ok for case %d", i)
 		return false
@@ -760,13 +771,19 @@ func RunGraph(nodes []*Node) {
 	runAll(nodes)
 }
 
+// quitGrace bounds how long runAll waits for node goroutines to notice
+// quit and exit, once the RunTime deadline has already fired.
+const quitGrace = 100 * time.Millisecond
+
 // runAll calls Run for each Node, and times out after RunTime.
 func runAll(nodes []*Node) {
 
 	extendChannelCaps(nodes)
 
 	// builds node internals after edges attached
+	quit := make(chan struct{})
 	for _, v := range nodes {
+		v.quit = quit
 		v.Init()
 	}
 
@@ -812,9 +829,16 @@ func runAll(nodes []*Node) {
 		// A graph that terminates on its own (sources close their data
 		// channels, shutdown cascades downstream) returns as soon as every
 		// node's goroutine has exited -- no straggler left running after
-		// runAll returns. A graph with a genuinely unbounded loop (see
-		// examples/loop*.go) never reaches that, so this still falls back
-		// to abandoning it at the deadline exactly as before.
+		// runAll returns.
+		//
+		// If the deadline fires first, close quit to ask every node's
+		// RecvOne to return false on its next cycle through the select
+		// (rather than just abandoning the goroutines outright), then give
+		// them a bounded grace period to actually exit before falling back
+		// to the old abandon-at-the-deadline behavior. A node with a
+		// genuinely unbounded fire loop that never reaches RecvOne (see
+		// examples/loop*.go) won't notice quit and still gets abandoned --
+		// unchanged from before this quit mechanism existed.
 		done := make(chan struct{})
 		go func() {
 			wg.Wait()
@@ -825,6 +849,11 @@ func runAll(nodes []*Node) {
 		select {
 		case <-done:
 		case <-deadline.C:
+			close(quit)
+			select {
+			case <-done:
+			case <-time.After(quitGrace):
+			}
 		}
 	} else {
 		wg.Wait()
