@@ -527,23 +527,13 @@ func (e *Edge) SendData(n *Node) bool {
 			}
 
 			e.blocked = dataBlock
-			complete := true
 			for i := range *e.Data {
-				select {
-				case (*e.Data)[i] <- e.Val:
-				case <-n.quit:
-					complete = false
-				}
-				if !complete {
-					break
-				}
+				(*e.Data)[i] <- e.Val
 			}
 			e.blocked = noBlock
 
-			if complete {
-				e.Val = nil
-				sendOK = true
-			}
+			e.Val = nil
+			sendOK = true
 		}
 	}
 	e.Flow = false
@@ -565,11 +555,7 @@ func (e *Edge) SendAck(n *Node) bool {
 					n.Tracef("%s.Ack <- struct {}%s\n", e.Name, attrs)
 				}
 				e.blocked = ackBlock
-				select {
-				case e.Ack2 <- struct{}{}:
-					sendOK = true
-				case <-n.quit:
-				}
+				e.Ack2 <- struct{}{}
 				e.blocked = noBlock
 				e.Ack2 = nil
 			} else {
@@ -577,13 +563,10 @@ func (e *Edge) SendAck(n *Node) bool {
 					n.Tracef("%s.Ack <-%s\n", e.Name, " "+emptystruct())
 				}
 				e.blocked = ackBlock
-				select {
-				case e.Ack <- struct{}{}:
-					sendOK = true
-				case <-n.quit:
-				}
+				e.Ack <- struct{}{}
 				e.blocked = noBlock
 			}
+			sendOK = true
 		}
 	}
 	e.Flow = false
