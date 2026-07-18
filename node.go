@@ -598,6 +598,16 @@ func (n *Node) RecvOne() (recvOK bool) {
 	if i == n.quitCase {
 		// quit closed by runAll asking this Node's Run to return -- expected
 		// shutdown, not a bad receive.
+		//
+		// This is the only place quit is checked -- SendData/SendAck stay
+		// bare (see their comments). A node caught mid-send when its peer
+		// has already exited just stays blocked; that's fine, not a leak
+		// worth chasing. A torn-down flowgraph's in-flight state was never
+		// meant to survive teardown, any more than a register's contents
+		// survive a power cut -- what matters is that a node actively
+		// cycling (touching package state on every pass, e.g. TraceLevel)
+		// stops promptly, which happens here, for free, since select was
+		// already in this path before quit existed.
 		return false
 	}
 	if !recvOK {
