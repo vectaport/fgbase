@@ -43,8 +43,14 @@ type Edge struct {
 	srcCnt, dstCnt *int                // count of upstream/downstream nodes
 
 	// values unique to upstream and downstream Nodes
-	Val      interface{}   // generic empty interface
-	RdyCnt   int           // readiness of I/O
+	Val    interface{} // generic empty interface
+	RdyCnt int         // readiness of I/O, counted from acks already received --
+	// this is what lets SendData/SendAck use bare, unguarded channel sends.
+	// DstRdy/RdyAll check RdyCnt (and thus, transitively, prior acks) before
+	// Fire is ever called, so by the time a send happens the room it needs
+	// has already been proven, not merely hoped for. Don't add a select/
+	// non-blocking check to those sends "to be safe" -- that's re-deriving,
+	// at runtime, on every call, what this counter already decided once.
 	Flow     bool          // set true to allow one output, data or ack
 	Ack2     chan struct{} // alternate channel for ack steering
 	blocked  block         // blocked status:  dataBlock, ackBlock, readBLock, noBlock
@@ -425,7 +431,10 @@ func (e *Edge) dstWriteRdy() bool {
 	return true
 }
 
-// DstRdy tests if a destination Edge is ready.
+// DstRdy tests if a destination Edge is ready. This is the check that
+// makes SendData's later bare channel send safe without a select: room
+// is proven here, from acks already drained above, before Fire (and so
+// SendData) ever runs.
 func (e *Edge) DstRdy(n *Node) bool {
 	if n.isSrc(e) {
 		panic(fmt.Sprintf("Unexpected source edge %q checked for destination readiness on node %q\n", e.Name, n.Name))
@@ -526,6 +535,11 @@ func (e *Edge) SendData(n *Node) bool {
 				e.Val = n.AckWrap(e.Val, e.Ack)
 			}
 
+			// Bare send, deliberately: DstRdy already proved room exists
+			// (via RdyCnt, counted from acks received) before this Node's
+			// Fire ran. Guarding this with select would re-check, at
+			// real cost on every send, something already decided for
+			// free. See RdyCnt's comment.
 			e.blocked = dataBlock
 			for i := range *e.Data {
 				(*e.Data)[i] <- e.Val
@@ -546,6 +560,11 @@ func (e *Edge) SendAck(n *Node) bool {
 	if e.Ack != nil {
 		if e.Flow {
 			e.RdyCnt++
+			// Bare sends below, deliberately -- same reasoning as
+			// SendData: the producer never has more than ChannelSize
+			// items in flight before it needs a drained ack (DstRdy),
+			// so this Ack channel can't fill beyond what the protocol
+			// already bounds. See RdyCnt's comment.
 			if e.Ack2 != nil {
 				attrs := ""
 				if TraceLevel >= VVVV {
