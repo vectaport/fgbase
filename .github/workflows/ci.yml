@@ -62,10 +62,16 @@ jobs:
           repository: vectaport/fgbase_test
           path: fgbase_test
 
+      # fgbase_test's go.mod still declares `go 1.20`, but its go.sum
+      # already pins golang.org/x/crypto and x/sys releases built against
+      # a go 1.24 language-version floor -- a pre-existing mismatch in
+      # that repo, unrelated to fgbase. Use a current toolchain here
+      # (independent of fgbase's own go-version below) so the smoke job
+      # can actually build those deps.
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "stable"
           cache: true
 
       - name: Point fgbase_test at this fgbase commit
