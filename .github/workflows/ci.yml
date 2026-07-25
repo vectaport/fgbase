@@ -20,14 +20,18 @@ jobs:
           go-version: "1.20"
           cache: true
 
+      # imglab needs opencv (native lib) and weblab imports
+      # github.com/shopify/sarama, which upstream renamed to
+      # github.com/IBM/sarama -- neither builds as-is. Both pre-existing,
+      # unrelated to this change; scoping to the packages that do build.
       - name: Build
-        run: go build ./...
+        run: go build . ./grid ./regexp
 
       - name: Vet
-        run: go vet ./...
+        run: go vet . ./grid ./regexp
 
       - name: Test
-        run: go test -v ./...
+        run: go test -v . ./grid ./regexp
 
       # Informational only: known concurrency edges are still being hardened
       # (see issues #6/#7 on the shutdown protocol). Kept running so
@@ -35,7 +39,7 @@ jobs:
       - name: Test (race detector, informational)
         timeout-minutes: 8
         continue-on-error: true
-        run: go test -race -v ./...
+        run: go test -race -v . ./grid ./regexp
 
   # fgbase_test (github.com/vectaport/fgbase_test) is a sibling repo of
   # standalone testbed programs -- one `package main` per file (tbadd.go,
@@ -73,6 +77,7 @@ jobs:
         with:
           go-version: "stable"
           cache: true
+          cache-dependency-path: fgbase_test/go.sum
 
       - name: Point fgbase_test at this fgbase commit
         working-directory: fgbase_test
@@ -80,21 +85,32 @@ jobs:
 
       - name: Run testbed programs
         working-directory: fgbase_test
+        # -mod=mod: fgbase_test's committed go.mod doesn't declare every
+        # transitive requirement its tb*.go files actually import (e.g.
+        # tbcrypt.go's golang.org/x/crypto/nacl/box) -- a pre-existing gap.
+        # Rather than `go mod tidy` the whole module (which fails outright
+        # on the excluded imglab/weblab groups' deps), let each `go run`
+        # resolve and add just what it needs.
+        env:
+          GOFLAGS: -mod=mod
         run: |
           set +e
           mkdir -p /tmp/smoke-logs
           fail=0
 
           # Pulled straight from the Makefile so new tb targets are picked
-          # up automatically. Deliberately excludes two groups:
+          # up automatically. Deliberately excludes:
           #   imglab:: needs opencv (native lib, camera/display) - not
           #     installable/runnable on a standard CI image.
           #   weblab:: currently fails `go mod tidy` outright (imports
           #     github.com/shopify/sarama, which the upstream module
           #     renamed to github.com/IBM/sarama) - a real, pre-existing
           #     fgbase_test issue, unrelated to fgbase itself.
+          #   tbregexp: reads a fasta.huge.txt fixture that isn't checked
+          #     into the repo (only the smaller fasta.txt is) - another
+          #     pre-existing fgbase_test gap.
           targets=$( { grep '^all::' Makefile; grep '^regexp::' Makefile; } \
-            | sed 's/^[a-z]*:: *//' )
+            | sed 's/^[a-z]*:: *//' | tr ' ' '\n' | grep -v '^tbregexp$' )
 
           for t in $targets; do
             echo "::group::$t"
