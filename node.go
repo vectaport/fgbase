@@ -429,7 +429,7 @@ func (n *Node) traceValRdy(valOnly bool) {
 	newFmt := n.traceValRdySrc(valOnly)
 	newFmt += n.traceValRdyDst(valOnly)
 	newFmt += "\n"
-	StdoutLog.Printf(newFmt)
+	StdoutLog.Print(newFmt)
 }
 
 // traceValRdyErr lists Node input values and output readiness to stderr.
@@ -438,7 +438,7 @@ func (n *Node) traceValRdyErr() {
 	newFmt := n.traceValRdySrc(false)
 	newFmt += n.traceValRdyDst(false)
 	newFmt += "\n"
-	StderrLog.Printf(newFmt)
+	StderrLog.Print(newFmt)
 }
 
 // TraceVals lists input and output values for a Node.
@@ -567,7 +567,7 @@ func (n *Node) Fire() error {
 			}
 		}
 		newFmt += "\n"
-		StdoutLog.Printf(newFmt)
+		StdoutLog.Print(newFmt)
 	}
 	return err
 }

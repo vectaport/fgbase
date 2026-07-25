@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+          cache: true
+
+      # imglab needs opencv (native lib) and weblab imports
+      # github.com/shopify/sarama, which upstream renamed to
+      # github.com/IBM/sarama -- neither builds as-is. Both pre-existing,
+      # unrelated to this change; scoping to the packages that do build.
+      - name: Build
+        run: go build . ./grid ./regexp
+
+      - name: Vet
+        run: go vet . ./grid ./regexp
+
+      - name: Test
+        run: go test -v . ./grid ./regexp
+
+      # Informational only: known concurrency edges are still being hardened
+      # (see issues #6/#7 on the shutdown protocol). Kept running so
+      # regressions are visible without gating merges on them yet.
+      - name: Test (race detector, informational)
+        timeout-minutes: 8
+        continue-on-error: true
+        run: go test -race -v . ./grid ./regexp
+
+  # fgbase_test (github.com/vectaport/fgbase_test) is a sibling repo of
+  # standalone testbed programs -- one `package main` per file (tbadd.go,
+  # tbgcd.go, tbiterator.go, ...), run individually via its Makefile, in
+  # the hardware-testbench sense: pass/fail today means a human reads the
+  # trace. There's no `testing.T` and no assertions, so this can't be a
+  # `go test` job. What it CAN do without any rewrite: check out fgbase_test
+  # against the fgbase commit under test, run every program, and treat
+  # "compiled, ran, exited 0, didn't hang" as the smoke signal. That alone
+  # would have caught both concurrency bugs fixed in #4 and #5 (the
+  # goroutine leak and the EOF/EOS deadlock) well before a human noticed.
+  smoke-fgbase_test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout fgbase
+        uses: actions/checkout@v4
+        with:
+          path: fgbase
+
+      - name: Checkout fgbase_test
+        uses: actions/checkout@v4
+        with:
+          repository: vectaport/fgbase_test
+          path: fgbase_test
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+          cache: true
+          cache-dependency-path: fgbase_test/go.sum
+
+      - name: Point fgbase_test at this fgbase commit
+        working-directory: fgbase_test
+        run: go mod edit -replace github.com/vectaport/fgbase=../fgbase
+
+      - name: Run testbed programs
+        working-directory: fgbase_test
+        # -mod=mod: fgbase_test's committed go.mod doesn't declare every
+        # transitive requirement its tb*.go files actually import (e.g.
+        # tbcrypt.go's golang.org/x/crypto/nacl/box) -- a pre-existing gap.
+        # Rather than `go mod tidy` the whole module (which fails outright
+        # on the excluded imglab/weblab groups' deps), let each `go run`
+        # resolve and add just what it needs.
+        env:
+          GOFLAGS: -mod=mod
+        run: |
+          set +e
+          mkdir -p /tmp/smoke-logs
+          fail=0
+
+          # Pulled straight from the Makefile so new tb targets are picked
+          # up automatically. Deliberately excludes:
+          #   imglab:: needs opencv (native lib, camera/display) - not
+          #     installable/runnable on a standard CI image.
+          #   weblab:: currently fails `go mod tidy` outright (imports
+          #     github.com/shopify/sarama, which the upstream module
+          #     renamed to github.com/IBM/sarama) - a real, pre-existing
+          #     fgbase_test issue, unrelated to fgbase itself.
+          #   tbregexp: reads a fasta.huge.txt fixture that isn't checked
+          #     into the repo (only the smaller fasta.txt is) - another
+          #     pre-existing fgbase_test gap.
+          targets=$( { grep '^all::' Makefile; grep '^regexp::' Makefile; } \
+            | sed 's/^[a-z]*:: *//' | tr ' ' '\n' | grep -v '^tbregexp$' )
+
+          for t in $targets; do
+            echo "::group::$t"
+            log="/tmp/smoke-logs/$t.log"
+            timeout --kill-after=5s 30s make "$t" > "$log" 2>&1
+            rc=$?
+            if [ $rc -eq 124 ] || [ $rc -eq 137 ]; then
+              echo "::error::$t timed out (possible hang/deadlock)"
+              fail=1
+            elif [ $rc -ne 0 ]; then
+              echo "::error::$t exited $rc"
+              fail=1
+            else
+              echo "ok: $t"
+            fi
+            tail -n 20 "$log"
+            echo "::endgroup::"
+          done
+
+          # Informational only, never gates the job: some tb programs (e.g.
+          # tbadd.go, tbsub.go, tbmul.go, tbdiv.go, tblsh.go, tbrsh.go)
+          # deliberately feed mismatched types through fgbase's arithmetic
+          # funcs to exercise Node.LogError's " ERROR:  " output on
+          # purpose. There's no marker distinguishing that from a real,
+          # unexpected error at the same log level, so grepping for
+          # ERROR/panic can't safely gate pass/fail without a per-target
+          # expected-count allowlist. Surfaced here for a human to skim.
+          echo "::group::ERROR/panic lines (informational, non-gating)"
+          grep -inH "error\|panic" /tmp/smoke-logs/*.log || echo "none"
+          echo "::endgroup::"
+
+          exit $fail
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs
+          path: /tmp/smoke-logs
