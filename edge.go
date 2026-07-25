@@ -1,4 +1,3 @@
-23897690q2345986y98$$^&*())_  some nonsense introduced here to cause CI to fail
 package fgbase
 
 import (
