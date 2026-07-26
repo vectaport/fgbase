@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -56,12 +56,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout fgbase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: fgbase
 
       - name: Checkout fgbase_test
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: vectaport/fgbase_test
           path: fgbase_test
