@@ -147,7 +147,7 @@ func MakeGraph(sze, szn int) ([]Edge, []Node) {
 func ConfigByFlag(defaults map[string]interface{}) {
 
 	var ncoreDef interface{} = runtime.NumCPU() - 1
-	var secDef interface{} = 1
+ 	var secDef interface{} = 1
 	var traceDef interface{} = "V"
 	var chanszDef interface{} = 1
 	var trsecDef interface{} = false
@@ -195,7 +195,11 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
+<<<<<<< Updated upstream
 
+=======
+	// allow a sec to be either int or float
+>>>>>>> Stashed changes
 	var secPtr
 	switch v := secDef.(type) {
 	case int:
