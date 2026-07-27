@@ -67,7 +67,7 @@ func (t TraceLevelType) String() string {
 // *errorString identity (not a per-package value type) so that
 // comparing against it, from any package, is a plain pointer-safe
 // equality check -- see errors.New.
-var EOS = errors.New("EOS")
+const EOS = errors.New("EOS")
 
 // IsEOS returns true if interface{} is the EOS error.
 func IsEOS(v interface{}) bool {
@@ -187,7 +187,6 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
-	secPtr := flag.Int("sec", secDef.(int), "seconds to run")
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, QQ|Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
@@ -195,6 +194,17 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	trportPtr := flag.Bool("trport", trportDef.(bool), "trace ports")
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
+
+
+	var secPtr
+	switch v := secDef.(type) {
+	case int:
+	    secPtr := flag.Int("sec", secDef.(int), "seconds to run")
+        case float:
+	    secPtr := flag.Float("sec", secDef.(float), "seconds to run")
+        default:
+	    secPtr := flag.Int("sec", 1, "seconds to run")
+        }
 
 	flag.Parse()
 
