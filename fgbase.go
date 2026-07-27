@@ -196,7 +196,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
-        secPtr := flag.Float64("sec", secDef.(float64), "seconds to run")
+        secPtr := flag.Float64("sec", secDef, "seconds to run")
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, QQ|Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
