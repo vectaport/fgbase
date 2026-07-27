@@ -204,6 +204,8 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
+        flag.Parse()
+
 	runtime.GOMAXPROCS(*ncorePtr)
 	RunTime = time.Duration(*secPtr * float64(time.Second))
 	TraceLevel = TraceLevels[*tracePtr]
