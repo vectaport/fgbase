@@ -195,11 +195,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
-<<<<<<< Updated upstream
-
-=======
 	// allow a sec to be either int or float
->>>>>>> Stashed changes
 	var secPtr
 	switch v := secDef.(type) {
 	case int:
