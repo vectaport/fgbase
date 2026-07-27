@@ -187,6 +187,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
+        secPtr = flag.Float64("sec", secDef.(float), "seconds to run")
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, QQ|Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
@@ -194,19 +195,6 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	trportPtr := flag.Bool("trport", trportDef.(bool), "trace ports")
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
-
-	// allow a sec to be either int or float
-	var secPtr
-	switch v := secDef.(type) {
-	case int:
-	    secPtr := flag.Int("sec", secDef.(int), "seconds to run")
-        case float:
-	    secPtr := flag.Float("sec", secDef.(float), "seconds to run")
-        default:
-	    secPtr := flag.Int("sec", 1, "seconds to run")
-        }
-
-	flag.Parse()
 
 	runtime.GOMAXPROCS(*ncorePtr)
 	RunTime = time.Duration(*secPtr) * time.Second
