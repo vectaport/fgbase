@@ -5,6 +5,7 @@ package fgbase
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
