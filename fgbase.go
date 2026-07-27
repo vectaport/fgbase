@@ -5,6 +5,7 @@ package fgbase
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -147,7 +148,7 @@ func MakeGraph(sze, szn int) ([]Edge, []Node) {
 func ConfigByFlag(defaults map[string]interface{}) {
 
 	var ncoreDef interface{} = runtime.NumCPU() - 1
-	var secDef interface{} = 1
+	var secDef float64 = 1
 	var traceDef interface{} = "V"
 	var chanszDef interface{} = 1
 	var trsecDef interface{} = false
@@ -156,12 +157,20 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	var dotDef interface{} = false
 	var gmlDef interface{} = false
 
+	if defaults != nil && defaults["sec"] != nil {
+	    switch v := defaults["sec"].(type) {
+        case int:
+	        secDef = float64(v)
+        case float64:
+	        secDef = v
+        default:
+    	    panic(fmt.Sprintf("sec default must be int or float64, got %T", v))
+	    }
+        }
+	
 	if defaults != nil {
 		if defaults["ncore"] != nil {
 			ncoreDef = defaults["ncore"]
-		}
-		if defaults["sec"] != nil {
-			secDef = defaults["sec"]
 		}
 		if defaults["trace"] != nil {
 			traceDef = defaults["trace"]
@@ -187,7 +196,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
-	secPtr := flag.Int("sec", secDef.(int), "seconds to run")
+        secPtr := flag.Float64("sec", secDef, "seconds to run")
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, QQ|Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
@@ -196,10 +205,10 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
-	flag.Parse()
+        flag.Parse()
 
 	runtime.GOMAXPROCS(*ncorePtr)
-	RunTime = time.Duration(*secPtr) * time.Second
+	RunTime = time.Duration(*secPtr * float64(time.Second))
 	TraceLevel = TraceLevels[*tracePtr]
 	ChannelSize = *chanszPtr
 	TraceSeconds = *trsecPtr
