@@ -67,7 +67,7 @@ func (t TraceLevelType) String() string {
 // *errorString identity (not a per-package value type) so that
 // comparing against it, from any package, is a plain pointer-safe
 // equality check -- see errors.New.
-const EOS = errors.New("EOS")
+var EOS = errors.New("EOS")
 
 // IsEOS returns true if interface{} is the EOS error.
 func IsEOS(v interface{}) bool {
