@@ -11,8 +11,8 @@ type ZeroTester interface {
 	ZeroTest() bool
 }
 
-// ZeroTest returns true if empty interface (interface{}) is a numeric zero.
-func ZeroTest(a interface{}) bool {
+// ZeroTest returns true if empty interface (any) is a numeric zero.
+func ZeroTest(a any) bool {
 
 	switch v := a.(type) {
 	case int8:
@@ -55,7 +55,7 @@ func ZeroTest(a interface{}) bool {
 }
 
 // EqualsTest returns true if two empty interfaces have the same numeric or string value.
-func EqualsTest(n *Node, a, b interface{}) bool {
+func EqualsTest(n *Node, a, b any) bool {
 
 	a2, b2, same := Promote(n, a, b)
 	if !same {
@@ -65,28 +65,28 @@ func EqualsTest(n *Node, a, b interface{}) bool {
 	return a2 == b2
 }
 
-// IsInt returns true if empty interface (interface{}) is an int.
-func IsInt(d interface{}) bool {
+// IsInt returns true if empty interface (any) is an int.
+func IsInt(d any) bool {
 	return reflect.ValueOf(d).Kind() == reflect.Int
 }
 
-// IsSlice returns true if empty interface (interface{}) is a slice.
-func IsSlice(d interface{}) bool {
+// IsSlice returns true if empty interface (any) is a slice.
+func IsSlice(d any) bool {
 	return reflect.ValueOf(d).Kind() == reflect.Slice
 }
 
-// IsStruct returns true if empty interface (interface{}) is a struct.
-func IsStruct(d interface{}) bool {
+// IsStruct returns true if empty interface (any) is a struct.
+func IsStruct(d any) bool {
 	return reflect.ValueOf(d).Kind() == reflect.Struct
 }
 
-// IsPtr returns true if empty interface (interface{}) is a pointer
-func IsPtr(d interface{}) bool {
+// IsPtr returns true if empty interface (any) is a pointer
+func IsPtr(d any) bool {
 	return reflect.ValueOf(d).Kind() == reflect.Ptr
 }
 
 // ResolvePtr resolves an empty interface which is a pointer
-func ResolvePtr(d interface{}) interface{} {
+func ResolvePtr(d any) any {
 	rv := reflect.ValueOf(d)
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
@@ -97,13 +97,13 @@ func ResolvePtr(d interface{}) interface{} {
 	return nil
 }
 
-// Index returns the nth element of an empty interface (interface{}) that is a slice.
-func Index(d interface{}, i int) interface{} {
+// Index returns the nth element of an empty interface (any) that is a slice.
+func Index(d any, i int) any {
 	return reflect.ValueOf(d).Index(i).Interface()
 }
 
-// Len returns the length of an empty interface (interface{}) if it is a slice.
-func Len(d interface{}) int {
+// Len returns the length of an empty interface (any) if it is a slice.
+func Len(d any) int {
 	if IsSlice(d) {
 		return reflect.ValueOf(d).Len()
 	}
@@ -111,7 +111,7 @@ func Len(d interface{}) int {
 }
 
 // CopySlice returns a copy of a slice from an empty interface (as an empty interface).
-func CopySlice(d interface{}) interface{} {
+func CopySlice(d any) any {
 	dt := reflect.TypeOf(d)
 	dv := reflect.ValueOf(d)
 	r := reflect.MakeSlice(dt, dv.Len(), dv.Cap()).Interface()
@@ -119,9 +119,9 @@ func CopySlice(d interface{}) interface{} {
 	return r
 }
 
-// String returns a string representation of a interface{} with
+// String returns a string representation of a any with
 // ellipse shortened slices if TraceLevel<VVVV.
-func String(d interface{}) string {
+func String(d any) string {
 
 	d = ResolvePtr(d)
 
@@ -132,7 +132,7 @@ func String(d interface{}) string {
 	if IsSlice(d) {
 		return /*"BBB"+*/ StringSlice(d)
 	}
-	if dd, ok := d.([]interface{}); ok {
+	if dd, ok := d.([]any); ok {
 		var s string
 		for i := range dd {
 			if i != 0 {
@@ -202,7 +202,7 @@ func String(d interface{}) string {
 }
 
 // StringSlice returns a string representation of a slice, ellipse shortened if TraceLevel<VVVV.
-func StringSlice(d interface{}) string {
+func StringSlice(d any) string {
 	m := 8
 	l := Len(d)
 	if l < m || TraceLevel == VVVV {
@@ -227,7 +227,7 @@ func StringSlice(d interface{}) string {
 
 // isShadowSlice returns true if the nth field of the struct is a slice that is shadowing
 // another field.
-func isShadowSlice(d interface{}, nth int) bool {
+func isShadowSlice(d any, nth int) bool {
 	if !IsStruct(d) {
 		return false
 	}
@@ -256,7 +256,7 @@ func isShadowSlice(d interface{}, nth int) bool {
 // shadowSlice returns the index of a struct field that is a slice that
 // is being shadowed by the nth field of the struct (with a "Shadow" prefix and matching type).
 // -1 returned if not found
-func shadowSlice(d interface{}, nth int) int {
+func shadowSlice(d any, nth int) int {
 	if !IsStruct(d) {
 		return -1
 	}
@@ -284,7 +284,7 @@ func shadowSlice(d interface{}, nth int) int {
 
 // shadowString returns a struct-like string for a shadows slice, where the index of a changed
 // value proceeds the value and a colon.
-func shadowString(d interface{}, sliceIndex, shadowIndex int) string {
+func shadowString(d any, sliceIndex, shadowIndex int) string {
 	if !IsStruct(d) {
 		return ""
 	}
@@ -319,7 +319,7 @@ func shadowString(d interface{}, sliceIndex, shadowIndex int) string {
 
 // StringStruct returns a string representation of a struct with
 // ellipse shortened slices if TraceLevel<VVVV.
-func StringStruct(d interface{}) string {
+func StringStruct(d any) string {
 	dv := reflect.ValueOf(d)
 	l := dv.NumField()
 	var s string
@@ -361,8 +361,8 @@ func StringStruct(d interface{}) string {
 }
 
 // ParseDatum parses a string for numeric constants, otherwise returns the string.
-func ParseDatum(s string) interface{} {
-	var v interface{}
+func ParseDatum(s string) any {
+	var v any
 
 	// trim trailing whitespace or comments
 	var s2 string
@@ -444,13 +444,13 @@ func ParseDatum(s string) interface{} {
 	return v
 }
 
-// IsNada tests if a interface{} (an empty interface) is a struct{} (an empty struct)
-func IsNada(d interface{}) bool {
+// IsNada tests if a any (an empty interface) is a struct{} (an empty struct)
+func IsNada(d any) bool {
 	return reflect.TypeOf(d) == reflect.TypeOf(struct{}{})
 }
 
-// IsZero returns true if a interface{} has a golang zero value
-func IsZero(d interface{}) bool {
+// IsZero returns true if a any has a golang zero value
+func IsZero(d any) bool {
 	return reflect.DeepEqual(reflect.Zero(reflect.TypeOf(d)).Interface(), d)
 }
 
@@ -460,7 +460,7 @@ type Inter interface {
 }
 
 // Int returns an int version of a value
-func Int(a interface{}) int {
+func Int(a any) int {
 
 	switch a.(type) {
 	case int8:

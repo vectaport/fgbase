@@ -43,7 +43,7 @@ func csviRdy(n *Node) bool {
 
 // FuncCSVI reads a vector of input data values from a Reader and outputs
 // them downstream.  enums is an optional map from field.enum to an empty interface.
-func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
+func FuncCSVI(x []Edge, r io.Reader, enums map[string]any) Node {
 
 	var fireFunc = func(n *Node) error {
 		x := n.Dsts
@@ -63,7 +63,7 @@ func FuncCSVI(x []Edge, r io.Reader, enums map[string]interface{}) Node {
 				if record[j] == "*" {
 					continue
 				}
-				var v interface{}
+				var v any
 				var ok bool
 				if enums != nil {
 					v, ok = enums[record[j]]

@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func subFire2(a, b interface{}) interface{} {
+func subFire2(a, b any) any {
 
 	switch a.(type) {
 	case int8:

@@ -51,7 +51,7 @@ func csvoRdy(n *Node) bool {
 
 // FuncCSVO reads a vector of expected data values from a Reader and tests the against
 // input from upstream.  enums is an optional map from field.enum to an empty interface.
-func FuncCSVO(a []Edge, r io.Reader, enums map[string]interface{}) Node {
+func FuncCSVO(a []Edge, r io.Reader, enums map[string]any) Node {
 
 	var fireFunc = func(n *Node) error {
 		a := n.Srcs
@@ -68,7 +68,7 @@ func FuncCSVO(a []Edge, r io.Reader, enums map[string]interface{}) Node {
 			j := header[i]
 
 			if record[j] != "*" {
-				var v interface{}
+				var v any
 				var ok bool
 				if enums != nil {
 					v, ok = enums[record[j]]

@@ -70,8 +70,8 @@ func (t TraceLevelType) String() string {
 // equality check -- see errors.New.
 var EOS = errors.New("EOS")
 
-// IsEOS returns true if interface{} is the EOS error.
-func IsEOS(v interface{}) bool {
+// IsEOS returns true if any is the EOS error.
+func IsEOS(v any) bool {
 	err, ok := v.(error)
 	return ok && errors.Is(err, EOS)
 }
@@ -132,7 +132,7 @@ var summarizing = false
 // wrapper adds channel to steer ack
 type ackWrap struct {
 	node  *Node
-	datum interface{}
+	datum any
 	ack2  chan struct{}
 }
 
@@ -145,29 +145,29 @@ func MakeGraph(sze, szn int) ([]Edge, []Node) {
 // while at the same time parsing all other flags.  Use the defaults argument to override
 // default settings for ncore, chanz, sec, trace, trsec, trtyp, trport, summ, dot, and gml.
 // Use -help to see the standard set.
-func ConfigByFlag(defaults map[string]interface{}) {
+func ConfigByFlag(defaults map[string]any) {
 
-	var ncoreDef interface{} = runtime.NumCPU() - 1
+	var ncoreDef any = runtime.NumCPU() - 1
 	var secDef float64 = 1
-	var traceDef interface{} = "V"
-	var chanszDef interface{} = 1
-	var trsecDef interface{} = false
-	var trtypDef interface{} = false
-	var trportDef interface{} = false
-	var dotDef interface{} = false
-	var gmlDef interface{} = false
+	var traceDef any = "V"
+	var chanszDef any = 1
+	var trsecDef any = false
+	var trtypDef any = false
+	var trportDef any = false
+	var dotDef any = false
+	var gmlDef any = false
 
 	if defaults != nil && defaults["sec"] != nil {
-	    switch v := defaults["sec"].(type) {
-        case int:
-	        secDef = float64(v)
-        case float64:
-	        secDef = v
-        default:
-    	    panic(fmt.Sprintf("sec default must be int or float64, got %T", v))
-	    }
-        }
-	
+		switch v := defaults["sec"].(type) {
+		case int:
+			secDef = float64(v)
+		case float64:
+			secDef = v
+		default:
+			panic(fmt.Sprintf("sec default must be int or float64, got %T", v))
+		}
+	}
+
 	if defaults != nil {
 		if defaults["ncore"] != nil {
 			ncoreDef = defaults["ncore"]
@@ -196,7 +196,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	}
 
 	ncorePtr := flag.Int("ncore", ncoreDef.(int), "# cores to use, max "+strconv.Itoa(runtime.NumCPU()))
-        secPtr := flag.Float64("sec", secDef, "seconds to run")
+	secPtr := flag.Float64("sec", secDef, "seconds to run")
 	tracePtr := flag.String("trace", traceDef.(string), "trace level, QQ|Q|V|VV|VVV|VVVV")
 	chanszPtr := flag.Int("chansz", chanszDef.(int), "channel size")
 	trsecPtr := flag.Bool("trsec", trsecDef.(bool), "trace seconds")
@@ -205,7 +205,7 @@ func ConfigByFlag(defaults map[string]interface{}) {
 	dotPtr := flag.Bool("dot", dotDef.(bool), "graphviz output")
 	gmlPtr := flag.Bool("gml", gmlDef.(bool), "GML output")
 
-        flag.Parse()
+	flag.Parse()
 
 	runtime.GOMAXPROCS(*ncorePtr)
 	RunTime = time.Duration(*secPtr * float64(time.Second))

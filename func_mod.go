@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func modFire2(a, b interface{}) interface{} {
+func modFire2(a, b any) any {
 
 	switch a.(type) {
 	case int8:
