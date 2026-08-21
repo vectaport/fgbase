@@ -11,7 +11,7 @@ func mapFire(n *Node) error {
 }
 
 // FuncMap maps a value to one of n reducers.
-func FuncMap(a, x []Edge, mapper func(n *Node, datum interface{}) int) *Pool {
+func FuncMap(a, x []Edge, mapper func(n *Node, datum any) int) *Pool {
 
 	var mapRdy = func(n *Node) bool {
 		a := n.Srcs[0]

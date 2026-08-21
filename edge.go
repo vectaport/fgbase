@@ -36,15 +36,15 @@ const (
 type Edge struct {
 
 	// values shared by upstream and downstream Nodes
-	Name           string              // for trace
-	Data           *[]chan interface{} // slice of data channels
-	Ack            chan struct{}       // request (or acknowledge) channel
-	edgeNodes      *[]edgeNode         // list of Node's associated with this Edge.
-	srcCnt, dstCnt *int                // count of upstream/downstream nodes
+	Name           string        // for trace
+	Data           *[]chan any   // slice of data channels
+	Ack            chan struct{} // request (or acknowledge) channel
+	edgeNodes      *[]edgeNode   // list of Node's associated with this Edge.
+	srcCnt, dstCnt *int          // count of upstream/downstream nodes
 
 	// values unique to upstream and downstream Nodes
-	Val    interface{} // generic empty interface
-	RdyCnt int         // readiness of I/O, counted from acks already received --
+	Val    any // generic empty interface
+	RdyCnt int // readiness of I/O, counted from acks already received --
 	// this is what lets SendData/SendAck use bare, unguarded channel sends.
 	// DstRdy/RdyAll check RdyCnt (and thus, transitively, prior acks) before
 	// Fire is ever called, so by the time a send happens the room it needs
@@ -60,7 +60,7 @@ type Edge struct {
 
 // Return new Edge to connect one upstream Node to one or more downstream Node's.
 // Initialize optional data value to start flow.
-func makeEdge(name string, initVal interface{}) Edge {
+func makeEdge(name string, initVal any) Edge {
 
 	var e Edge
 
@@ -72,7 +72,7 @@ func makeEdge(name string, initVal interface{}) Edge {
 	}
 
 	e.Val = initVal
-	var dc []chan interface{}
+	var dc []chan any
 	e.Data = &dc
 	e.Ack = make(chan struct{}, ChannelSize)
 	var nl = make([]edgeNode, 0)
@@ -87,12 +87,12 @@ func makeEdge(name string, initVal interface{}) Edge {
 }
 
 // MakeEdge initializes optional data value to start flow.
-func MakeEdge(name string, initVal interface{}) Edge {
+func MakeEdge(name string, initVal any) Edge {
 	return makeEdge(name, initVal)
 }
 
 // Const sets up an Edge to provide a constant value.
-func (e *Edge) Const(d interface{}) {
+func (e *Edge) Const(d any) {
 	e.Val = d
 	e.Data = nil
 	e.Ack = nil
@@ -143,7 +143,7 @@ func (e *Edge) SrcJSON(n *Node, portString string) {
 				return
 			}
 
-			var v interface{}
+			var v any
 			err = json.Unmarshal(b, &v)
 			if err != nil {
 				n.LogError("%v", err)
@@ -204,7 +204,7 @@ func (e *Edge) DstJSON(n *Node, portString string) {
 
 	writer := bufio.NewWriter(conn)
 	j := len(*e.Data)
-	*e.Data = append(*e.Data, make(chan interface{}, ChannelSize))
+	*e.Data = append(*e.Data, make(chan any, ChannelSize))
 	ej := (*e.Data)[j]
 	go func() {
 		bufCnt := 0
@@ -674,13 +674,13 @@ func NameEdges(edges []Edge, names []string) {
 }
 
 // SrcGet returns the empty interface value flowing from the input Edge
-func (e *Edge) SrcGet() interface{} {
+func (e *Edge) SrcGet() any {
 	e.Flow = true
 	return e.Val
 }
 
 // DstPut sets the empty interface value flowing to the output Edge
-func (e *Edge) DstPut(v interface{}) {
+func (e *Edge) DstPut(v any) {
 	e.Flow = true
 	e.Val = v
 }

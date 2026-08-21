@@ -24,3 +24,7 @@ coverage.out
 .#datum.go
 
 doit
+
+.idea
+
+.agentbridge

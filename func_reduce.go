@@ -3,7 +3,7 @@ package fgbase
 import ()
 
 // FuncReduce reduces a stream of data into a single empty interface.
-func FuncReduce(a, x Edge, reducer func(n *Node, datum, collection interface{}) interface{}, freerun bool) Node {
+func FuncReduce(a, x Edge, reducer func(n *Node, datum, collection any) any, freerun bool) Node {
 
 	var reduceFreerunRdy = func(n *Node) bool {
 		a := n.Srcs[0]

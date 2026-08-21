@@ -11,17 +11,17 @@ import (
 
 // Node of a flowgraph.
 type Node struct {
-	ID       int64       // unique id
-	Name     string      // for tracing
-	Cnt      int64       // execution count
-	Srcs     []*Edge     // upstream Edge's
-	Dsts     []*Edge     // downstream Edge's
-	RdyFunc  NodeRdy     // func to test Edge readiness
-	FireFunc NodeFire    // func to fire off the Node
-	RunFunc  NodeRun     // func to repeatedly run Node
-	Aux      interface{} // auxiliary empty interface to hold state
-	RdyState int         // state of latest readiness
-	Owner    interface{} // owner of this node
+	ID       int64    // unique id
+	Name     string   // for tracing
+	Cnt      int64    // execution count
+	Srcs     []*Edge  // upstream Edge's
+	Dsts     []*Edge  // downstream Edge's
+	RdyFunc  NodeRdy  // func to test Edge readiness
+	FireFunc NodeFire // func to fire off the Node
+	RunFunc  NodeRun  // func to repeatedly run Node
+	Aux      any      // auxiliary empty interface to hold state
+	RdyState int      // state of latest readiness
+	Owner    any      // owner of this node
 
 	cases         []reflect.SelectCase // select cases to read from Edge's
 	caseToEdgeDir map[int]edgeDir      // map from index of selected case to associated Edge
@@ -129,7 +129,7 @@ func (n *Node) Init() {
 					}
 					return ChannelSize
 				}()
-				*srci.Data = append(*srci.Data, make(chan interface{}, df))
+				*srci.Data = append(*srci.Data, make(chan any, df))
 			} else {
 				j = 0
 			}
@@ -248,7 +248,7 @@ func prefixTracef(n *Node) (format string) {
 }
 
 // Tracef for debug trace printing.  Uses atomic log mechanism.
-func (n *Node) Tracef(format string, v ...interface{}) {
+func (n *Node) Tracef(format string, v ...any) {
 	if TraceLevel < V {
 		return
 	}
@@ -258,7 +258,7 @@ func (n *Node) Tracef(format string, v ...interface{}) {
 }
 
 // LogError for logging of error messages.  Uses atomic log mechanism.
-func (n *Node) LogError(format string, v ...interface{}) {
+func (n *Node) LogError(format string, v ...any) {
 	// _,nm,ln,_ := runtime.Caller(1)
 	newFmt := prefixTracef(n)
 	newFmt += " ERROR:  "
@@ -268,7 +268,7 @@ func (n *Node) LogError(format string, v ...interface{}) {
 }
 
 // Panicf for quitting with formatted panic message.
-func (n *Node) Panicf(format string, v ...interface{}) {
+func (n *Node) Panicf(format string, v ...any) {
 	newFmt := prefixTracef(n)
 	newFmt += " ERROR:  "
 	newFmt += format
@@ -534,7 +534,7 @@ func (n *Node) Fire() error {
 		err = n.FireFunc(n)
 	} else {
 		/* Generic PASS */
-		var v interface{}
+		var v any
 		for i := range n.Srcs {
 			v = n.Srcs[i].SrcGet()
 			if len(n.Dsts) > i {
@@ -698,7 +698,7 @@ func extendChannelCaps(nodes []*Node) {
 							}
 							return dstj.SrcCnt() * ChannelSize
 						}()
-						(*dstj.Data)[k] = make(chan interface{}, c)
+						(*dstj.Data)[k] = make(chan any, c)
 
 					}
 
@@ -891,7 +891,7 @@ func runAll(nodes []*Node) {
 
 // AckWrap bundles a Node pointer, and an ack channel with an empty interface, in order to
 // pass information about an upstream node downstream.  Used for acking back in a Pool.
-func (n *Node) AckWrap(d interface{}, ack chan struct{}) interface{} {
+func (n *Node) AckWrap(d any, ack chan struct{}) any {
 	return ackWrap{n, d, ack}
 }
 

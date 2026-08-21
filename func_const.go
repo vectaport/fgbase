@@ -11,7 +11,7 @@ func ConstFire(n *Node) error {
 
 // FuncConst produces a constant value (x = c).  Can also
 // be done with an Edge made const.
-func FuncConst(x Edge, c interface{}) Node {
+func FuncConst(x Edge, c any) Node {
 
 	node := MakeNode("const", nil, []*Edge{&x}, nil, ConstFire)
 	node.Aux = c

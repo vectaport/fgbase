@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func biggerType(a, b interface{}) bool {
+func biggerType(a, b any) bool {
 	switch a.(type) {
 	case bool:
 		{
@@ -85,8 +85,8 @@ func biggerType(a, b interface{}) bool {
 	return false
 }
 
-// Promote pair of numeric empty interfaces (interface{}) as necessary.
-func Promote(n *Node, a, b interface{}) (aBig, bBig interface{}, same bool) {
+// Promote pair of numeric empty interfaces (any) as necessary.
+func Promote(n *Node, a, b any) (aBig, bBig any, same bool) {
 
 	var debug = false && n != nil
 

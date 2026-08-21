@@ -4,7 +4,7 @@ import (
 	"reflect"
 )
 
-func lshFire2(a, b interface{}) interface{} {
+func lshFire2(a, b any) any {
 
 	switch a.(type) {
 	case uint8:

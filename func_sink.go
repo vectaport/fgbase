@@ -6,7 +6,7 @@ import (
 
 // Sinker consumes wavefronts of values one at a time forever
 type Sinker interface {
-	Sink(source []interface{})
+	Sink(source []any)
 }
 
 // SinkStats to use with Sinker interface
@@ -15,7 +15,7 @@ type SinkStats struct {
 	Sum int
 }
 
-func (s *SinkStats) Sink(v []interface{}) {
+func (s *SinkStats) Sink(v []any) {
 	for i := range v {
 		s.Cnt++
 		s.Sum += Int(v[i])
@@ -33,7 +33,7 @@ func SinkFire(n *Node) error {
 	}
 
 	if s, ok := n.Aux.(Sinker); ok {
-		s.Sink([]interface{}{v})
+		s.Sink([]any{v})
 	}
 	return nil
 }

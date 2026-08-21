@@ -9,7 +9,7 @@ type RecursiveSort interface {
 	sort.Interface
 
 	// SubSlice returns a sub-slice.
-	SubSlice(n, m int) interface{}
+	SubSlice(n, m int) any
 
 	// Slice returns current slice.
 	Slice() []int
@@ -87,7 +87,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 		// Make a substitute output Edge to point back to the Pool.
 		xBack := x.PoolEdge(a)
 
-		var lo, hi interface{}
+		var lo, hi any
 		if mlo > 1 {
 			n.Tracef("Original(%p) recurse left [0:%d], id=%d, depth will be %d\n", d.Original(), mlo, d.ID(), d.Depth()+1)
 			lo = n.AckWrap(d.SubSlice(0, mlo), x.Ack)
@@ -107,7 +107,7 @@ func FuncQsort(a, x Edge, poolSz int) *Pool {
 			p.Free(n, 1)
 		}
 
-		x.Val = []interface{}{lo, hi} // for tracing as lo|hi.
+		x.Val = []any{lo, hi} // for tracing as lo|hi.
 		return nil
 
 	}
